@@ -62,6 +62,19 @@ describe('PhoneScreen', () => {
     expect(screen.getByPlaceholderText(/כינוי/i)).toBeInTheDocument();
   });
 
+  it('disables submit when nickname is empty and phone is empty', () => {
+    render(<PhoneScreen onSuccess={onSuccess} />);
+    expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
+  });
+
+  it('disables submit when nickname is 1 character', async () => {
+    const user = userEvent.setup();
+    render(<PhoneScreen onSuccess={onSuccess} />);
+    await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    await user.type(screen.getByPlaceholderText(/כינוי/i), 'A');
+    expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
+  });
+
   it('disables submit when nickname is empty but phone is valid', async () => {
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);

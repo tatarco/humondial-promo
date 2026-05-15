@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getToken, setToken, isLoggedIn } from './lib/session.js';
+import { getToken, setToken, clearToken, isLoggedIn } from './lib/session.js';
 import { callFn } from './lib/api.js';
 import SplashScreen from './screens/SplashScreen.jsx';
 import PhoneScreen  from './screens/PhoneScreen.jsx';
@@ -55,6 +55,7 @@ export default function App() {
   }
 
   function handleLogout() {
+    clearToken();
     setPlayer(null);
     setPhone('');
     setTokenState('');
@@ -94,7 +95,7 @@ export default function App() {
       <LegalScreen
         token={token}
         onSuccess={handleLegalSuccess}
-        onBack={() => setScreen(SCREEN.PHONE)}
+        onBack={() => { setTokenState(''); setScreen(SCREEN.PHONE); }}
       />
     );
   }

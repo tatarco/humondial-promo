@@ -7,7 +7,7 @@ export default function OtpScreen({ phone, onSuccess, onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
-  const displayPhone = phone.replace(/^(972)(\d+)(\d{4})$/, '+972-****$3');
+  const displayPhone = phone.replace(/^(972)(\d{5})(\d{4})$/, '+972-****$3');
 
   async function handleVerify(e) {
     e.preventDefault();

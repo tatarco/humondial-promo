@@ -19,10 +19,17 @@ describe('LegalScreen', () => {
     expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
   });
 
-  it('button stays disabled when only one checkbox checked', async () => {
+  it('button stays disabled when only terms checked', async () => {
     const user = userEvent.setup();
     render(<LegalScreen token="t" onSuccess={onSuccess} onBack={onBack} />);
     await user.click(screen.getAllByRole('checkbox')[0]);
+    expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
+  });
+
+  it('button stays disabled when only whatsapp checked', async () => {
+    const user = userEvent.setup();
+    render(<LegalScreen token="t" onSuccess={onSuccess} onBack={onBack} />);
+    await user.click(screen.getAllByRole('checkbox')[1]);
     expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
   });
 

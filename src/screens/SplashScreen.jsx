@@ -4,7 +4,7 @@ export default function SplashScreen({ onDone }) {
   useEffect(() => {
     const t = setTimeout(onDone, 1500);
     return () => clearTimeout(t);
-  }, [onDone]);
+  }, []);
 
   return (
     <div className="min-h-dvh bg-hm-bg flex items-center justify-center">
