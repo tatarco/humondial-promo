@@ -31,6 +31,7 @@ describe('PhoneScreen', () => {
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    await user.type(screen.getByPlaceholderText(/כינוי/i), 'GoalKing');
     expect(screen.getByRole('button', { name: /המשך|continue/i })).not.toBeDisabled();
   });
 
@@ -39,8 +40,9 @@ describe('PhoneScreen', () => {
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    await user.type(screen.getByPlaceholderText(/כינוי/i), 'GoalKing');
     await user.click(screen.getByRole('button', { name: /המשך|continue/i }));
-    await waitFor(() => expect(callFn).toHaveBeenCalledWith('promoRequestOtp', { phone: '0521234567' }));
+    await waitFor(() => expect(callFn).toHaveBeenCalledWith('promoRequestOtp', { phone: '0521234567', nickname: 'GoalKing' }));
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('972521234567'));
   });
 
@@ -49,8 +51,41 @@ describe('PhoneScreen', () => {
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    await user.type(screen.getByPlaceholderText(/כינוי/i), 'GoalKing');
     await user.click(screen.getByRole('button', { name: /המשך|continue/i }));
     await waitFor(() => expect(screen.getByText(/שגיאה|error|rate/i)).toBeInTheDocument());
     expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('renders nickname input', () => {
+    render(<PhoneScreen onSuccess={onSuccess} />);
+    expect(screen.getByPlaceholderText(/כינוי/i)).toBeInTheDocument();
+  });
+
+  it('disables submit when nickname is empty but phone is valid', async () => {
+    const user = userEvent.setup();
+    render(<PhoneScreen onSuccess={onSuccess} />);
+    await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
+  });
+
+  it('disables submit when nickname is too short', async () => {
+    const user = userEvent.setup();
+    render(<PhoneScreen onSuccess={onSuccess} />);
+    await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    await user.type(screen.getByPlaceholderText(/כינוי/i), 'A');
+    expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
+  });
+
+  it('calls promoRequestOtp with phone and nickname', async () => {
+    callFn.mockResolvedValueOnce({ ok: true });
+    const user = userEvent.setup();
+    render(<PhoneScreen onSuccess={onSuccess} />);
+    await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
+    await user.type(screen.getByPlaceholderText(/כינוי/i), 'GoalKing');
+    await user.click(screen.getByRole('button', { name: /המשך/i }));
+    await waitFor(() =>
+      expect(callFn).toHaveBeenCalledWith('promoRequestOtp', { phone: '0521234567', nickname: 'GoalKing' })
+    );
   });
 });
