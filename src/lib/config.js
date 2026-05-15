@@ -1,5 +1,15 @@
-export const campaignConfig = {
-  displayTimezone:       import.meta.env.VITE_CAMPAIGN_DISPLAY_TZ      || 'Asia/Jerusalem',
-  participationPoints:   Number(import.meta.env.VITE_CAMPAIGN_PARTICIPATION_PTS) || 10,
-  lockOffsetMinutes:     Number(import.meta.env.VITE_CAMPAIGN_LOCK_OFFSET_MIN)   || 0,
-};
+import { callFn } from './api.js';
+
+let _config = null;
+
+export async function loadConfig() {
+  if (_config) return _config;
+  _config = await callFn('getCampaignConfig', {});
+  return _config;
+}
+
+export function getConfig() {
+  return _config;
+}
+
+export const DISPLAY_TIMEZONE = 'Asia/Jerusalem';
