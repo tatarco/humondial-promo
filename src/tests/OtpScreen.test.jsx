@@ -35,7 +35,7 @@ describe('OtpScreen', () => {
     await user.click(screen.getByRole('button', { name: /אימות|verify/i }));
     await waitFor(() => expect(callFn).toHaveBeenCalledWith('promoVerifyOtp', { phone, code: '123456' }));
     await waitFor(() => expect(setToken).toHaveBeenCalledWith('tok-abc'));
-    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('pid-1'));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('pid-1', 'tok-abc'));
   });
 
   it('shows error on invalid code', async () => {

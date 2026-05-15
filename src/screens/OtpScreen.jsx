@@ -16,7 +16,7 @@ export default function OtpScreen({ phone, onSuccess, onBack }) {
     try {
       const { token, playerId } = await callFn('promoVerifyOtp', { phone, code });
       setToken(token);
-      onSuccess(playerId);
+      onSuccess(playerId, token);
     } catch (err) {
       setError('קוד שגוי או פג תוקף — נסה שוב');
     } finally {
