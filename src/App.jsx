@@ -39,7 +39,13 @@ export default function App() {
 
   async function handleSplashDone() {
     setScreen(SCREEN.LOADING);
-    const [sessionResult, cfg] = await Promise.all([fetchSession(), loadConfig()]);
+    let sessionResult = { nextScreen: SCREEN.PHONE, playerId: null };
+    let cfg = null;
+    try {
+      [sessionResult, cfg] = await Promise.all([fetchSession(), loadConfig()]);
+    } catch {
+      // config or session failed — fall through with defaults (phone screen, no config)
+    }
     setConfig(cfg);
     if (sessionResult.nextScreen === SCREEN.LEGAL) {
       setTokenState(getToken());
