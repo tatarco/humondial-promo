@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --hm-bg:    #050303;
+  --hm-red:   #c13633;
+  --hm-white: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--hm-bg);
+  color: var(--hm-white);
+  margin: 0;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
