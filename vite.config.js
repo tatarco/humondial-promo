@@ -11,5 +11,15 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/tests/setup.js'],
+    environmentOptions: {
+      jsdom: {
+        url: 'http://localhost/',
+      },
+    },
+    poolOptions: {
+      forks: {
+        execArgv: ['--localstorage-file=/tmp/vitest-ls.json'],
+      },
+    },
   },
 });
