@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
@@ -241,7 +241,26 @@ export default function ShellScreen({ playerId, onLogout }) {
   const config = useConfig();
   const [matches, setMatches] = useState([]);
   const [predictions, setPredictions] = useState({});
-  const [totalPoints, setTotalPoints] = useState(0);
+  const totalPoints = useMemo(() => {
+    if (!config) return 0;
+    let pts = config.join_points ?? 50;
+    for (const match of matches) {
+      const pred = predictions[match.id];
+      if (!pred) continue;
+      pts += config.participation_points ?? 10;
+      if (match.status !== 'final') continue;
+      const isBullseye =
+        pred.home_score === match.final_home_score &&
+        pred.away_score === match.final_away_score;
+      if (isBullseye) { pts += config.bullseye_points ?? 60; continue; }
+      const ao = match.final_home_score > match.final_away_score ? 'home'
+        : match.final_home_score < match.final_away_score ? 'away' : 'draw';
+      const po = pred.home_score > pred.away_score ? 'home'
+        : pred.home_score < pred.away_score ? 'away' : 'draw';
+      if (ao === po) pts += config.outcome_points ?? 30;
+    }
+    return pts;
+  }, [matches, predictions, config]);
   const [activeCard, setActiveCard] = useState(null);
   const [activeStage, setActiveStage] = useState(null);
   const [loading, setLoading] = useState(true);
