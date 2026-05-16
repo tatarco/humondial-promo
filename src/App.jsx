@@ -7,7 +7,8 @@ import SplashScreen from './screens/SplashScreen.jsx';
 import PhoneScreen  from './screens/PhoneScreen.jsx';
 import OtpScreen    from './screens/OtpScreen.jsx';
 import LegalScreen  from './screens/LegalScreen.jsx';
-import ShellScreen  from './screens/ShellScreen.jsx';
+import HomeScreen from './screens/HomeScreen.jsx';
+import PersonalAreaScreen from './screens/PersonalAreaScreen.jsx';
 
 const SCREEN = {
   SPLASH:  'splash',
@@ -15,7 +16,8 @@ const SCREEN = {
   PHONE:   'phone',
   OTP:     'otp',
   LEGAL:   'legal',
-  SHELL:   'shell',
+  SHELL:         'shell',
+  PERSONAL_AREA: 'personal_area',
 };
 
 async function fetchSession() {
@@ -76,6 +78,14 @@ export default function App() {
     setScreen(SCREEN.PHONE);
   }
 
+  function handlePersonalArea() {
+    setScreen(SCREEN.PERSONAL_AREA);
+  }
+
+  function handleBackFromPersonalArea() {
+    setScreen(SCREEN.SHELL);
+  }
+
   const body = (() => {
     if (screen === SCREEN.SPLASH) {
       return <SplashScreen onDone={handleSplashDone} />;
@@ -110,7 +120,18 @@ export default function App() {
         />
       );
     }
-    return <ShellScreen playerId={player} onLogout={handleLogout} />;
+    if (screen === SCREEN.PERSONAL_AREA) {
+      return (
+        <PersonalAreaScreen
+          playerId={player}
+          token={getToken()}
+          campaignId={config?.id}
+          config={config}
+          onBack={handleBackFromPersonalArea}
+        />
+      );
+    }
+    return <HomeScreen playerId={player} onLogout={handleLogout} onPersonalArea={handlePersonalArea} />;
   })();
 
   return <ConfigProvider config={config}>{body}</ConfigProvider>;
