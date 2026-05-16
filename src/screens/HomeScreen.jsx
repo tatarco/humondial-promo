@@ -49,15 +49,16 @@ function HeroCard({ totalPoints, config, onPersonalArea }) {
 
   return (
     <div
-      className="hm-card p-5 mb-3 mx-3"
+      className="hm-card mb-3 mx-3 overflow-hidden"
       style={{ border: '1px solid rgba(244,193,93,0.4)', boxShadow: '0 0 40px rgba(244,193,93,0.12), 0 0 80px rgba(214,58,54,0.15)' }}
     >
-      <div className="text-center mb-4">
-        <div className="text-3xl mb-1">🏆</div>
-        <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-sec)' }}>
-          פה לא רק רואים מונדיאל. פה משחקים אותו.
-        </div>
-      </div>
+      <img
+        src="/assets/humondial-banner.jpeg"
+        alt="HUMONDIAL 2026"
+        className="w-full object-cover"
+        style={{ maxHeight: 200, objectPosition: 'center 20%' }}
+      />
+      <div className="p-5">
       <div className="flex items-end justify-between mb-3">
         <div>
           <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>הנקודות שלי</div>
@@ -81,6 +82,7 @@ function HeroCard({ totalPoints, config, onPersonalArea }) {
           <span>{ptsToNext} נ׳ עד {nextTier.label_he}</span>
         </div>
       )}
+      </div>
     </div>
   );
 }
