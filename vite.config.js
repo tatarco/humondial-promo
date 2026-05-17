@@ -11,6 +11,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/tests/setup.js'],
+    exclude: ['**/node_modules/**', '**/.worktrees/**'],
     environmentOptions: {
       jsdom: {
         url: 'http://localhost/',
