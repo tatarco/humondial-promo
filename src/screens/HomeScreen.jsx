@@ -281,7 +281,7 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
   );
 }
 
-export default function HomeScreen({ playerId, onLogout, onPersonalArea }) {
+export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenueCode, onMyQR }) {
   const config = useConfig();
   const [matches, setMatches]         = useState([]);
   const [predictions, setPredictions] = useState({});
@@ -391,6 +391,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea }) {
           {config.delivery_url && (
             <QuickActionTile icon="🛵" label="משלוח" pts={config.delivery_points ?? 80} href={config.delivery_url} />
           )}
+          <QuickActionTile icon="📱" label="הצג QR" onClick={onMyQR} />
+          <QuickActionTile icon="📍" label="הזן קוד" onClick={onVenueCode} />
         </div>
       )}
 

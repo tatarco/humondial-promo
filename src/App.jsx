@@ -9,6 +9,8 @@ import OtpScreen    from './screens/OtpScreen.jsx';
 import LegalScreen  from './screens/LegalScreen.jsx';
 import HomeScreen from './screens/HomeScreen.jsx';
 import PersonalAreaScreen from './screens/PersonalAreaScreen.jsx';
+import VenueCodeScreen from './screens/VenueCodeScreen.jsx';
+import MyQRScreen from './screens/MyQRScreen.jsx';
 
 const SCREEN = {
   SPLASH:  'splash',
@@ -18,6 +20,8 @@ const SCREEN = {
   LEGAL:   'legal',
   SHELL:         'shell',
   PERSONAL_AREA: 'personal_area',
+  VENUE_CODE:    'venue_code',
+  MY_QR:         'my_qr',
 };
 
 async function fetchSession() {
@@ -33,13 +37,20 @@ async function fetchSession() {
 }
 
 export default function App() {
-  const [screen, setScreen]     = useState(SCREEN.SPLASH);
-  const [phone,  setPhone]      = useState('');
-  const [token,  setTokenState] = useState('');
-  const [player, setPlayer]     = useState(null);
-  const [config, setConfig]     = useState(null);
+  const [screen, setScreen]           = useState(SCREEN.SPLASH);
+  const [phone,  setPhone]            = useState('');
+  const [token,  setTokenState]       = useState('');
+  const [player, setPlayer]           = useState(null);
+  const [config, setConfig]           = useState(null);
+  const [pendingVenueCode, setPendingVenueCode] = useState('');
+  const [pendingCid, setPendingCid]   = useState('');
 
   async function handleSplashDone() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const vc = urlParams.get('venue_code');
+    const cid = urlParams.get('cid');
+    if (vc) { setPendingVenueCode(vc); setPendingCid(cid || ''); }
+    history.replaceState(null, '', window.location.pathname);
     setScreen(SCREEN.LOADING);
     const [sessionResult, cfg] = await Promise.all([
       fetchSession().catch(() => ({ nextScreen: SCREEN.PHONE, playerId: null })),
@@ -52,7 +63,11 @@ export default function App() {
     } else if (sessionResult.nextScreen === SCREEN.SHELL) {
       setPlayer(sessionResult.playerId);
     }
-    setScreen(sessionResult.nextScreen);
+    if (vc && sessionResult.nextScreen === SCREEN.SHELL) {
+      setScreen(SCREEN.VENUE_CODE);
+    } else {
+      setScreen(sessionResult.nextScreen);
+    }
   }
 
   function handlePhoneSuccess(normalizedPhone) {
@@ -131,7 +146,32 @@ export default function App() {
         />
       );
     }
-    return <HomeScreen playerId={player} onLogout={handleLogout} onPersonalArea={handlePersonalArea} />;
+    if (screen === SCREEN.VENUE_CODE) {
+      return (
+        <VenueCodeScreen
+          token={getToken()}
+          campaignId={config?.id || pendingCid}
+          prefillCode={pendingVenueCode}
+          onBack={() => { setPendingVenueCode(''); setScreen(SCREEN.SHELL); }}
+        />
+      );
+    }
+    if (screen === SCREEN.MY_QR) {
+      return (
+        <MyQRScreen
+          token={getToken()}
+          campaignId={config?.id}
+          onBack={() => setScreen(SCREEN.SHELL)}
+        />
+      );
+    }
+    return <HomeScreen
+      playerId={player}
+      onLogout={handleLogout}
+      onPersonalArea={handlePersonalArea}
+      onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
+      onMyQR={() => setScreen(SCREEN.MY_QR)}
+    />;
   })();
 
   return <ConfigProvider config={config}>{body}</ConfigProvider>;
