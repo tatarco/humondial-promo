@@ -136,13 +136,27 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
   const [delivCount, setDelivCount]   = useState(2);
   const [lastSlider, setLastSlider]   = useState(null);
   const [showBenefits, setShowBenefits] = useState(false);
+  const [tierPerks, setTierPerks]     = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const result = await callFn('getLeaderboard', { token, campaign_id: campaignId });
+      const [result, campaignConfig] = await Promise.all([
+        callFn('getLeaderboard', { token, campaign_id: campaignId }),
+        callFn('getCampaignConfig', { campaign_id: campaignId }).catch(() => null),
+      ]);
       setData(result);
+      if (campaignConfig) {
+        const myPoints = result?.me?.total_points ?? 0;
+        const myTierId = result?.me?.tier?.id || result?.me?.tier;
+        const allTiers = campaignConfig.tiers ?? [];
+        const sorted = [...allTiers].sort((a, b) => b.min_points - a.min_points);
+        const activeTier = sorted.find(t => t.id === myTierId) ||
+          sorted.find(t => myPoints >= t.min_points) ||
+          sorted[sorted.length - 1];
+        setTierPerks(activeTier?.perks ?? []);
+      }
     } catch (e) {
       setError(e.message || 'שגיאה בטעינה');
     } finally {
@@ -250,6 +264,24 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
             )}
           </div>
         </div>
+
+        {tierPerks.length > 0 && (
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>ההטבות שלי 🎁</div>
+            <div className="flex flex-wrap gap-2 justify-end">
+              {tierPerks.map(perk => (
+                <div
+                  key={perk.id}
+                  className="hm-card flex items-center gap-2 px-3 py-2 rounded-xl border"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <span className="text-lg">{perk.emoji}</span>
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>{perk.label_he}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div>
           <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>הצפי שלי</div>
