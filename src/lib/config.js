@@ -4,7 +4,7 @@ let _config = null;
 
 export async function loadConfig() {
   if (_config) return _config;
-  _config = await callFn('getCampaignConfig', {});
+  _config = await callFn('getPlayerCampaignConfig', {});
   return _config;
 }
 
