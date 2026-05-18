@@ -144,7 +144,7 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
     try {
       const [result, campaignConfig] = await Promise.all([
         callFn('getLeaderboard', { token, campaign_id: campaignId }),
-        callFn('getCampaignConfig', { campaign_id: campaignId }).catch(() => null),
+        callFn('getPlayerCampaignConfig', { campaign_id: campaignId }).catch(() => null),
       ]);
       setData(result);
       if (campaignConfig) {
