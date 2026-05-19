@@ -130,7 +130,7 @@ function QuickActionTile({ icon, label, pts, onClick, href }) {
     : inner;
 }
 
-function PredictionEditor({ match, prediction, config, onPredict }) {
+function PredictionEditor({ match, prediction, config, onPredict, onSaved }) {
   const initOutcome = () => {
     if (!prediction) return null;
     if (prediction.home_score > prediction.away_score) return 'home';
@@ -141,7 +141,6 @@ function PredictionEditor({ match, prediction, config, onPredict }) {
   const [homeScore, setHomeScore] = useState(prediction?.home_score ?? 0);
   const [awayScore, setAwayScore] = useState(prediction?.away_score ?? 0);
   const [submitting, setSubmitting] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
@@ -164,8 +163,7 @@ function PredictionEditor({ match, prediction, config, onPredict }) {
     setErr('');
     try {
       await onPredict(match.id, homeScore, awayScore);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      onSaved?.();
     } catch (e) {
       if (e?.data?.error === 'prediction_locked') setErr('המשחק כבר התחיל');
       else setErr(e.message || 'שגיאה');
@@ -239,7 +237,7 @@ function PredictionEditor({ match, prediction, config, onPredict }) {
         className="hm-btn-primary w-full py-4 rounded-2xl text-base font-black"
         style={{ opacity: !selected || submitting ? 0.5 : 1 }}
       >
-        {submitting ? 'שומר...' : saved ? '✓ נשמר!' : 'שמור תחזית'}
+        {submitting ? 'שומר...' : 'שמור תחזית'}
       </button>
     </div>
   );
@@ -252,6 +250,13 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
   const isLive    = match.status === 'live';
   const isFinal   = match.status === 'final';
   const hasPrediction = prediction != null;
+
+  const [editMode, setEditMode] = useState(false);
+  const prevActive = useRef(isActive);
+  useEffect(() => {
+    if (prevActive.current && !isActive) setEditMode(false);
+    prevActive.current = isActive;
+  }, [isActive]);
 
   const predOutcome = hasPrediction
     ? (prediction.home_score > prediction.away_score ? 'home'
@@ -358,17 +363,44 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
       <div style={{ display: 'grid', gridTemplateRows: isActive ? '1fr' : '0fr', transition: 'grid-template-rows 0.32s cubic-bezier(.4,0,.2,1)' }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="px-4 pb-4 space-y-3">
-            {/* Open match — prediction editor */}
-            {isOpen && (
+            {/* Open match — prediction editor (no prediction yet, or user clicked "שנה בחירה") */}
+            {isOpen && (!hasPrediction || editMode) && (
               <PredictionEditor
                 match={match}
                 prediction={prediction}
                 config={config}
                 onPredict={onPredict}
+                onSaved={() => setEditMode(false)}
               />
             )}
 
-            {/* Locked / live with existing prediction */}
+            {/* Open match — saved/locked summary with option to re-edit */}
+            {isOpen && hasPrediction && !editMode && (
+              <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="text-xs underline"
+                    style={{ color: 'var(--text-sec)' }}
+                  >
+                    שנה בחירה
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
+                    <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
+                      {predLabel}
+                    </span>
+                  </div>
+                </div>
+                {prediction.home_score != null && (
+                  <div className="text-center text-xs mt-2" style={{ color: 'var(--text-sec)' }}>
+                    תוצאה מדויקת: {prediction.home_score} : {prediction.away_score}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Locked / live / final with existing prediction */}
             {!isOpen && hasPrediction && (
               <div className="text-center py-2">
                 <div className="text-xs mb-1" style={{ color: 'var(--text-sec)' }}>הניחוש שלך</div>
@@ -391,8 +423,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
               <p className="text-center text-xs py-2" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
             )}
 
-            {/* Booking CTA — shown for open matches */}
-            {isOpen && config?.booking_url && (
+            {/* Booking CTA — open matches and locked-status future matches */}
+            {(isOpen || match.status === 'locked') && config?.booking_url && (
               <a
                 href={config.booking_url}
                 target="_blank"
