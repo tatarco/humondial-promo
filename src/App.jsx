@@ -11,6 +11,7 @@ import HomeScreen from './screens/HomeScreen.jsx';
 import PersonalAreaScreen from './screens/PersonalAreaScreen.jsx';
 import VenueCodeScreen from './screens/VenueCodeScreen.jsx';
 import MyQRScreen from './screens/MyQRScreen.jsx';
+import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 
 const SCREEN = {
   SPLASH:  'splash',
@@ -22,6 +23,7 @@ const SCREEN = {
   PERSONAL_AREA: 'personal_area',
   VENUE_CODE:    'venue_code',
   MY_QR:         'my_qr',
+  LEADERBOARD:   'leaderboard',
 };
 
 async function fetchSession() {
@@ -176,6 +178,16 @@ export default function App() {
         />
       );
     }
+    if (screen === SCREEN.LEADERBOARD) {
+      return (
+        <LeaderboardScreen
+          token={getToken()}
+          campaignId={config?.id}
+          config={config}
+          onBack={() => setScreen(SCREEN.SHELL)}
+        />
+      );
+    }
     return <HomeScreen
       playerId={player}
       onLogout={handleLogout}
@@ -183,6 +195,7 @@ export default function App() {
       onPersonalAreaTier={handlePersonalAreaTier}
       onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
+      onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
     />;
   })();
 

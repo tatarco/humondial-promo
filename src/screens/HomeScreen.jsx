@@ -649,7 +649,46 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
   );
 }
 
-export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR }) {
+function FloatingDock({ config, onScrollToGames }) {
+  const effectiveCfg = config ? {
+    ...config,
+    booking_url: config.booking_url || 'https://humongous.co.il/book',
+    delivery_url: config.delivery_url || 'https://humongous.co.il/delivery',
+  } : config;
+  const items = [
+    { icon: '⚽', label: 'ניחוש', pts: config?.outcome_points ?? 30, onClick: onScrollToGames },
+    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 20, href: effectiveCfg?.booking_url },
+    { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 80, href: effectiveCfg?.delivery_url },
+  ];
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-40"
+      style={{
+        background: 'rgba(16,5,5,0.9)',
+        backdropFilter: 'blur(14px)',
+        borderTop: '1px solid rgba(255,255,255,0.09)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      <div className="flex items-stretch justify-around px-2 py-2 max-w-lg mx-auto" dir="rtl">
+        {items.map(item => {
+          const inner = (
+            <div className="flex flex-col items-center gap-0.5 py-1 cursor-pointer" onClick={item.onClick}>
+              <span className="text-2xl leading-none">{item.icon}</span>
+              <span className="text-[10px] font-bold" style={{ color: 'var(--text)' }}>{item.label}</span>
+              <span className="text-[10px] font-bold" style={{ color: 'var(--gold)' }}>+{item.pts} נ׳</span>
+            </div>
+          );
+          return item.href
+            ? <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center">{inner}</a>
+            : <div key={item.label} className="flex-1 flex justify-center">{inner}</div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onLeaderboard }) {
   const config = useConfig();
   const effectiveConfig = config ? {
     ...config,
@@ -751,7 +790,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
       <div
         ref={scrollContainerRef}
-        className="h-dvh overflow-y-auto"
+        className="h-dvh overflow-y-auto pb-20"
         onScroll={handleScroll}
       >
         <div style={{ background: 'var(--hm-bg, #100505)' }}>
@@ -776,32 +815,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
           <div className="grid grid-cols-3 gap-2 px-3 mb-1">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
-            <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={() => onVenueCode('arrival')} scrolled={false} />
+            <QuickActionTile icon="🏆" label="דירוג" onClick={onLeaderboard} scrolled={false} />
             <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={false} />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 px-3 mb-2">
-            <QuickActionTile
-              icon="⚽"
-              label="ניחוש"
-              sub={`+${config?.outcome_points ?? 30} נ׳`}
-              scrolled={false}
-              onClick={scrollToGames}
-            />
-            <QuickActionTile
-              icon="🍽️"
-              label="הזמן שולחן"
-              sub={`+${config?.table_booking_points ?? 20} נ׳`}
-              href={effectiveConfig?.booking_url}
-              scrolled={false}
-            />
-            <QuickActionTile
-              icon="🛵"
-              label="משלוח"
-              sub={`+${config?.delivery_points ?? 80} נ׳`}
-              href={effectiveConfig?.delivery_url}
-              scrolled={false}
-            />
           </div>
 
           <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
@@ -830,6 +845,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
       </div>
 
     </div>
+    <FloatingDock config={config} onScrollToGames={scrollToGames} />
     {scrolled && (
       <div className="fixed top-0 left-0 right-0 z-50" dir="rtl" style={{ background: 'var(--hm-bg, #100505)' }}>
         <HeroCard
@@ -841,13 +857,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         />
         <div className="grid grid-cols-3 gap-2 px-3 mb-1">
           <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
-          <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={() => onVenueCode('arrival')} scrolled={true} />
+          <QuickActionTile icon="🏆" label="דירוג" onClick={onLeaderboard} scrolled={true} />
           <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={true} />
-        </div>
-        <div className="grid grid-cols-3 gap-2 px-3 mb-2">
-          <QuickActionTile icon="⚽" label="ניחוש" sub={`+${config?.outcome_points ?? 30} נ׳`} scrolled={true} onClick={scrollToGames} />
-          <QuickActionTile icon="🍽️" label="הזמן שולחן" sub={`+${config?.table_booking_points ?? 20} נ׳`} href={effectiveConfig?.booking_url} scrolled={true} />
-          <QuickActionTile icon="🛵" label="משלוח" sub={`+${config?.delivery_points ?? 80} נ׳`} href={effectiveConfig?.delivery_url} scrolled={true} />
         </div>
         <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
       </div>
