@@ -17,6 +17,6 @@ export default defineConfig({
         url: 'http://localhost/',
       },
     },
-    pool: 'vmThreads',
+    pool: 'forks',
   },
 });
