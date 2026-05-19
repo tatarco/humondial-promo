@@ -691,9 +691,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   );
   const visibleMatches = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
 
-  function handleScroll(e) {
-    const heroHeight = heroRef.current ? heroRef.current.offsetHeight : 250;
-    setScrolled(e.currentTarget.scrollTop > heroHeight);
+  function handleScroll() {
+    if (!heroRef.current) return;
+    setScrolled(heroRef.current.getBoundingClientRect().bottom <= 0);
   }
 
   function scrollToGames() {
