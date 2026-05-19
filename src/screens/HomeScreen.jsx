@@ -343,10 +343,14 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, predictionWindowDays, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
-  const isOpen    = match.status === 'open' && !isPending;
+  const windowDays = predictionWindowDays ?? config?.prediction_window_days ?? 3;
+  const isFutureLocked = match.kickoff_utc && match.status === 'open' && !isPending &&
+    (new Date(match.kickoff_utc) - Date.now()) > windowDays * 24 * 3600 * 1000;
+  const isOpen    = match.status === 'open' && !isPending && !isFutureLocked;
+  const isLocked  = match.status === 'locked' || isFutureLocked;
   const isLive    = match.status === 'live';
   const isFinal   = match.status === 'final';
   const hasPrediction = prediction != null;
@@ -394,8 +398,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}><span>●</span> פתוח</span>
     : isLive
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>⚽ חי</span>
-    : match.status === 'locked'
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 נעול</span>
+    : isLocked
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 בקרוב</span>
     : isFinal
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(157,133,133,0.15)', color: 'var(--text-sec)', border: '1px solid rgba(157,133,133,0.3)' }}>✓ סיום</span>
     : !isPending
@@ -579,22 +583,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               <p className="text-center text-xs py-2" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
             )}
 
-            {((isOpen && (!hasPrediction || editMode)) || (match.status === 'locked')) && config?.booking_url && (
-              <a
-                href={config.booking_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => onBooking(match.id)}
-                className="flex items-center justify-between px-4 py-3 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
-              >
-                <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
-                <div className="text-right">
-                  <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ הזמן מקום</div>
-                  <div className="text-xs" style={{ color: 'var(--green)' }}>רואים יחד? +{config?.table_booking_points ?? 20} נ׳</div>
-                </div>
-              </a>
-            )}
           </div>
         </div>
       </div>
@@ -834,6 +822,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               match={{ ...match, stage: stageHe(match.stage) }}
               prediction={predictions[match.id] || null}
               config={effectiveConfig}
+              predictionWindowDays={effectiveConfig?.prediction_window_days ?? 3}
               onPredict={handlePredict}
               onBooking={handleBooking}
               onVenueCode={onVenueCode}
