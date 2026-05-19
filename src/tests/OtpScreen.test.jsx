@@ -33,7 +33,7 @@ describe('OtpScreen', () => {
     render(<OtpScreen phone={phone} onSuccess={onSuccess} onBack={onBack} />);
     await user.type(screen.getByPlaceholderText('------'), '123456');
     await user.click(screen.getByRole('button', { name: /אימות|verify/i }));
-    await waitFor(() => expect(callFn).toHaveBeenCalledWith('promoVerifyOtp', { phone, code: '123456' }));
+    await waitFor(() => expect(callFn).toHaveBeenCalledWith('promoVerifyOtp', { phone, code: '123456', acceptTerms: false }));
     await waitFor(() => expect(setToken).toHaveBeenCalledWith('tok-abc'));
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('pid-1', 'tok-abc'));
   });
