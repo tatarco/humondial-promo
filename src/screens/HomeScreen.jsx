@@ -343,11 +343,11 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, windowLocked, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
-  const isOpen    = match.status === 'open' && !isPending;
-  const isLocked  = match.status === 'locked';
+  const isOpen    = match.status === 'open' && !isPending && !windowLocked;
+  const isLocked  = match.status === 'locked' || windowLocked;
   const isLive    = match.status === 'live';
   const isFinal   = match.status === 'final';
   const hasPrediction = prediction != null;
@@ -731,14 +731,17 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   );
   const windowGames = effectiveConfig?.prediction_window_games ?? 5;
   const allFiltered = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
-  const visibleMatches = (() => {
+  const lockedMatchIds = (() => {
     let openCount = 0;
-    return allFiltered.filter(m => {
-      if (m.status !== 'open') return true;
+    const ids = new Set();
+    allFiltered.forEach(m => {
+      if (m.status !== 'open') return;
       openCount++;
-      return openCount <= windowGames;
+      if (openCount > windowGames) ids.add(m.id);
     });
+    return ids;
   })();
+  const visibleMatches = allFiltered;
 
   function handleScroll() {
     if (!heroRef.current) return;
@@ -827,6 +830,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               match={{ ...match, stage: stageHe(match.stage) }}
               prediction={predictions[match.id] || null}
               config={effectiveConfig}
+              windowLocked={lockedMatchIds.has(match.id)}
               onPredict={handlePredict}
               onBooking={handleBooking}
               onVenueCode={onVenueCode}
