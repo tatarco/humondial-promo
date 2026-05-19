@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
 
 const TIER_CSS = {
@@ -12,32 +12,47 @@ function tierCss(key) {
   return TIER_CSS[key] || 'tier-bronze';
 }
 
-function PodiumDisplay({ top3 }) {
-  const MEDAL = {
-    1: { size: 'w-16 h-16 text-3xl', standH: 'h-16', standBg: 'rgba(244,193,93,0.25)' },
-    2: { size: 'w-12 h-12 text-2xl', standH: 'h-11', standBg: 'rgba(255,255,255,0.06)' },
-    3: { size: 'w-12 h-12 text-2xl', standH: 'h-8',  standBg: 'rgba(255,255,255,0.06)' },
-  };
+const BADGES = [
+  { id: 'silver',    emoji: '🥈', label: 'Silver Member',    check: (t, c) => ['silver','gold','legend'].includes(t) },
+  { id: 'gold',      emoji: '🥇', label: 'חבר זהב',           check: (t, c) => ['gold','legend'].includes(t) },
+  { id: 'legend',    emoji: '🏆', label: 'Legend',           check: (t, c) => t === 'legend' },
+  { id: 'delivery1', emoji: '🛵', label: 'הזמנה ראשונה',    check: (t, c) => (c.delivery ?? 0) >= 1 },
+  { id: 'table1',    emoji: '🍽️',label: 'מסעדה ראשונה',    check: (t, c) => (c.table_booking ?? 0) >= 1 },
+  { id: 'visit1',    emoji: '🏟️', label: 'ביקור ראשון',     check: (t, c) => (c.venue_visit ?? 0) >= 1 },
+  { id: 'pred5',     emoji: '⚽', label: '5 ניחושים',       check: (t, c) => (c.prediction_participation ?? 0) >= 5 },
+  { id: 'pred10',    emoji: '🔥', label: '10 ניחושים',      check: (t, c) => (c.prediction_participation ?? 0) >= 10 },
+  { id: 'achieve1',  emoji: '🏅', label: 'הישג',            check: (t, c) => (c.achievement ?? 0) >= 1 },
+];
+
+function MiniPodium({ top3 }) {
   const ORDER = [2, 1, 3];
+  const META = {
+    1: { cls: 'w-10 h-10 text-base', standH: 54, standBg: 'rgba(244,193,93,0.18)', crown: true },
+    2: { cls: 'w-8 h-8 text-sm',     standH: 40, standBg: 'rgba(255,255,255,0.07)', crown: false },
+    3: { cls: 'w-8 h-8 text-sm',     standH: 30, standBg: 'rgba(255,255,255,0.05)', crown: false },
+  };
   return (
-    <div className="flex items-end justify-center gap-3 py-4">
+    <div className="flex items-end justify-center gap-3 py-3">
       {ORDER.map(rank => {
         const p = top3.find(r => r.rank === rank);
-        if (!p) return <div key={rank} className="w-20" />;
-        const m = MEDAL[rank];
+        if (!p) return <div key={rank} className="w-14" />;
+        const m = META[rank];
         return (
           <div key={rank} className="flex flex-col items-center gap-1">
-            {rank === 1 && <div className="text-xl">👑</div>}
-            <div className={`${m.size} rounded-full hm-card flex items-center justify-center text-2xl`}>
-              {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
+            {m.crown && <div className="text-sm">👑</div>}
+            <div
+              className={`${m.cls} rounded-full flex items-center justify-center font-black`}
+              style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text)' }}
+            >
+              {(p.nickname || '?')[0].toUpperCase()}
             </div>
-            <div className="text-xs font-bold text-center max-w-[72px] truncate" style={{ color: 'var(--text)' }}>
+            <div className="text-[9px] font-bold text-center max-w-[56px] truncate" style={{ color: 'var(--text)' }}>
               {p.nickname}
             </div>
-            <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>{p.total_points} נ׳</div>
+            <div className="text-[8px]" style={{ color: 'var(--text-sec)' }}>{p.total_points} נ׳</div>
             <div
-              className={`${m.standH} w-16 rounded-t-md flex items-center justify-center text-lg font-black`}
-              style={{ background: m.standBg, color: 'rgba(255,255,255,0.4)' }}
+              className="w-12 rounded-t-md flex items-center justify-center text-xs font-black"
+              style={{ height: m.standH, background: m.standBg, color: 'rgba(255,255,255,0.3)' }}
             >
               {rank}
             </div>
@@ -48,70 +63,17 @@ function PodiumDisplay({ top3 }) {
   );
 }
 
-function LbRow({ entry }) {
-  return (
-    <div className="flex items-center gap-3 px-1 py-2 border-b last:border-0" style={{ borderColor: 'var(--border)' }}>
-      <div className="text-xs w-6 text-center" style={{ color: 'var(--text-sec)' }}>{entry.rank}</div>
-      <div className="flex-1 text-sm font-semibold" style={{ color: 'var(--text)' }}>{entry.nickname}</div>
-      <div className="text-sm font-bold" style={{ color: 'var(--gold)' }}>{entry.total_points}</div>
-    </div>
-  );
-}
-
-function WhatIfCard({ icon, label, value, onChange, pts }) {
-  return (
-    <div className="rounded-2xl p-4 mb-2 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'var(--border)' }}>
-      <div className="text-sm font-bold mb-3 text-right" style={{ color: 'var(--text)' }}>
-        {icon} {label} <span style={{ color: 'var(--red)' }}>{value}</span> פעמים
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="text-xl font-black tabular-nums" style={{ color: 'var(--gold)', minWidth: 60 }}>
-          {pts} נ׳
-        </div>
-        <input
-          type="range" min="0" max={10} value={value}
-          onChange={e => onChange(Number(e.target.value))}
-          className="flex-1 h-1 rounded appearance-none cursor-pointer"
-          style={{
-            accentColor: 'var(--red)',
-            background: `linear-gradient(to left, var(--red) ${value / 10 * 100}%, rgba(255,255,255,0.1) ${value / 10 * 100}%)`,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-export default function PersonalAreaScreen({ token, campaignId, config, onBack, scrollToTier }) {
-  const [data, setData]               = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
-  const [predCount, setPredCount]     = useState(4);
-  const [tableCount, setTableCount]   = useState(3);
-  const [delivCount, setDelivCount]   = useState(2);
-  const [lastSlider, setLastSlider]   = useState(null);
-  const [tierPerks, setTierPerks]     = useState([]);
-  const tierRef = useRef(null);
+export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const [result, campaignConfig] = await Promise.all([
-        callFn('getLeaderboard', { token, campaign_id: campaignId }),
-        callFn('getPlayerCampaignConfig', { campaign_id: campaignId }).catch(() => null),
-      ]);
+      const result = await callFn('getLeaderboard', { token, campaign_id: campaignId });
       setData(result);
-      if (campaignConfig) {
-        const myPoints = result?.me?.total_points ?? 0;
-        const myTierId = result?.me?.tier?.id || result?.me?.tier;
-        const allTiers = campaignConfig.tiers ?? [];
-        const sorted = [...allTiers].sort((a, b) => b.min_points - a.min_points);
-        const activeTier = sorted.find(t => t.id === myTierId) ||
-          sorted.find(t => myPoints >= t.min_points) ||
-          sorted[sorted.length - 1];
-        setTierPerks(activeTier?.perks ?? []);
-      }
     } catch (e) {
       setError(e.message || 'שגיאה בטעינה');
     } finally {
@@ -121,13 +83,6 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    if (scrollToTier && tierRef.current) {
-      const t = setTimeout(() => tierRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
-      return () => clearTimeout(t);
-    }
-  }, [scrollToTier]);
-
   if (loading) {
     return (
       <div className="min-h-dvh stadium-bg flex items-center justify-center">
@@ -135,7 +90,6 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="min-h-dvh stadium-bg flex flex-col items-center justify-center gap-4 p-6">
@@ -145,211 +99,143 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
     );
   }
 
-  const { top10 = [], me = {}, trajectory = {}, whatif = {}, tiers: dataTiers = [] } = data || {};
-  const tiers = dataTiers.length ? dataTiers : (config?.tiers ?? []);
-  const top3   = top10.filter(r => r.rank <= 3);
-  const rest   = top10.filter(r => r.rank > 3);
-  const myPts  = me.total_points ?? 0;
-  const myTier = me.tier || null;
+  const { top50 = [], me = {}, trajectory = {}, tiers: dataTiers = [] } = data || {};
+  const top3    = top50.filter(r => r.rank <= 3);
+  const myPts   = me.total_points ?? 0;
+  const myTier  = me.tier || null;
+  const tierKey = myTier?.key || myTier?.id || '';
+  const counts  = me.ledger_counts ?? {};
 
   const nextTier = (() => {
-    const sorted = [...tiers].sort((a, b) => a.min_points - b.min_points);
+    const sorted = [...dataTiers].sort((a, b) => a.min_points - b.min_points);
     return sorted.find(t => t.min_points > myPts) || null;
   })();
-  const ptsToNext = nextTier ? nextTier.min_points - myPts : 0;
-
-  const predDelta  = config?.outcome_points ?? 30;
-  const tableDelta = config?.table_booking_points ?? 20;
-  const delivDelta = config?.delivery_points ?? 80;
-
-  function handleSlider(which, setter, value) {
-    setter(value);
-    setLastSlider(which);
-  }
-
-  const ctaPrimary = lastSlider === 'deliv' ? 'deliv' : lastSlider === 'table' ? 'table' : 'predict';
+  const progPct = nextTier ? Math.min(100, Math.round((myPts / nextTier.min_points) * 100)) : 100;
+  const badges  = BADGES.map(b => ({ ...b, unlocked: b.check(tierKey, counts) }));
 
   return (
-    <div className="min-h-dvh stadium-bg" dir="rtl">
+    <div className="min-h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
       <header className="flex items-center justify-between px-4 py-3">
-        <div className="text-base font-black" style={{ color: 'var(--text)' }}>האיזור האישי</div>
         <button
           onClick={onBack}
           className="text-xs px-3 py-1.5 rounded-full border"
           style={{ color: 'var(--text-sec)', borderColor: 'var(--border)' }}
-        >
-          ← חזרה
-        </button>
+        >← חזרה</button>
+        <div className="flex flex-col items-center leading-none">
+          <span className="font-black" style={{ fontSize: 18, color: '#fff', textShadow: '0 0 16px rgba(214,58,54,0.4)', letterSpacing: 3 }}>
+            HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
+          </span>
+          <span dir="ltr" className="font-black" style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: 3, marginTop: 1 }}>
+            2 0 2 6
+          </span>
+        </div>
+        <div style={{ width: 64 }} />
       </header>
 
-      <div className="px-4 pb-8 space-y-4 overflow-y-auto">
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>מובילים</div>
-          <div className="hm-card p-4">
-            <PodiumDisplay top3={top3} />
-            <div className="border-t mt-2 pt-2" style={{ borderColor: 'var(--border)' }}>
-              {rest.map(r => <LbRow key={r.player_id} entry={r} />)}
+      <div className="px-4 space-y-3">
+        {/* Block 1 — My Stats */}
+        <div className="hm-card p-4" style={{ borderColor: 'var(--red)', borderWidth: 2 }}>
+          <div className="flex items-center gap-3">
+            <div className="text-4xl font-black" style={{ color: 'var(--red)' }}>
+              {me.rank ? `#${me.rank}` : '—'}
             </div>
+            <div>
+              <div className="text-base font-black" style={{ color: 'var(--text)' }}>{myPts} נקודות</div>
+              {myTier && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
+                  {myTier.label_he}
+                </span>
+              )}
+            </div>
+          </div>
+          {nextTier && (
+            <div className="mt-3">
+              <div className="hm-progress-bg h-1.5">
+                <div className="hm-progress-fill h-1.5" style={{ width: `${progPct}%` }} />
+              </div>
+              <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
+                {nextTier.min_points - myPts} נקודות עד {nextTier.label_he}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Block 2 — Trajectory */}
+        <div
+          className="flex items-center justify-between px-4 py-3 rounded-xl"
+          style={{ background: 'rgba(244,193,93,0.06)', border: '1px solid rgba(244,193,93,0.18)' }}
+        >
+          <div className="text-xs" style={{ color: 'var(--text-sec)' }}>
+            צפי סיום<br />
+            <span className="text-[10px]">{trajectory.end_date || '19.7.26'} בקצב הנוכחי</span>
+          </div>
+          <div className="text-2xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>
+            ~{trajectory.projected_points ?? myPts} נ׳
           </div>
         </div>
 
+        {/* Block 3 — הישגים */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>המיקום שלי</div>
-          <div className="hm-card p-4" style={{ borderColor: 'var(--red)' }}>
-            <div className="flex items-center gap-3">
-              <div className="text-4xl font-black" style={{ color: 'var(--red)' }}>
-                {me.rank ? `#${me.rank}` : '—'}
-              </div>
-              <div className="flex-1">
-                <div className="text-base font-black" style={{ color: 'var(--text)' }}>{myPts} נקודות</div>
-                {myTier && (
-                  <button
-                    onClick={() => tierRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    className={`mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(myTier.key || myTier.id)}`}
-                  >
-                    {myTier.label_he} ↗
-                  </button>
-                )}
-              </div>
-            </div>
-            {nextTier && (
-              <div className="mt-3">
-                <div className="hm-progress-bg h-1.5 mt-2">
-                  <div
-                    className="hm-progress-fill h-1.5"
-                    style={{ width: `${Math.min(100, Math.round((myPts / nextTier.min_points) * 100))}%` }}
-                  />
-                </div>
-                <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
-                  {ptsToNext} נקודות עד {nextTier.label_he}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {tierPerks.length > 0 && (
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>ההטבות שלי 🎁</div>
-            <div className="flex flex-wrap gap-2 justify-end">
-              {tierPerks.map(perk => (
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>הישגים 🏅</div>
+          <div className="hm-card p-3">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {badges.map(b => (
                 <div
-                  key={perk.id}
-                  className="hm-card flex items-center gap-2 px-3 py-2 rounded-xl border"
-                  style={{ borderColor: 'var(--border)' }}
+                  key={b.id}
+                  className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
+                  style={{
+                    background: b.unlocked ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                    opacity: b.unlocked ? 1 : 0.38,
+                    minWidth: 60,
+                  }}
                 >
-                  <span className="text-lg">{perk.emoji}</span>
-                  <span className="text-sm" style={{ color: 'var(--text)' }}>{perk.label_he}</span>
+                  <span className="text-xl leading-none">{b.emoji}</span>
+                  <span
+                    className="text-[8px] font-bold text-center leading-tight"
+                    style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}
+                  >
+                    {b.label}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-        )}
+        </div>
 
+        {/* Block 4 — Mini podium */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>הצפי שלי</div>
-          <div className="hm-card p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs" style={{ color: 'var(--text-sec)' }}>
-                  צפי סיום ({trajectory.end_date || '19.7.26'})
-                </div>
-                <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-sec)' }}>בקצב הנוכחי</div>
-              </div>
-              <div className="text-3xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>
-                ~{trajectory.projected_points ?? myPts} נ׳
-              </div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>3 המובילים</div>
+          <div className="hm-card">
+            <MiniPodium top3={top3} />
+          </div>
+        </div>
+
+        {/* Block 5 — Navigation */}
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>ניווט</div>
+          <button
+            onClick={onLeaderboard}
+            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl mb-2 font-bold text-sm text-white"
+            style={{ background: 'var(--red)' }}
+          >
+            <div>
+              <div className="text-[9px] mb-0.5" style={{ opacity: 0.7 }}>כל 50 השחקנים</div>
+              🏆 לוח האלופים
             </div>
-          </div>
-        </div>
-
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2 text-right" style={{ color: 'var(--text-sec)' }}>מה אם...</div>
-          <WhatIfCard
-            icon="⚽" label="אנחש נכון עוד"
-            value={predCount} onChange={v => handleSlider('pred', setPredCount, v)}
-            pts={predCount * predDelta}
-          />
-          <WhatIfCard
-            icon="🍽️" label="אזמין שולחן עוד"
-            value={tableCount} onChange={v => handleSlider('table', setTableCount, v)}
-            pts={tableCount * tableDelta}
-          />
-          <WhatIfCard
-            icon="🛵" label="אזמין משלוח עוד"
-            value={delivCount} onChange={v => handleSlider('deliv', setDelivCount, v)}
-            pts={delivCount * delivDelta}
-          />
-          <button
-            onClick={onBack}
-            className="hm-btn-primary flex items-center justify-center gap-2 w-full py-3 text-sm mt-2"
-          >
-            ⚽ לניחושים ←
+            <span style={{ opacity: 0.5 }}>←</span>
           </button>
-        </div>
-
-        {tiers.length > 0 && (
-          <div ref={tierRef}>
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-2 text-right" style={{ color: 'var(--text-sec)' }}>הטבות לפי דרגה</div>
-            {[...tiers].sort((a, b) => b.min_points - a.min_points).map(tier => {
-              const isCurrent  = tier.id === myTier?.id;
-              const isAchieved = tier.min_points <= (myTier?.min_points ?? 0) && !isCurrent;
-              const tierKey    = tier.key || tier.id;
-              return (
-                <div
-                  key={tier.id}
-                  className={`rounded-2xl p-4 mb-3 ${isCurrent ? 'border-2' : 'border'}`}
-                  style={{
-                    borderColor: isCurrent ? 'var(--red)' : 'var(--border)',
-                    background:  isCurrent ? 'rgba(214,58,54,0.12)' : 'transparent',
-                    opacity:     isAchieved || isCurrent ? 1 : 0.38,
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
-                      {tier.label_he}
-                    </span>
-                    {isAchieved && <span className="text-xs font-bold" style={{ color: 'var(--green)' }}>✓ נצבר</span>}
-                    {isCurrent && <span className="text-xs font-bold" style={{ color: 'var(--red)' }}>◉ הדרגה שלך</span>}
-                  </div>
-                  <ul className="space-y-1">
-                    {(tier.benefits || []).map((b, i) => (
-                      <li key={i} className="text-xs" style={{ color: 'var(--text-sec)' }}>• {b}</li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="space-y-2">
           <button
-            onClick={onBack}
-            className={`${ctaPrimary === 'predict' ? 'hm-btn-primary' : 'hm-btn-secondary'} flex items-center justify-center gap-2 w-full py-3 text-sm`}
+            onClick={onLedger}
+            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl font-bold text-sm"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)' }}
           >
-            ⚽ לניחושים →
+            <div>
+              <div className="text-[9px] mb-0.5" style={{ opacity: 0.5 }}>מאיפה הגיעו הנקודות</div>
+              📊 הניקוד שלי
+            </div>
+            <span style={{ opacity: 0.4 }}>←</span>
           </button>
-          {config?.booking_url && (
-            <a
-              href={config.booking_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${ctaPrimary === 'table' ? 'hm-btn-primary' : 'hm-btn-secondary'} flex items-center justify-center gap-2 w-full py-3 text-sm`}
-            >
-              🍽️ הזמן שולחן ↗
-            </a>
-          )}
-          {config?.delivery_url && (
-            <a
-              href={config.delivery_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${ctaPrimary === 'deliv' ? 'hm-btn-primary' : 'hm-btn-secondary'} flex items-center justify-center gap-2 w-full py-3 text-sm`}
-            >
-              🛵 הזמן משלוח ↗
-            </a>
-          )}
         </div>
       </div>
     </div>
