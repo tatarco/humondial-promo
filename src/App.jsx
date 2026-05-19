@@ -12,6 +12,7 @@ import PersonalAreaScreen from './screens/PersonalAreaScreen.jsx';
 import VenueCodeScreen from './screens/VenueCodeScreen.jsx';
 import MyQRScreen from './screens/MyQRScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
+import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
 
 const SCREEN = {
   SPLASH:  'splash',
@@ -23,7 +24,8 @@ const SCREEN = {
   PERSONAL_AREA: 'personal_area',
   VENUE_CODE:    'venue_code',
   MY_QR:         'my_qr',
-  LEADERBOARD:   'leaderboard',
+  LEADERBOARD:      'leaderboard',
+  BRANCH_BOOKING:   'branch_booking',
 };
 
 async function fetchSession() {
@@ -188,6 +190,9 @@ export default function App() {
         />
       );
     }
+    if (screen === SCREEN.BRANCH_BOOKING) {
+      return <BranchBookingScreen onBack={() => setScreen(SCREEN.SHELL)} />;
+    }
     return <HomeScreen
       playerId={player}
       onLogout={handleLogout}
@@ -196,6 +201,7 @@ export default function App() {
       onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
       onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
+      onBranchBooking={() => setScreen(SCREEN.BRANCH_BOOKING)}
     />;
   })();
 

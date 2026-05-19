@@ -637,15 +637,14 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
   );
 }
 
-function FloatingDock({ config, onScrollToGames }) {
+function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
   const effectiveCfg = config ? {
     ...config,
-    booking_url: config.booking_url || 'https://humongous.co.il/book',
     delivery_url: config.delivery_url || 'https://humongous.co.il/delivery',
   } : config;
   const items = [
     { icon: '⚽', label: 'ניחוש', pts: config?.outcome_points ?? 30, onClick: onScrollToGames },
-    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 20, href: effectiveCfg?.booking_url },
+    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 20, onClick: onBranchBooking },
     { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 80, href: effectiveCfg?.delivery_url },
   ];
   return (
@@ -676,7 +675,7 @@ function FloatingDock({ config, onScrollToGames }) {
   );
 }
 
-export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onLeaderboard }) {
+export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onLeaderboard, onBranchBooking }) {
   const config = useConfig();
   const effectiveConfig = config ? {
     ...config,
@@ -834,7 +833,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
       </div>
 
     </div>
-    <FloatingDock config={config} onScrollToGames={scrollToGames} />
+    <FloatingDock config={config} onScrollToGames={scrollToGames} onBranchBooking={onBranchBooking} />
     {scrolled && (
       <div className="fixed top-0 left-0 right-0 z-50" dir="rtl" style={{ background: 'var(--hm-bg, #100505)' }}>
         <HeroCard
