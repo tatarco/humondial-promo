@@ -45,3 +45,4 @@ jobs:
           projectName: humondial-promo
           directory: dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: '3'
