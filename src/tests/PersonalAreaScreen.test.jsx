@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('../lib/api.js', () => ({ callFn: vi.fn() }));
@@ -89,5 +89,28 @@ describe('PersonalAreaScreen', () => {
     await waitFor(() => screen.getByText(/הניקוד שלי/));
     screen.getByText(/הניקוד שלי/).closest('button').click();
     expect(onLedger).toHaveBeenCalledOnce();
+  });
+
+  test('shows loading state initially', () => {
+    callFn.mockReturnValue(new Promise(() => {}));
+    render(<PersonalAreaScreen token="t" campaignId="c" onBack={vi.fn()} onLeaderboard={vi.fn()} onLedger={vi.fn()} />);
+    expect(screen.getByText(/טוען/i)).toBeInTheDocument();
+  });
+
+  test('shows error and retry button when callFn rejects', async () => {
+    callFn.mockRejectedValue(new Error('network'));
+    render(<PersonalAreaScreen token="t" campaignId="c" onBack={vi.fn()} onLeaderboard={vi.fn()} onLedger={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/שגיאה/i)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /נסה שוב/i })).toBeInTheDocument();
+  });
+
+  test('retries on retry button click', async () => {
+    callFn
+      .mockRejectedValueOnce(new Error('fail'))
+      .mockResolvedValueOnce(MOCK_DATA);
+    render(<PersonalAreaScreen token="t" campaignId="c" onBack={vi.fn()} onLeaderboard={vi.fn()} onLedger={vi.fn()} />);
+    await waitFor(() => screen.getByRole('button', { name: /נסה שוב/i }));
+    fireEvent.click(screen.getByRole('button', { name: /נסה שוב/i }));
+    await waitFor(() => expect(screen.getByText(/#4/)).toBeInTheDocument());
   });
 });

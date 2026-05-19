@@ -93,7 +93,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   if (error) {
     return (
       <div className="min-h-dvh stadium-bg flex flex-col items-center justify-center gap-4 p-6">
-        <div style={{ color: 'var(--text-sec)' }}>{error}</div>
+        <div style={{ color: 'var(--text-sec)' }}>שגיאה: {error}</div>
         <button onClick={load} className="hm-btn-primary px-6 py-2 text-sm">נסה שוב</button>
       </div>
     );
@@ -106,12 +106,20 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const tierKey = myTier?.key || myTier?.id || '';
   const counts  = me.ledger_counts ?? {};
 
-  const nextTier = (() => {
-    const sorted = [...dataTiers].sort((a, b) => a.min_points - b.min_points);
-    return sorted.find(t => t.min_points > myPts) || null;
-  })();
-  const progPct = nextTier ? Math.min(100, Math.round((myPts / nextTier.min_points) * 100)) : 100;
+  const currentTier = dataTiers.find(t => t.key === tierKey) || { min_points: 0 };
+  const nextTier = dataTiers.slice().sort((a, b) => a.min_points - b.min_points).find(t => t.min_points > myPts);
+  const bandMin = currentTier.min_points || 0;
+  const bandMax = nextTier?.min_points ?? bandMin;
+  const progPct = bandMax > bandMin
+    ? Math.min(100, Math.round(((myPts - bandMin) / (bandMax - bandMin)) * 100))
+    : 100;
   const badges  = BADGES.map(b => ({ ...b, unlocked: b.check(tierKey, counts) }));
+
+  const formatEndDate = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    return `${d.getDate()}.${d.getMonth() + 1}.${String(d.getFullYear()).slice(2)}`;
+  };
 
   return (
     <div className="min-h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
@@ -161,18 +169,15 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
         </div>
 
         {/* Block 2 — Trajectory */}
-        <div
-          className="flex items-center justify-between px-4 py-3 rounded-xl"
-          style={{ background: 'rgba(244,193,93,0.06)', border: '1px solid rgba(244,193,93,0.18)' }}
-        >
-          <div className="text-xs" style={{ color: 'var(--text-sec)' }}>
-            צפי סיום<br />
-            <span className="text-[10px]">{trajectory.end_date || '19.7.26'} בקצב הנוכחי</span>
+        {trajectory.end_date && (
+          <div
+            className="traj-chip flex items-center justify-between px-4 py-3 rounded-xl"
+            style={{ background: 'rgba(244,193,93,0.06)', border: '1px solid rgba(244,193,93,0.18)' }}
+          >
+            <span className="text-xs" style={{ color: 'var(--text-sec)' }}>צפי סיום / {formatEndDate(trajectory.end_date)} בקצב הנוכחי</span>
+            <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>{trajectory.projected_points} נ׳</span>
           </div>
-          <div className="text-2xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>
-            ~{trajectory.projected_points ?? myPts} נ׳
-          </div>
-        </div>
+        )}
 
         {/* Block 3 — הישגים */}
         <div>
