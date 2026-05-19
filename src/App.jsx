@@ -13,6 +13,7 @@ import VenueCodeScreen from './screens/VenueCodeScreen.jsx';
 import MyQRScreen from './screens/MyQRScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
+import LedgerScreen from './screens/LedgerScreen.jsx';
 
 const SCREEN = {
   SPLASH:  'splash',
@@ -26,6 +27,7 @@ const SCREEN = {
   MY_QR:         'my_qr',
   LEADERBOARD:      'leaderboard',
   BRANCH_BOOKING:   'branch_booking',
+  LEDGER:           'ledger',
 };
 
 async function fetchSession() {
@@ -49,7 +51,6 @@ export default function App() {
   const [config, setConfig]           = useState(null);
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [pendingCid, setPendingCid]   = useState('');
-  const [scrollToTier, setScrollToTier] = useState(false);
 
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -101,17 +102,7 @@ export default function App() {
   }
 
   function handlePersonalArea() {
-    setScrollToTier(false);
     setScreen(SCREEN.PERSONAL_AREA);
-  }
-
-  function handlePersonalAreaTier() {
-    setScrollToTier(true);
-    setScreen(SCREEN.PERSONAL_AREA);
-  }
-
-  function handleBackFromPersonalArea() {
-    setScreen(SCREEN.SHELL);
   }
 
   const body = (() => {
@@ -152,12 +143,20 @@ export default function App() {
     if (screen === SCREEN.PERSONAL_AREA) {
       return (
         <PersonalAreaScreen
-          playerId={player}
           token={getToken()}
           campaignId={config?.id}
-          config={config}
-          onBack={handleBackFromPersonalArea}
-          scrollToTier={scrollToTier}
+          onBack={() => setScreen(SCREEN.SHELL)}
+          onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
+          onLedger={() => setScreen(SCREEN.LEDGER)}
+        />
+      );
+    }
+    if (screen === SCREEN.LEDGER) {
+      return (
+        <LedgerScreen
+          token={getToken()}
+          campaignId={config?.id}
+          onBack={() => setScreen(SCREEN.PERSONAL_AREA)}
         />
       );
     }
@@ -197,7 +196,6 @@ export default function App() {
       playerId={player}
       onLogout={handleLogout}
       onPersonalArea={handlePersonalArea}
-      onPersonalAreaTier={handlePersonalAreaTier}
       onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
       onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
