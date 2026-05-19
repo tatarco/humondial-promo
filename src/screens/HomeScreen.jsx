@@ -137,18 +137,19 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scrolled }) {
-  const tier     = getTier(config, totalPoints);
-  const nextTier = getNextTier(config, totalPoints);
+function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scrolled, openMatchCount, onScrollToGames, onBranchBooking }) {
+  const tier      = getTier(config, totalPoints);
+  const nextTier  = getNextTier(config, totalPoints);
   const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
-  const pct = nextTier
-    ? Math.min(100, Math.round((totalPoints / nextTier.min_points) * 100))
-    : 100;
+  const pct       = nextTier ? Math.min(100, Math.round((totalPoints / nextTier.min_points) * 100)) : 100;
+  const tierKey   = tier?.key || tier?.id || 'bronze';
+  const tierMedal = tierKey === 'legend' ? '🏅' : tierKey === 'gold' ? '🥇' : tierKey === 'silver' ? '🥈' : '🥉';
+  const delivPts  = config?.delivery_points ?? 80;
 
   if (scrolled) {
     return (
       <div
-        className="hm-card mx-3 mb-2 flex items-center justify-between px-4 py-2 transition-all duration-300"
+        className="hm-card mx-3 mb-2 flex items-center justify-between px-4 py-2"
         style={{ border: '1px solid rgba(244,193,93,0.4)', minHeight: 44 }}
       >
         <div className="flex items-center gap-1">
@@ -156,10 +157,7 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scr
           {totalPoints != null && <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>נ׳</span>}
         </div>
         {tier && (
-          <button
-            onClick={onPersonalAreaTier}
-            className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tier.key || tier.id)}`}
-          >
+          <button onClick={onPersonalAreaTier} className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tierKey)}`}>
             {tier.label_he}
           </button>
         )}
@@ -169,40 +167,76 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scr
 
   return (
     <div
-      className="hm-card mb-3 mx-3 overflow-hidden transition-all duration-300"
-      style={{ border: '1px solid rgba(244,193,93,0.4)', boxShadow: '0 0 40px rgba(244,193,93,0.12), 0 0 80px rgba(214,58,54,0.15)' }}
+      className="hm-card mb-3 mx-3 overflow-hidden"
+      style={{ border: '1px solid rgba(244,193,93,0.45)', boxShadow: '0 0 40px rgba(244,193,93,0.14), 0 0 80px rgba(214,58,54,0.18)' }}
     >
-      <img
-        src="/assets/humondial-banner.jpeg"
-        alt="HUMONDIAL 2026"
-        className="w-full object-cover"
-        style={{ maxHeight: 200, objectPosition: 'center 20%' }}
-      />
-      <div className="p-5">
-        <div className="flex items-end justify-between mb-3">
-          <button onClick={onPersonalArea} className="text-right">
-            <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>הנקודות שלי</div>
-            <div className="text-4xl font-black tabular-nums" style={{ color: 'var(--text)' }}>{totalPoints ?? '—'}</div>
+      {/* Tagline + trophy */}
+      <div className="relative px-5 pt-5 pb-3">
+        <div className="pl-16 text-right">
+          <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>פה לא רק רואים מונדיאל.</p>
+          <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>פה משחקים אותו.</p>
+        </div>
+        <div className="absolute top-4 left-4 text-6xl leading-none select-none">🏆</div>
+      </div>
+
+      {/* Points */}
+      <div className="px-5 pb-3 text-right">
+        <div className="flex items-baseline gap-2 justify-end">
+          <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
+            {totalPoints ?? '—'}
+          </span>
+          <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
+        </div>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-sec)' }}>
+          {totalPoints ?? 0} נקודות. אתה מתחמם.
+        </p>
+      </div>
+
+      {/* Tier progress */}
+      <div className="px-5 pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xl leading-none">{tierMedal}</span>
+          <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
+            השלב שלי: {tier?.label_he || 'ברונזה'} ↗
           </button>
-          {tier && (
-            <button
-              onClick={onPersonalAreaTier}
-              className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tier.key || tier.id)}`}
-            >
-              {tier.label_he} ↗
-            </button>
+        </div>
+        <div className="relative h-3 rounded-full overflow-visible" style={{ background: 'rgba(255,255,255,0.1)' }}>
+          <div
+            className="h-full rounded-full"
+            style={{ width: pct + '%', background: 'linear-gradient(to right, var(--gold), var(--red))' }}
+          />
+          <span
+            className="absolute top-1/2 -translate-y-1/2 text-sm leading-none"
+            style={{ left: `calc(${Math.max(2, pct)}% - 10px)` }}
+          >⚽</span>
+        </div>
+        <div className="flex items-center justify-between mt-1.5">
+          <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>{pct}%</span>
+          {nextTier && (
+            <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
+              עוד {ptsToNext} נקודות ואתה עולה ל{nextTier.label_he}
+            </span>
           )}
         </div>
-        <button onClick={onPersonalArea} className="w-full text-right">
-          <div className="hm-progress-bg h-1.5 mb-1">
-            <div className="hm-progress-fill h-1.5" style={{ width: pct + '%' }} />
-          </div>
-          {nextTier && (
-            <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-sec)' }}>
-              <span>{pct}% ⚽</span>
-              <span>{ptsToNext} נ׳ עד {nextTier.label_he}</span>
-            </div>
-          )}
+      </div>
+
+      {/* Today's Snapshot */}
+      <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="text-xs font-bold mb-2 text-right" style={{ color: 'var(--gold)' }}>Today's Snapshot</p>
+        <div className="space-y-1.5 text-sm text-right" style={{ color: 'var(--text)' }}>
+          {openMatchCount > 0 && <p>⚽ {openMatchCount} משחקים פתוחים לניחוש</p>}
+          {(config?.table_booking_points ?? 0) > 0 && <p>🔥 הזמנת שולחן = +{config.table_booking_points} נקודות</p>}
+          <p>🍔 צפייה ביומנגס = {delivPts}+ נקודות</p>
+        </div>
+      </div>
+
+      {/* CTAs */}
+      <div className="px-5 pb-5 grid grid-cols-2 gap-3" dir="rtl">
+        <button onClick={onScrollToGames} className="hm-btn-primary py-3 text-sm font-black">
+          נחש עכשיו ←
+        </button>
+        <button onClick={onBranchBooking} className="hm-btn-secondary py-3 text-sm font-bold flex items-center justify-center gap-1.5">
+          📅 שמור לי שולחן
         </button>
       </div>
     </div>
@@ -741,6 +775,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     });
     return ids;
   })();
+  const openMatchCount = matches.filter(m => m.status === 'open' && !lockedMatchIds.has(m.id)).length;
   const visibleMatches = allFiltered;
 
   function handleScroll() {
@@ -790,13 +825,25 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         onScroll={handleScroll}
       >
         <div style={{ background: 'var(--hm-bg, #100505)' }}>
-          <header className="flex items-center justify-between px-4 py-3">
-            <button onClick={onPersonalArea} className="text-xl">👤</button>
-            <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--text)' }}>
-              HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
-              <span className="text-xs font-normal mr-1" style={{ color: 'var(--text-sec)' }}>2026</span>
-            </h1>
-            <button onClick={onLogout} className="text-xs" style={{ color: 'var(--text-sec)' }}>יציאה</button>
+          <header className="flex items-center justify-between px-4 pt-4 pb-3">
+            <button
+              onClick={onPersonalArea}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+            >
+              <span className="text-lg leading-none">👤</span>
+            </button>
+            <div className="flex flex-col items-center leading-none">
+              <h1 className="text-2xl font-black tracking-widest" style={{ color: 'var(--text)', textShadow: '0 0 20px rgba(214,58,54,0.5)' }}>
+                HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
+              </h1>
+              <span className="text-sm font-black tracking-widest" style={{ color: 'var(--gold)' }}>2026</span>
+            </div>
+            <button
+              onClick={onLogout}
+              className="text-xs px-3 py-1.5 rounded-full"
+              style={{ color: 'var(--text-sec)', border: '1px solid rgba(255,255,255,0.15)' }}
+            >יציאה</button>
           </header>
 
           <div ref={heroRef}>
@@ -806,6 +853,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               onPersonalArea={onPersonalArea}
               onPersonalAreaTier={onPersonalAreaTier}
               scrolled={false}
+              openMatchCount={openMatchCount}
+              onScrollToGames={scrollToGames}
+              onBranchBooking={onBranchBooking}
             />
           </div>
 
@@ -851,6 +901,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           onPersonalArea={onPersonalArea}
           onPersonalAreaTier={onPersonalAreaTier}
           scrolled={true}
+          openMatchCount={openMatchCount}
+          onScrollToGames={scrollToGames}
+          onBranchBooking={onBranchBooking}
         />
         <div className="grid grid-cols-3 gap-2 px-3 mb-1">
           <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
