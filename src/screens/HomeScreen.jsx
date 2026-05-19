@@ -662,25 +662,28 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     setLoading(true);
     setError('');
     try {
-      const [matchesRes, predsRes, lbRes] = await Promise.all([
+      const [matchesRes, predsRes] = await Promise.all([
         callFn('listMatches', {}),
         campaignId && token
           ? callFn('listMyPredictions', { token, campaign_id: campaignId })
           : Promise.resolve({ predictions: [] }),
-        campaignId && token
-          ? callFn('getLeaderboard', { campaign_id: campaignId, token })
-          : Promise.resolve(null),
       ]);
       setMatches(matchesRes.matches || []);
       const predMap = {};
       for (const p of (predsRes.predictions || [])) predMap[p.match_id] = p;
       setPredictions(predMap);
-      const lbData = lbRes?.data ?? lbRes;
-      if (lbData?.player?.points != null) setTotalPoints(lbData.player.points);
     } catch (e) {
       setError(e.message || 'שגיאה בטעינה');
     } finally {
       setLoading(false);
+    }
+    if (campaignId && token) {
+      callFn('getLeaderboard', { campaign_id: campaignId, token })
+        .then(lbRes => {
+          const d = lbRes?.data ?? lbRes;
+          if (d?.player?.points != null) setTotalPoints(d.player.points);
+        })
+        .catch(() => {});
     }
   }, [campaignId, token]);
 
@@ -723,7 +726,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   }
 
   return (
-    <div className="h-dvh stadium-bg overflow-hidden relative" dir="rtl">
+    <div className="h-dvh stadium-bg relative" dir="rtl">
       {pendingAchievements.length > 0 && (
         <AchievementToast
           achievement={pendingAchievements[0]}
