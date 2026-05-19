@@ -27,6 +27,18 @@ const FLAG_MAP = {
   'מרוקו': '🇲🇦', 'תוניסיה': '🇹🇳', 'קמרון': '🇨🇲', 'גאנה': '🇬🇭',
   'אוסטרליה': '🇦🇺', 'קנדה': '🇨🇦', 'פולין': '🇵🇱', 'סרביה': '🇷🇸',
   'ניגריה': '🇳🇬', 'מצרים': '🇪🇬', 'אקוודור': '🇪🇨', 'פרגוואי': '🇵🇾',
+  'Algeria': '🇩🇿', 'Argentina': '🇦🇷', 'Australia': '🇦🇺', 'Austria': '🇦🇹',
+  'Belgium': '🇧🇪', 'Bosnia & Herzegovina': '🇧🇦', 'Brazil': '🇧🇷', 'Canada': '🇨🇦',
+  'Cape Verde Islands': '🇨🇻', 'Colombia': '🇨🇴', 'Congo DR': '🇨🇩', 'Croatia': '🇭🇷',
+  'Curaçao': '🇨🇼', 'Czech Republic': '🇨🇿', 'Ecuador': '🇪🇨', 'Egypt': '🇪🇬',
+  'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'France': '🇫🇷', 'Germany': '🇩🇪', 'Ghana': '🇬🇭',
+  'Haiti': '🇭🇹', 'Iran': '🇮🇷', 'Iraq': '🇮🇶', 'Ivory Coast': '🇨🇮',
+  'Japan': '🇯🇵', 'Jordan': '🇯🇴', 'Mexico': '🇲🇽', 'Morocco': '🇲🇦',
+  'Netherlands': '🇳🇱', 'New Zealand': '🇳🇿', 'Norway': '🇳🇴', 'Panama': '🇵🇦',
+  'Paraguay': '🇵🇾', 'Portugal': '🇵🇹', 'Qatar': '🇶🇦', 'Saudi Arabia': '🇸🇦',
+  'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'Senegal': '🇸🇳', 'South Africa': '🇿🇦', 'South Korea': '🇰🇷',
+  'Spain': '🇪🇸', 'Sweden': '🇸🇪', 'Switzerland': '🇨🇭', 'Tunisia': '🇹🇳',
+  'Türkiye': '🇹🇷', 'USA': '🇺🇸', 'Uruguay': '🇺🇾', 'Uzbekistan': '🇺🇿',
 };
 
 const DAYS_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -218,7 +230,7 @@ function QuickActionTile({ icon, label, sub, onClick, href, scrolled }) {
     : inner;
 }
 
-function PredictionEditor({ match, prediction, config, onPredict, onSaved }) {
+function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeFlag, awayFlag }) {
   const initOutcome = () => {
     if (!prediction) return null;
     if (prediction.home_score > prediction.away_score) return 'home';
@@ -270,9 +282,9 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved }) {
         <p className="text-sm font-bold text-right mb-2.5" style={{ color: 'var(--text)' }}>מי ינצח?</p>
         <div className="flex gap-2" dir="ltr">
           {[
-            { key: 'away', label: '2', sub: awayName },
+            { key: 'away', label: awayFlag, sub: awayName },
             { key: 'draw', label: 'X', sub: 'תיקו' },
-            { key: 'home', label: '1', sub: homeName },
+            { key: 'home', label: homeFlag, sub: homeName },
           ].map(btn => (
             <button
               key={btn.key}
@@ -386,6 +398,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 נעול</span>
     : isFinal
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(157,133,133,0.15)', color: 'var(--text-sec)', border: '1px solid rgba(157,133,133,0.3)' }}>✓ סיום</span>
+    : !isPending
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(156,163,175,0.15)', color: '#9ca3af', border: '1px solid rgba(156,163,175,0.3)' }}>⏳ בקרוב</span>
     : null;
 
   return (
@@ -457,6 +471,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
                 prediction={prediction}
                 config={config}
                 onPredict={onPredict}
+                homeFlag={homeFlag}
+                awayFlag={awayFlag}
                 onSaved={() => {
                   setEditMode(false);
                   setShowPointsFlash(true);
@@ -507,8 +523,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
                   >
                     <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
                     <div className="text-right">
-                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ צפה ב-Humongous!</div>
-                      <div className="text-xs" style={{ color: 'var(--green)' }}>הזמן מקום וקבל +{config.table_booking_points ?? 20} נ׳</div>
+                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ הזמן מקום</div>
+                      <div className="text-xs" style={{ color: 'var(--green)' }}>רואים יחד? +{config?.table_booking_points ?? 20} נ׳</div>
                     </div>
                   </a>
                 ) : config?.delivery_url ? (
@@ -574,8 +590,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               >
                 <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
                 <div className="text-right">
-                  <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ צפה ב-Humongous!</div>
-                  <div className="text-xs" style={{ color: 'var(--green)' }}>הזמן מקום וקבל +{config.table_booking_points ?? 20} נ׳</div>
+                  <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ הזמן מקום</div>
+                  <div className="text-xs" style={{ color: 'var(--green)' }}>רואים יחד? +{config?.table_booking_points ?? 20} נ׳</div>
                 </div>
               </a>
             )}
