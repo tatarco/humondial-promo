@@ -343,14 +343,11 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, predictionWindowDays, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
-  const windowDays = predictionWindowDays ?? config?.prediction_window_days ?? 3;
-  const isFutureLocked = match.kickoff_utc && match.status === 'open' && !isPending &&
-    (new Date(match.kickoff_utc) - Date.now()) > windowDays * 24 * 3600 * 1000;
-  const isOpen    = match.status === 'open' && !isPending && !isFutureLocked;
-  const isLocked  = match.status === 'locked' || isFutureLocked;
+  const isOpen    = match.status === 'open' && !isPending;
+  const isLocked  = match.status === 'locked';
   const isLive    = match.status === 'live';
   const isFinal   = match.status === 'final';
   const hasPrediction = prediction != null;
@@ -392,7 +389,7 @@ function MatchCard({ match, prediction, config, predictionWindowDays, onPredict,
   const lockTime    = match.lock_deadline_utc ? fmtTime(match.lock_deadline_utc) : '';
   const dayDate     = match.kickoff_utc ? fmtDayDate(match.kickoff_utc) : '';
 
-  const predLabel = predOutcome === 'home' ? '1' : predOutcome === 'away' ? '2' : predOutcome === 'draw' ? 'X' : null;
+  const predLabel = predOutcome === 'home' ? homeFlag : predOutcome === 'away' ? awayFlag : predOutcome === 'draw' ? 'X' : null;
 
   const statusBadge = isOpen
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}><span>●</span> פתוח</span>
@@ -732,7 +729,16 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const stages = [...new Set(matches.map(m => m.stage))].sort((a, b) =>
     (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
   );
-  const visibleMatches = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
+  const windowGames = effectiveConfig?.prediction_window_games ?? 5;
+  const allFiltered = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
+  const visibleMatches = (() => {
+    let openCount = 0;
+    return allFiltered.filter(m => {
+      if (m.status !== 'open') return true;
+      openCount++;
+      return openCount <= windowGames;
+    });
+  })();
 
   function handleScroll() {
     if (!heroRef.current) return;
@@ -821,7 +827,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               match={{ ...match, stage: stageHe(match.stage) }}
               prediction={predictions[match.id] || null}
               config={effectiveConfig}
-              predictionWindowDays={effectiveConfig?.prediction_window_days ?? 3}
               onPredict={handlePredict}
               onBooking={handleBooking}
               onVenueCode={onVenueCode}
