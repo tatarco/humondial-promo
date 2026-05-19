@@ -67,7 +67,7 @@ describe('LedgerScreen', () => {
   it('shows error state when callFn rejects', async () => {
     callFn.mockRejectedValue(new Error('network error'));
     render(<LedgerScreen token="t" campaignId="c" onBack={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/שגיאה/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/לא הצלחנו לטעון את הנתונים/i)).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /נסה שוב/i })).toBeInTheDocument();
   });
 

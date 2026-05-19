@@ -13,9 +13,9 @@ function tierCss(key) {
 }
 
 const BADGES = [
-  { id: 'silver',    emoji: '🥈', label: 'חבר סילבר',          check: (t, c) => ['silver','gold','legend'].includes(t) },
-  { id: 'gold',      emoji: '🥇', label: 'חבר זהב',           check: (t, c) => ['gold','legend'].includes(t) },
-  { id: 'legend',    emoji: '🏆', label: 'אגדה',              check: (t, c) => t === 'legend' },
+  { id: 'silver',    emoji: '🥈', label: 'חבר סילבר', threshold: 'silver', check: (t, c) => ['silver','gold','legend'].includes(t) },
+  { id: 'gold',      emoji: '🥇', label: 'חבר זהב',   threshold: 'gold',   check: (t, c) => ['gold','legend'].includes(t) },
+  { id: 'legend',    emoji: '🏆', label: 'אגדה',       threshold: 'legend', check: (t, c) => t === 'legend' },
   { id: 'delivery1', emoji: '🛵', label: 'הזמנה ראשונה',    check: (t, c) => (c.delivery ?? 0) >= 1 },
   { id: 'table1',    emoji: '🍽️',label: 'מסעדה ראשונה',    check: (t, c) => (c.table_booking ?? 0) >= 1 },
   { id: 'visit1',    emoji: '🏟️', label: 'ביקור ראשון',     check: (t, c) => (c.venue_visit ?? 0) >= 1 },
@@ -93,7 +93,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   if (error) {
     return (
       <div className="min-h-dvh stadium-bg flex flex-col items-center justify-center gap-4 p-6">
-        <div style={{ color: 'var(--text-sec)' }}>שגיאה: {error}</div>
+        <div style={{ color: 'var(--text-sec)', fontSize: 13 }}>לא הצלחנו לטעון את הנתונים</div>
         <button onClick={load} className="hm-btn-primary px-6 py-2 text-sm">נסה שוב</button>
       </div>
     );
@@ -156,16 +156,22 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
               )}
             </div>
           </div>
-          {nextTier && (
-            <div className="mt-3">
-              <div className="hm-progress-bg h-1.5">
-                <div className="hm-progress-fill h-1.5" style={{ width: `${progPct}%` }} />
+          <div className="mt-3">
+            {nextTier ? (
+              <>
+                <div className="hm-progress-bg h-1.5">
+                  <div className="hm-progress-fill h-1.5" style={{ width: `${progPct}%` }} />
+                </div>
+                <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
+                  {nextTier.min_points - myPts} נקודות עד {nextTier.label_he}
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 8, fontWeight: 700, textAlign: 'right' }}>
+                🏆 הגעת לדרגת האגדה — שמור על המקום שלך!
               </div>
-              <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
-                {nextTier.min_points - myPts} נקודות עד {nextTier.label_he}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Block 2 — Trajectory */}
@@ -179,6 +185,15 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
               <div style={{ fontSize: 9, opacity: 0.7 }}>בקצב הנוכחי</div>
             </div>
             <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>{trajectory.projected_points} נ׳</span>
+          </div>
+        )}
+
+        {/* B2 — Empty state for 0-point player */}
+        {data && myPts === 0 && (
+          <div className="hm-card mx-3 text-center py-4">
+            <div style={{ fontSize: 22, marginBottom: 6 }}>🎯</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>עוד לא צברת נקודות</div>
+            <div style={{ fontSize: 11, color: 'var(--text-sec)', marginTop: 4 }}>הזמן משלוח, הגיע למסעדה או נחש תוצאות</div>
           </div>
         )}
 
@@ -205,6 +220,10 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                   >
                     {b.label}
                   </span>
+                  {!b.unlocked && b.threshold && (() => {
+                    const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
+                    return tierPts ? <div style={{ fontSize: 8, color: 'var(--text-sec)', marginTop: 2 }}>{tierPts} נ׳</div> : null;
+                  })()}
                 </div>
               ))}
             </div>

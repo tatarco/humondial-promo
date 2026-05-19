@@ -100,7 +100,7 @@ describe('PersonalAreaScreen', () => {
   test('shows error and retry button when callFn rejects', async () => {
     callFn.mockRejectedValue(new Error('network'));
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={vi.fn()} onLeaderboard={vi.fn()} onLedger={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/שגיאה/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/לא הצלחנו לטעון את הנתונים/i)).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /נסה שוב/i })).toBeInTheDocument();
   });
 

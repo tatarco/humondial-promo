@@ -68,7 +68,7 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
   if (error) {
     return (
       <div className="min-h-dvh stadium-bg flex flex-col items-center justify-center gap-4 p-6">
-        <div style={{ color: 'var(--text-sec)' }}>שגיאה: {error}</div>
+        <div style={{ color: 'var(--text-sec)', fontSize: 13 }}>לא הצלחנו לטעון את הנתונים</div>
         <button onClick={load} className="hm-btn-primary px-6 py-2 text-sm">נסה שוב</button>
       </div>
     );
@@ -110,7 +110,7 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
               </div>
               <div className="hm-card overflow-hidden">
                 {groupRows.map((row, idx) => {
-                  const meta = REASON_MAP[row.reason] || { emoji: '•', label: row.reason };
+                  const meta = REASON_MAP[row.reason] || { emoji: '•', label: 'פעילות' };
                   return (
                     <div
                       key={row.id}
