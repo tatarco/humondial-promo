@@ -833,9 +833,13 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
             >
               <span className="text-lg leading-none">👤</span>
             </button>
-            <div className="flex flex-col items-center gap-0.5">
-              <img src="/assets/humondial-logo.png" alt="HUMONDIAL" style={{ width: 148, height: 'auto' }} />
-              <img src="/assets/year-2026.png" alt="2026" style={{ width: 64, height: 'auto', marginTop: -6 }} />
+            <div className="flex flex-col items-center leading-none">
+              <h1 className="font-black m-0" style={{ fontSize: 22, color: '#fff', textShadow: '0 0 16px rgba(214,58,54,0.4)', letterSpacing: 3 }}>
+                HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
+              </h1>
+              <span dir="ltr" className="font-black" style={{ fontSize: 14, color: 'var(--gold)', letterSpacing: 4, marginTop: 2 }}>
+                2 0 2 6
+              </span>
             </div>
             <button
               onClick={onLogout}
