@@ -57,13 +57,15 @@ describe('PhoneScreen', () => {
     expect(screen.getByText(/WhatsApp/i)).toBeInTheDocument();
   });
 
-  it('shows returning-user banner and no nickname when promoCheckPhone returns isNewUser: false', async () => {
-    callFn.mockResolvedValueOnce({ isNewUser: false });
+  it('returning user: skips reveal and calls onSuccess immediately after check', async () => {
+    callFn
+      .mockResolvedValueOnce({ isNewUser: false })
+      .mockResolvedValueOnce({ ok: true });
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
-    await waitFor(() => expect(screen.getByText(/ברוך שובך/i)).toBeInTheDocument());
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('972521234567', false));
     expect(screen.queryByPlaceholderText(/כינוי/i)).not.toBeInTheDocument();
   });
 
@@ -109,15 +111,13 @@ describe('PhoneScreen', () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('972521234567', true));
   });
 
-  it('returning user: calls promoRequestOtp without nickname and onSuccess(normalizedPhone, false)', async () => {
+  it('returning user: calls promoRequestOtp without nickname inside handleCheck', async () => {
     callFn
       .mockResolvedValueOnce({ isNewUser: false })
       .mockResolvedValueOnce({ ok: true });
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
-    await user.click(screen.getByRole('button', { name: /המשך/i }));
-    await waitFor(() => screen.getByText(/ברוך שובך/i));
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() =>
       expect(callFn).toHaveBeenCalledWith('promoRequestOtp', { phone: '0521234567' })
@@ -135,7 +135,7 @@ describe('PhoneScreen', () => {
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
-  it('shows error when promoRequestOtp fails', async () => {
+  it('shows error when promoRequestOtp fails for returning user', async () => {
     callFn
       .mockResolvedValueOnce({ isNewUser: false })
       .mockRejectedValueOnce(new Error('rate_limited'));
@@ -143,21 +143,19 @@ describe('PhoneScreen', () => {
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
-    await waitFor(() => screen.getByText(/ברוך שובך/i));
-    await user.click(screen.getByRole('button', { name: /המשך/i }));
-    await waitFor(() => expect(screen.getByText(/rate_limited/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/שגיאה/i)).toBeInTheDocument());
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
   it('editing phone resets to phone-check phase', async () => {
-    callFn.mockResolvedValueOnce({ isNewUser: false });
+    callFn.mockResolvedValueOnce({ isNewUser: true });
     const user = userEvent.setup();
     render(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
-    await waitFor(() => screen.getByText(/ברוך שובך/i));
+    await waitFor(() => screen.getByPlaceholderText(/כינוי/i));
     await user.clear(screen.getByPlaceholderText(/05/i));
     await user.type(screen.getByPlaceholderText(/05/i), '052');
-    expect(screen.queryByText(/ברוך שובך/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/כינוי/i)).not.toBeInTheDocument();
   });
 });

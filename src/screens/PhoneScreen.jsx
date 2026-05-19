@@ -29,7 +29,6 @@ export default function PhoneScreen({ onSuccess }) {
   const phoneValid   = isValidPhone(phone);
   const canCheck     = phoneValid && !loading;
   const canSubmitNew = phoneValid && isValidNickname(nickname) && terms && whatsapp && !loading;
-  const canSubmitRet = phoneValid && !loading;
 
   async function handleCheck(e) {
     e.preventDefault();
@@ -37,7 +36,12 @@ export default function PhoneScreen({ onSuccess }) {
     setLoading(true);
     try {
       const { isNewUser } = await callFn('promoCheckPhone', { phone });
-      setPhase(isNewUser ? 'new-user' : 'returning');
+      if (!isNewUser) {
+        await callFn('promoRequestOtp', { phone });
+        onSuccess(normalizePhone(phone), false);
+        return;
+      }
+      setPhase('new-user');
     } catch {
       setError('שגיאה — נסה שוב');
     } finally {
@@ -62,10 +66,8 @@ export default function PhoneScreen({ onSuccess }) {
     }
   }
 
-  const isPhasePhone    = phase === 'phone';
-  const isPhaseChecking = phase === 'checking';
-  const isNewUser       = phase === 'new-user';
-  const isReturning     = phase === 'returning';
+  const isPhasePhone = phase === 'phone';
+  const isNewUser    = phase === 'new-user';
 
   return (
     <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center px-6">
@@ -87,13 +89,6 @@ export default function PhoneScreen({ onSuccess }) {
         </div>
 
         <form onSubmit={isPhasePhone ? handleCheck : handleSubmit} className="flex flex-col gap-4">
-
-          {isReturning && (
-            <div className="flex items-center gap-2 bg-hm-card border border-hm-dim rounded-xl px-4 py-3 text-right">
-              <span className="text-green-400 text-lg">✓</span>
-              <span className="text-hm-white text-sm">ברוך שובך! נשלח לך קוד אימות</span>
-            </div>
-          )}
 
           <div className="flex flex-col gap-1">
             <label className="text-sm text-hm-white font-semibold text-right">מספר טלפון</label>
@@ -163,7 +158,7 @@ export default function PhoneScreen({ onSuccess }) {
 
           <button
             type="submit"
-            disabled={isPhasePhone ? !canCheck : isNewUser ? !canSubmitNew : !canSubmitRet}
+            disabled={isPhasePhone ? !canCheck : !canSubmitNew}
             className="w-full bg-hm-red text-hm-white font-bold py-3 rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        active:scale-95 transition-transform"
