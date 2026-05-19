@@ -575,9 +575,7 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
                 <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
                 <div className="text-right">
                   <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ צפה ב-Humongous!</div>
-                  <div className="text-xs" style={{ color: 'var(--green)' }}>
-                    הזמן מקום {match.away_team} vs {match.home_team} וקבל +{config.table_booking_points ?? 15} נקודות
-                  </div>
+                  <div className="text-xs" style={{ color: 'var(--green)' }}>הזמן מקום וקבל +{config.table_booking_points ?? 20} נ׳</div>
                 </div>
               </a>
             )}
@@ -681,7 +679,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
       callFn('getLeaderboard', { campaign_id: campaignId, token })
         .then(lbRes => {
           const d = lbRes?.data ?? lbRes;
-          if (d?.player?.points != null) setTotalPoints(d.player.points);
+          if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
         })
         .catch(() => {});
     }
@@ -726,6 +724,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   }
 
   return (
+    <>
     <div className="h-dvh stadium-bg relative" dir="rtl">
       {pendingAchievements.length > 0 && (
         <AchievementToast
@@ -814,46 +813,29 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         </div>
       </div>
 
-      {scrolled && (
-        <div className="fixed top-0 left-0 right-0 z-20" style={{ background: 'var(--hm-bg, #100505)' }}>
-          <HeroCard
-            totalPoints={totalPoints}
-            config={config}
-            onPersonalArea={onPersonalArea}
-            onPersonalAreaTier={onPersonalAreaTier}
-            scrolled={true}
-          />
-          <div className="grid grid-cols-3 gap-2 px-3 mb-1">
-            <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
-            <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={() => onVenueCode('arrival')} scrolled={true} />
-            <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={true} />
-          </div>
-          <div className="grid grid-cols-3 gap-2 px-3 mb-2">
-            <QuickActionTile
-              icon="⚽"
-              label="ניחוש"
-              sub={`+${config?.outcome_points ?? 30} נ׳`}
-              scrolled={true}
-              onClick={scrollToGames}
-            />
-            <QuickActionTile
-              icon="🍽️"
-              label="הזמן שולחן"
-              sub={`+${config?.table_booking_points ?? 20} נ׳`}
-              href={effectiveConfig?.booking_url}
-              scrolled={true}
-            />
-            <QuickActionTile
-              icon="🛵"
-              label="משלוח"
-              sub={`+${config?.delivery_points ?? 80} נ׳`}
-              href={effectiveConfig?.delivery_url}
-              scrolled={true}
-            />
-          </div>
-          <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
-        </div>
-      )}
     </div>
+    {scrolled && (
+      <div className="fixed top-0 left-0 right-0 z-50" dir="rtl" style={{ background: 'var(--hm-bg, #100505)' }}>
+        <HeroCard
+          totalPoints={totalPoints}
+          config={config}
+          onPersonalArea={onPersonalArea}
+          onPersonalAreaTier={onPersonalAreaTier}
+          scrolled={true}
+        />
+        <div className="grid grid-cols-3 gap-2 px-3 mb-1">
+          <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
+          <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={() => onVenueCode('arrival')} scrolled={true} />
+          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={true} />
+        </div>
+        <div className="grid grid-cols-3 gap-2 px-3 mb-2">
+          <QuickActionTile icon="⚽" label="ניחוש" sub={`+${config?.outcome_points ?? 30} נ׳`} scrolled={true} onClick={scrollToGames} />
+          <QuickActionTile icon="🍽️" label="הזמן שולחן" sub={`+${config?.table_booking_points ?? 20} נ׳`} href={effectiveConfig?.booking_url} scrolled={true} />
+          <QuickActionTile icon="🛵" label="משלוח" sub={`+${config?.delivery_points ?? 80} נ׳`} href={effectiveConfig?.delivery_url} scrolled={true} />
+        </div>
+        <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
+      </div>
+    )}
+    </>
   );
 }
