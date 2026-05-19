@@ -3,8 +3,19 @@ import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 
+const STAGE_HE = {
+  'group': 'שלב הבתים', 'Group Stage': 'שלב הבתים',
+  'Group Stage - 1': 'שלב הבתים 1', 'Group Stage - 2': 'שלב הבתים 2', 'Group Stage - 3': 'שלב הבתים 3',
+  'Round of 16': 'שמינית גמר', 'round of 16': 'שמינית גמר',
+  'Quarter Final': 'רבע גמר', 'quarter final': 'רבע גמר',
+  'Semi Final': 'חצי גמר', 'semi final': 'חצי גמר',
+  'Final': 'גמר', 'final': 'גמר',
+};
+function stageHe(s) { return STAGE_HE[s] || s; }
+
 const STAGE_SORT_KEYS = {
-  'שלב הבתים': 0, 'שמינית גמר': 1, 'רבע גמר': 2, 'חצי גמר': 3, 'גמר': 4,
+  'שלב הבתים': 0, 'שלב הבתים 1': 0, 'שלב הבתים 2': 0, 'שלב הבתים 3': 0,
+  'שמינית גמר': 1, 'רבע גמר': 2, 'חצי גמר': 3, 'גמר': 4,
 };
 
 const FLAG_MAP = {
@@ -69,7 +80,52 @@ function spawnConfetti() {
   }
 }
 
-function HeroCard({ totalPoints, config, onPersonalArea }) {
+function BenefitsSheet({ tiers, myTier, onClose }) {
+  const sorted = [...tiers].sort((a, b) => b.min_points - a.min_points);
+  const myPts = myTier?.min_points ?? 0;
+  return (
+    <div className="fixed inset-0 z-40 flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
+      <div
+        className="w-full rounded-t-3xl p-6 pb-8"
+        style={{ background: 'rgba(18,4,4,0.98)', border: '1px solid var(--border)', maxHeight: '75vh', overflowY: 'auto' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="text-center text-base font-black mb-4" style={{ color: 'var(--text)' }}>הטבות לפי דרגה</div>
+        {sorted.map(tier => {
+          const isCurrent  = tier.id === myTier?.id;
+          const isAchieved = tier.min_points <= myPts && !isCurrent;
+          const tierKey    = tier.key || tier.id;
+          return (
+            <div
+              key={tier.id}
+              className={`rounded-2xl p-4 mb-3 ${isCurrent ? 'border-2' : 'border'}`}
+              style={{
+                borderColor: isCurrent ? 'var(--red)' : 'var(--border)',
+                background:  isCurrent ? 'rgba(214,58,54,0.12)' : 'transparent',
+                opacity:     isAchieved || isCurrent ? 1 : 0.38,
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
+                  {tier.label_he}
+                </span>
+                {isAchieved && <span className="text-xs font-bold" style={{ color: 'var(--green)' }}>✓ נצבר</span>}
+                {isCurrent  && <span className="text-xs font-bold" style={{ color: 'var(--red)' }}>◉ הדרגה שלך</span>}
+              </div>
+              <ul className="space-y-1">
+                {(tier.benefits || []).map((b, i) => (
+                  <li key={i} className="text-xs" style={{ color: 'var(--text-sec)' }}>• {b}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HeroCard({ totalPoints, config, onPersonalArea, onTierDetails }) {
   const tier     = getTier(config, totalPoints);
   const nextTier = getNextTier(config, totalPoints);
   const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
@@ -96,10 +152,10 @@ function HeroCard({ totalPoints, config, onPersonalArea }) {
         </div>
         {tier && (
           <button
-            onClick={onPersonalArea}
+            onClick={onTierDetails}
             className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tier.key || tier.id)}`}
           >
-            {tier.label_he}
+            {tier.label_he} ↗
           </button>
         )}
       </div>
@@ -474,6 +530,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [pendingAchievements, setPendingAchievements] = useState([]);
+  const [showTiers, setShowTiers]     = useState(false);
 
   const totalPoints = useMemo(() => {
     if (!config) return 0;
@@ -531,7 +588,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
   }, [matches]);
 
   const stages = [...new Set(matches.map(m => m.stage))].sort((a, b) =>
-    (STAGE_SORT_KEYS[a] ?? 99) - (STAGE_SORT_KEYS[b] ?? 99)
+    (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
   );
   const visibleMatches = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
 
@@ -572,14 +629,19 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
         <button onClick={onLogout} className="text-xs" style={{ color: 'var(--text-sec)' }}>יציאה</button>
       </header>
 
-      <HeroCard totalPoints={totalPoints} config={config} onPersonalArea={onPersonalArea} />
+      <HeroCard
+        totalPoints={totalPoints}
+        config={config}
+        onPersonalArea={onPersonalArea}
+        onTierDetails={() => setShowTiers(true)}
+      />
 
       {config && (
         <div className="grid grid-cols-3 gap-2 px-3 mb-3">
           <QuickActionTile
             icon="⚽" label="ניחוש" pts={config.outcome_points ?? 30}
             onClick={() => {
-              const first = matches.find(m => m.status === 'open');
+              const first = matches.find(m => m.status === 'open' && !predictions[m.id]);
               if (first) setActiveCard(first.id);
             }}
           />
@@ -589,8 +651,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
           {config.delivery_url && (
             <QuickActionTile icon="🛵" label="משלוח" pts={config.delivery_points ?? 80} href={config.delivery_url} />
           )}
-          <QuickActionTile icon="📱" label="הצג QR" onClick={onMyQR} />
-          <QuickActionTile icon="📍" label="הזן קוד" onClick={onVenueCode} />
+          <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} />
+          <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={onVenueCode} />
+          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={onVenueCode} />
         </div>
       )}
 
@@ -639,7 +702,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
                 color: activeStage === s ? 'var(--text)' : 'var(--text-sec)',
                 fontWeight: activeStage === s ? 'bold' : 'normal',
               }}
-            >{s}</button>
+            >{stageHe(s)}</button>
           ))}
         </div>
       )}
@@ -654,7 +717,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
           {visibleMatches.map(match => (
             <MatchCard
               key={match.id}
-              match={match}
+              match={{ ...match, stage: stageHe(match.stage) }}
               prediction={predictions[match.id] || null}
               config={config}
               onPredict={handlePredict}
@@ -665,6 +728,14 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
           ))}
         </div>
       </main>
+
+      {showTiers && config?.tiers?.length > 0 && (
+        <BenefitsSheet
+          tiers={config.tiers}
+          myTier={getTier(config, totalPoints)}
+          onClose={() => setShowTiers(false)}
+        />
+      )}
     </div>
   );
 }

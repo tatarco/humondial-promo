@@ -183,7 +183,8 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
     );
   }
 
-  const { top10 = [], me = {}, trajectory = {}, whatif = {}, tiers = [] } = data || {};
+  const { top10 = [], me = {}, trajectory = {}, whatif = {}, tiers: dataTiers = [] } = data || {};
+  const tiers = dataTiers.length ? dataTiers : (config?.tiers ?? []);
   const top3   = top10.filter(r => r.rank <= 3);
   const rest   = top10.filter(r => r.rank > 3);
   const myPts  = me.total_points ?? 0;
@@ -204,7 +205,7 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
     setLastSlider(which);
   }
 
-  const ctaPrimary = lastSlider === 'deliv' ? 'deliv' : 'table';
+  const ctaPrimary = lastSlider === 'deliv' ? 'deliv' : lastSlider === 'table' ? 'table' : 'predict';
 
   return (
     <div className="min-h-dvh stadium-bg" dir="rtl">
@@ -320,6 +321,12 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
         </div>
 
         <div className="space-y-2">
+          <button
+            onClick={onBack}
+            className={`${ctaPrimary === 'predict' ? 'hm-btn-primary' : 'hm-btn-secondary'} flex items-center justify-center gap-2 w-full py-3 text-sm`}
+          >
+            ⚽ לניחושים →
+          </button>
           {config?.booking_url && (
             <a
               href={config.booking_url}
@@ -340,12 +347,6 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
               🛵 הזמן משלוח ↗
             </a>
           )}
-          <button
-            onClick={onBack}
-            className="hm-btn-secondary flex items-center justify-center gap-2 w-full py-3 text-sm"
-          >
-            ⚽ לניחושים →
-          </button>
         </div>
       </div>
 
