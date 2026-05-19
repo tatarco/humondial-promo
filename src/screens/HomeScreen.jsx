@@ -125,7 +125,7 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-function HeroCard({ totalPoints, config, onPersonalArea, onTierDetails }) {
+function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier }) {
   const tier     = getTier(config, totalPoints);
   const nextTier = getNextTier(config, totalPoints);
   const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
@@ -145,29 +145,31 @@ function HeroCard({ totalPoints, config, onPersonalArea, onTierDetails }) {
         style={{ maxHeight: 200, objectPosition: 'center 20%' }}
       />
       <div className="p-5">
-      <div className="flex items-end justify-between mb-3">
-        <div>
-          <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>הנקודות שלי</div>
-          <div className="text-4xl font-black tabular-nums" style={{ color: 'var(--text)' }}>{totalPoints}</div>
-        </div>
-        {tier && (
-          <button
-            onClick={onTierDetails}
-            className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tier.key || tier.id)}`}
-          >
-            {tier.label_he} ↗
+        <div className="flex items-end justify-between mb-3">
+          <button onClick={onPersonalArea} className="text-right">
+            <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>הנקודות שלי</div>
+            <div className="text-4xl font-black tabular-nums" style={{ color: 'var(--text)' }}>{totalPoints}</div>
           </button>
-        )}
-      </div>
-      <div className="hm-progress-bg h-1.5 mb-1">
-        <div className="hm-progress-fill h-1.5" style={{ width: pct + '%' }} />
-      </div>
-      {nextTier && (
-        <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-sec)' }}>
-          <span>{pct}% ⚽</span>
-          <span>{ptsToNext} נ׳ עד {nextTier.label_he}</span>
+          {tier && (
+            <button
+              onClick={onPersonalAreaTier}
+              className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tier.key || tier.id)}`}
+            >
+              {tier.label_he} ↗
+            </button>
+          )}
         </div>
-      )}
+        <button onClick={onPersonalArea} className="w-full text-right">
+          <div className="hm-progress-bg h-1.5 mb-1">
+            <div className="hm-progress-fill h-1.5" style={{ width: pct + '%' }} />
+          </div>
+          {nextTier && (
+            <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-sec)' }}>
+              <span>{pct}% ⚽</span>
+              <span>{ptsToNext} נ׳ עד {nextTier.label_he}</span>
+            </div>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -175,7 +177,7 @@ function HeroCard({ totalPoints, config, onPersonalArea, onTierDetails }) {
 
 function QuickActionTile({ icon, label, pts, onClick, href }) {
   const inner = (
-    <div className="hm-card flex flex-col items-center gap-1 p-3 cursor-pointer" onClick={onClick}>
+    <div className="hm-card shrink-0 flex flex-col items-center gap-1 p-3 cursor-pointer" style={{ minWidth: 76 }} onClick={onClick}>
       <div className="text-2xl">{icon}</div>
       <div className="text-[10px] font-bold text-center" style={{ color: 'var(--text)' }}>{label}</div>
       {pts != null && <div className="text-[9px] font-black" style={{ color: 'var(--gold)' }}>+{pts} נ׳</div>}
@@ -299,7 +301,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved }) {
   );
 }
 
-function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
   const isOpen    = match.status === 'open' && !isPending;
@@ -308,9 +310,15 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
   const hasPrediction = prediction != null;
 
   const [editMode, setEditMode] = useState(false);
+  const [showPointsFlash, setShowPointsFlash] = useState(false);
+  const flashTimer = useRef(null);
   const prevActive = useRef(isActive);
   useEffect(() => {
-    if (prevActive.current && !isActive) setEditMode(false);
+    if (prevActive.current && !isActive) {
+      setEditMode(false);
+      setShowPointsFlash(false);
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    }
     prevActive.current = isActive;
   }, [isActive]);
 
@@ -426,7 +434,12 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
                 prediction={prediction}
                 config={config}
                 onPredict={onPredict}
-                onSaved={() => setEditMode(false)}
+                onSaved={() => {
+                  setEditMode(false);
+                  setShowPointsFlash(true);
+                  if (flashTimer.current) clearTimeout(flashTimer.current);
+                  flashTimer.current = setTimeout(() => setShowPointsFlash(false), 3000);
+                }}
               />
             )}
 
@@ -523,6 +536,11 @@ function AchievementToast({ achievement, onClose }) {
 
 export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenueCode, onMyQR }) {
   const config = useConfig();
+  const effectiveConfig = config ? {
+    ...config,
+    booking_url: config.booking_url || 'https://humongous.co.il/book',
+    delivery_url: config.delivery_url || 'https://humongous.co.il/delivery',
+  } : config;
   const [matches, setMatches]         = useState([]);
   const [predictions, setPredictions] = useState({});
   const [activeCard, setActiveCard]   = useState(null);
@@ -636,8 +654,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
         onTierDetails={() => setShowTiers(true)}
       />
 
-      {config && (
-        <div className="grid grid-cols-3 gap-2 px-3 mb-3">
+      {effectiveConfig && (
+        <div className="flex overflow-x-auto gap-2 px-3 mb-3 scrollbar-none">
           <QuickActionTile
             icon="⚽" label="ניחוש" pts={config.outcome_points ?? 30}
             onClick={() => {
@@ -645,11 +663,11 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
               if (first) setActiveCard(first.id);
             }}
           />
-          {config.booking_url && (
-            <QuickActionTile icon="🍽️" label="הזמן שולחן" pts={config.table_booking_points ?? 20} href={config.booking_url} />
+          {effectiveConfig.booking_url && (
+            <QuickActionTile icon="🍽️" label="הזמן שולחן" pts={effectiveConfig.table_booking_points ?? 20} href={effectiveConfig.booking_url} />
           )}
-          {config.delivery_url && (
-            <QuickActionTile icon="🛵" label="משלוח" pts={config.delivery_points ?? 80} href={config.delivery_url} />
+          {effectiveConfig.delivery_url && (
+            <QuickActionTile icon="🛵" label="משלוח" pts={effectiveConfig.delivery_points ?? 80} href={effectiveConfig.delivery_url} />
           )}
           <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} />
           <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={onVenueCode} />
@@ -719,7 +737,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
               key={match.id}
               match={{ ...match, stage: stageHe(match.stage) }}
               prediction={predictions[match.id] || null}
-              config={config}
+              config={effectiveConfig}
               onPredict={handlePredict}
               onBooking={handleBooking}
               isActive={activeCard === match.id}
