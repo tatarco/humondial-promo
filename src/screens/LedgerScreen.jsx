@@ -79,7 +79,7 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
       <header className="flex items-center justify-between px-4 py-3">
         <button
           onClick={onBack}
-          className="text-xs px-3 py-1.5 rounded-full border"
+          className="text-xs px-3 py-2.5 rounded-full border min-h-[44px] flex items-center"
           style={{ color: 'var(--text-sec)', borderColor: 'var(--border)' }}
         >← חזרה</button>
         <div className="font-black text-base" style={{ color: 'var(--text)' }}>הניקוד שלי 📊</div>

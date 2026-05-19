@@ -13,9 +13,9 @@ function tierCss(key) {
 }
 
 const BADGES = [
-  { id: 'silver',    emoji: '🥈', label: 'Silver Member',    check: (t, c) => ['silver','gold','legend'].includes(t) },
+  { id: 'silver',    emoji: '🥈', label: 'חבר סילבר',          check: (t, c) => ['silver','gold','legend'].includes(t) },
   { id: 'gold',      emoji: '🥇', label: 'חבר זהב',           check: (t, c) => ['gold','legend'].includes(t) },
-  { id: 'legend',    emoji: '🏆', label: 'Legend',           check: (t, c) => t === 'legend' },
+  { id: 'legend',    emoji: '🏆', label: 'אגדה',              check: (t, c) => t === 'legend' },
   { id: 'delivery1', emoji: '🛵', label: 'הזמנה ראשונה',    check: (t, c) => (c.delivery ?? 0) >= 1 },
   { id: 'table1',    emoji: '🍽️',label: 'מסעדה ראשונה',    check: (t, c) => (c.table_booking ?? 0) >= 1 },
   { id: 'visit1',    emoji: '🏟️', label: 'ביקור ראשון',     check: (t, c) => (c.venue_visit ?? 0) >= 1 },
@@ -46,10 +46,10 @@ function MiniPodium({ top3 }) {
             >
               {(p.nickname || '?')[0].toUpperCase()}
             </div>
-            <div className="text-[9px] font-bold text-center max-w-[56px] truncate" style={{ color: 'var(--text)' }}>
+            <div className="text-[10px] font-bold text-center max-w-[56px] truncate" style={{ color: 'var(--text)' }}>
               {p.nickname}
             </div>
-            <div className="text-[8px]" style={{ color: 'var(--text-sec)' }}>{p.total_points} נ׳</div>
+            <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>{p.total_points} נ׳</div>
             <div
               className="w-12 rounded-t-md flex items-center justify-center text-xs font-black"
               style={{ height: m.standH, background: m.standBg, color: 'rgba(255,255,255,0.3)' }}
@@ -126,7 +126,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
       <header className="flex items-center justify-between px-4 py-3">
         <button
           onClick={onBack}
-          className="text-xs px-3 py-1.5 rounded-full border"
+          className="text-xs px-3 py-2.5 rounded-full border min-h-[44px] flex items-center"
           style={{ color: 'var(--text-sec)', borderColor: 'var(--border)' }}
         >← חזרה</button>
         <div className="flex flex-col items-center leading-none">
@@ -140,7 +140,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
         <div style={{ width: 64 }} />
       </header>
 
-      <div className="px-4 space-y-3">
+      <div className="px-4 space-y-4">
         {/* Block 1 — My Stats */}
         <div className="hm-card p-4" style={{ borderColor: 'var(--red)', borderWidth: 2 }}>
           <div className="flex items-center gap-3">
@@ -174,7 +174,10 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             className="traj-chip flex items-center justify-between px-4 py-3 rounded-xl"
             style={{ background: 'rgba(244,193,93,0.06)', border: '1px solid rgba(244,193,93,0.18)' }}
           >
-            <span className="text-xs" style={{ color: 'var(--text-sec)' }}>צפי סיום / {formatEndDate(trajectory.end_date)} בקצב הנוכחי</span>
+            <div className="text-xs" style={{ color: 'var(--text-sec)' }}>
+              <div>צפי סיום {formatEndDate(trajectory.end_date)}</div>
+              <div style={{ fontSize: 9, opacity: 0.7 }}>בקצב הנוכחי</div>
+            </div>
             <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>{trajectory.projected_points} נ׳</span>
           </div>
         )}
@@ -197,7 +200,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                 >
                   <span className="text-xl leading-none">{b.emoji}</span>
                   <span
-                    className="text-[8px] font-bold text-center leading-tight"
+                    className="text-[10px] font-bold text-center leading-tight"
                     style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}
                   >
                     {b.label}
@@ -225,7 +228,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             style={{ background: 'var(--red)' }}
           >
             <div>
-              <div className="text-[9px] mb-0.5" style={{ opacity: 0.7 }}>כל 50 השחקנים</div>
+              <div className="text-[10px] mb-0.5" style={{ opacity: 0.7 }}>כל 50 השחקנים</div>
               🏆 לוח האלופים
             </div>
             <span style={{ opacity: 0.5 }}>←</span>
@@ -236,7 +239,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)' }}
           >
             <div>
-              <div className="text-[9px] mb-0.5" style={{ opacity: 0.5 }}>מאיפה הגיעו הנקודות</div>
+              <div className="text-[10px] mb-0.5" style={{ opacity: 0.5 }}>מאיפה הגיעו הנקודות</div>
               📊 הניקוד שלי
             </div>
             <span style={{ opacity: 0.4 }}>←</span>
