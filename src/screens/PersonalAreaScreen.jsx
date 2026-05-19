@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { callFn } from '../lib/api.js';
 
 const TIER_CSS = {
@@ -127,7 +127,7 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-export default function PersonalAreaScreen({ token, campaignId, config, onBack }) {
+export default function PersonalAreaScreen({ token, campaignId, config, onBack, scrollToTier }) {
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
@@ -137,6 +137,7 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
   const [lastSlider, setLastSlider]   = useState(null);
   const [showBenefits, setShowBenefits] = useState(false);
   const [tierPerks, setTierPerks]     = useState([]);
+  const tierRef = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -165,6 +166,13 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
   }, [token, campaignId]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (scrollToTier && tierRef.current) {
+      const t = setTimeout(() => tierRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+      return () => clearTimeout(t);
+    }
+  }, [scrollToTier]);
 
   if (loading) {
     return (
@@ -231,7 +239,7 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack }
           </div>
         </div>
 
-        <div>
+        <div ref={tierRef}>
           <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>המיקום שלי</div>
           <div className="hm-card p-4" style={{ borderColor: 'var(--red)' }}>
             <div className="flex items-center gap-3">

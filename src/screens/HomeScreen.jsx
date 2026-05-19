@@ -443,29 +443,79 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               />
             )}
 
-            {/* Open match — saved/locked summary with option to re-edit */}
+            {/* Open match — saved: flash + summary + upsell CTA */}
             {isOpen && hasPrediction && !editMode && (
-              <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => setEditMode(true)}
-                    className="text-xs underline"
-                    style={{ color: 'var(--text-sec)' }}
-                  >
-                    שנה בחירה
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
-                    <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
-                      {predLabel}
-                    </span>
-                  </div>
-                </div>
-                {prediction.home_score != null && (
-                  <div className="text-center text-xs mt-2" style={{ color: 'var(--text-sec)' }}>
-                    תוצאה מדויקת: {prediction.home_score} : {prediction.away_score}
+              <div className="space-y-2">
+                {showPointsFlash && (
+                  <div className="rounded-xl px-4 py-2 text-center text-sm font-black"
+                       style={{ background: 'rgba(244,193,93,0.15)', border: '1px solid rgba(244,193,93,0.35)', color: 'var(--gold)' }}>
+                    🎉 +{config?.participation_points ?? 10} נ׳ נוספו!
                   </div>
                 )}
+                <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setEditMode(true)}
+                      className="text-xs underline"
+                      style={{ color: 'var(--text-sec)' }}
+                    >
+                      שנה בחירה
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
+                      <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
+                        {predLabel}
+                      </span>
+                    </div>
+                  </div>
+                  {prediction.home_score != null && (
+                    <div className="text-center text-xs mt-2" style={{ color: 'var(--text-sec)' }}>
+                      תוצאה מדויקת: {prediction.home_score} : {prediction.away_score}
+                    </div>
+                  )}
+                </div>
+                {config?.booking_url ? (
+                  <a
+                    href={config.booking_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => onBooking(match.id)}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
+                    <div className="text-right">
+                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ צפה ב-Humongous!</div>
+                      <div className="text-xs" style={{ color: 'var(--green)' }}>הזמן מקום וקבל +{config.table_booking_points ?? 20} נ׳</div>
+                    </div>
+                  </a>
+                ) : config?.delivery_url ? (
+                  <a
+                    href={config.delivery_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
+                    <div className="text-right">
+                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🛵 הזמן משלוח!</div>
+                      <div className="text-xs" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points ?? 80} נ׳</div>
+                    </div>
+                  </a>
+                ) : onVenueCode ? (
+                  <button
+                    onClick={onVenueCode}
+                    className="flex items-center justify-between w-full px-4 py-3 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">צבור ←</span>
+                    <div className="text-right">
+                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>📍 הגעת לסניף?</div>
+                      <div className="text-xs" style={{ color: 'var(--green)' }}>הזן קוד וצבור נקודות</div>
+                    </div>
+                  </button>
+                ) : null}
               </div>
             )}
 
@@ -492,8 +542,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               <p className="text-center text-xs py-2" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
             )}
 
-            {/* Booking CTA — open matches and locked-status future matches */}
-            {(isOpen || match.status === 'locked') && config?.booking_url && (
+            {/* Booking CTA — only for non-saved states: editor open or locked without prediction */}
+            {((isOpen && (!hasPrediction || editMode)) || (match.status === 'locked')) && config?.booking_url && (
               <a
                 href={config.booking_url}
                 target="_blank"
@@ -534,7 +584,7 @@ function AchievementToast({ achievement, onClose }) {
   );
 }
 
-export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenueCode, onMyQR }) {
+export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR }) {
   const config = useConfig();
   const effectiveConfig = config ? {
     ...config,
@@ -548,7 +598,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [pendingAchievements, setPendingAchievements] = useState([]);
-  const [showTiers, setShowTiers]     = useState(false);
 
   const totalPoints = useMemo(() => {
     if (!config) return 0;
@@ -651,7 +700,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
         totalPoints={totalPoints}
         config={config}
         onPersonalArea={onPersonalArea}
-        onTierDetails={() => setShowTiers(true)}
+        onPersonalAreaTier={onPersonalAreaTier}
       />
 
       {effectiveConfig && (
@@ -740,6 +789,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
               config={effectiveConfig}
               onPredict={handlePredict}
               onBooking={handleBooking}
+              onVenueCode={onVenueCode}
               isActive={activeCard === match.id}
               onToggle={() => setActiveCard(prev => (prev === match.id ? null : match.id))}
             />
@@ -747,13 +797,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onVenue
         </div>
       </main>
 
-      {showTiers && config?.tiers?.length > 0 && (
-        <BenefitsSheet
-          tiers={config.tiers}
-          myTier={getTier(config, totalPoints)}
-          onClose={() => setShowTiers(false)}
-        />
-      )}
     </div>
   );
 }

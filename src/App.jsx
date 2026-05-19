@@ -45,6 +45,7 @@ export default function App() {
   const [config, setConfig]           = useState(null);
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [pendingCid, setPendingCid]   = useState('');
+  const [scrollToTier, setScrollToTier] = useState(false);
 
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -96,6 +97,12 @@ export default function App() {
   }
 
   function handlePersonalArea() {
+    setScrollToTier(false);
+    setScreen(SCREEN.PERSONAL_AREA);
+  }
+
+  function handlePersonalAreaTier() {
+    setScrollToTier(true);
     setScreen(SCREEN.PERSONAL_AREA);
   }
 
@@ -146,6 +153,7 @@ export default function App() {
           campaignId={config?.id}
           config={config}
           onBack={handleBackFromPersonalArea}
+          scrollToTier={scrollToTier}
         />
       );
     }
@@ -172,6 +180,7 @@ export default function App() {
       playerId={player}
       onLogout={handleLogout}
       onPersonalArea={handlePersonalArea}
+      onPersonalAreaTier={handlePersonalAreaTier}
       onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
     />;
