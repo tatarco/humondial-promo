@@ -125,7 +125,7 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier }) {
+function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scrolled }) {
   const tier     = getTier(config, totalPoints);
   const nextTier = getNextTier(config, totalPoints);
   const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
@@ -133,9 +133,31 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier }) {
     ? Math.min(100, Math.round((totalPoints / nextTier.min_points) * 100))
     : 100;
 
+  if (scrolled) {
+    return (
+      <div
+        className="hm-card mx-3 mb-2 flex items-center justify-between px-4 py-2 transition-all duration-300"
+        style={{ border: '1px solid rgba(244,193,93,0.4)', minHeight: 44 }}
+      >
+        <div className="flex items-center gap-1">
+          <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--text)' }}>{totalPoints}</span>
+          <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>נ׳</span>
+        </div>
+        {tier && (
+          <button
+            onClick={onPersonalAreaTier}
+            className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tier.key || tier.id)}`}
+          >
+            {tier.label_he}
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
-      className="hm-card mb-3 mx-3 overflow-hidden"
+      className="hm-card mb-3 mx-3 overflow-hidden transition-all duration-300"
       style={{ border: '1px solid rgba(244,193,93,0.4)', boxShadow: '0 0 40px rgba(244,193,93,0.12), 0 0 80px rgba(214,58,54,0.15)' }}
     >
       <img
@@ -175,16 +197,24 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier }) {
   );
 }
 
-function QuickActionTile({ icon, label, pts, onClick, href }) {
+function QuickActionTile({ icon, label, sub, onClick, href, scrolled }) {
   const inner = (
-    <div className="hm-card shrink-0 flex flex-col items-center gap-1 p-3 cursor-pointer" style={{ minWidth: 76 }} onClick={onClick}>
-      <div className="text-2xl">{icon}</div>
-      <div className="text-[10px] font-bold text-center" style={{ color: 'var(--text)' }}>{label}</div>
-      {pts != null && <div className="text-[9px] font-black" style={{ color: 'var(--gold)' }}>+{pts} נ׳</div>}
+    <div
+      className="hm-card flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 w-full"
+      style={{ padding: scrolled ? '8px 4px' : '10px 6px' }}
+      onClick={onClick}
+    >
+      <div className="text-2xl leading-none">{icon}</div>
+      {!scrolled && (
+        <div className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--text)' }}>{label}</div>
+      )}
+      {!scrolled && sub && (
+        <div className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--gold)' }}>{sub}</div>
+      )}
     </div>
   );
   return href
-    ? <a href={href} target="_blank" rel="noopener noreferrer">{inner}</a>
+    ? <a href={href} target="_blank" rel="noopener noreferrer" className="w-full">{inner}</a>
     : inner;
 }
 
@@ -363,13 +393,11 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
       className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''}`}
       style={isActive ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' } : {}}
     >
-      {/* Always-visible header */}
       <button
         className="w-full text-right p-4"
         onClick={!isPending ? onToggle : undefined}
         disabled={isPending}
       >
-        {/* Row 1: status badge + stage/date */}
         <div className="flex items-center justify-between mb-2">
           {statusBadge || <span />}
           <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
@@ -377,7 +405,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
           </span>
         </div>
 
-        {/* Row 2: teams */}
         <div className="flex items-center justify-between mb-1.5">
           <span className="font-black text-base leading-tight" style={{ color: 'var(--text)' }}>
             {match.home_team || '?'} <span className="text-xl">{homeFlag}</span>
@@ -388,7 +415,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
           </span>
         </div>
 
-        {/* Row 3: time + lock */}
         {kickoffTime && (
           <div className="text-center text-[11px] mb-2" style={{ color: 'var(--text-sec)' }}>
             {kickoffTime} שעון ישראל
@@ -406,7 +432,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
           </div>
         )}
 
-        {/* Row 4: prediction summary */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
@@ -423,11 +448,9 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
         </div>
       </button>
 
-      {/* Expandable content */}
       <div style={{ display: 'grid', gridTemplateRows: isActive ? '1fr' : '0fr', transition: 'grid-template-rows 0.32s cubic-bezier(.4,0,.2,1)' }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="px-4 pb-4 space-y-3">
-            {/* Open match — prediction editor (no prediction yet, or user clicked "שנה בחירה") */}
             {isOpen && (!hasPrediction || editMode) && (
               <PredictionEditor
                 match={match}
@@ -443,7 +466,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               />
             )}
 
-            {/* Open match — saved: flash + summary + upsell CTA */}
             {isOpen && hasPrediction && !editMode && (
               <div className="space-y-2">
                 {showPointsFlash && (
@@ -519,7 +541,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               </div>
             )}
 
-            {/* Locked / live / final with existing prediction */}
             {!isOpen && hasPrediction && (
               <div className="text-center py-2">
                 <div className="text-xs mb-1" style={{ color: 'var(--text-sec)' }}>הניחוש שלך</div>
@@ -542,7 +563,6 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, onVenueCod
               <p className="text-center text-xs py-2" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
             )}
 
-            {/* Booking CTA — only for non-saved states: editor open or locked without prediction */}
             {((isOpen && (!hasPrediction || editMode)) || (match.status === 'locked')) && config?.booking_url && (
               <a
                 href={config.booking_url}
@@ -598,6 +618,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [pendingAchievements, setPendingAchievements] = useState([]);
+  const [scrolled, setScrolled]       = useState(false);
+  const gamesListRef                  = useRef(null);
 
   const totalPoints = useMemo(() => {
     if (!config) return 0;
@@ -646,18 +668,19 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
   useEffect(() => { load(); }, [load]);
 
-  const todayMatches = useMemo(() => {
-    const today = new Date().toDateString();
-    return matches.filter(m => {
-      try { return new Date(m.kickoff_utc || '').toDateString() === today; }
-      catch { return false; }
-    });
-  }, [matches]);
-
   const stages = [...new Set(matches.map(m => m.stage))].sort((a, b) =>
     (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
   );
   const visibleMatches = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
+
+  function handleGamesScroll(e) {
+    setScrolled(e.currentTarget.scrollTop > 50);
+  }
+
+  function scrollToGames() {
+    setScrolled(false);
+    if (gamesListRef.current) gamesListRef.current.scrollTop = 0;
+  }
 
   async function handlePredict(matchId, home, away) {
     if (!campaignId || !token) throw new Error('לא מחובר');
@@ -680,101 +703,97 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   }
 
   return (
-    <div className="min-h-dvh stadium-bg flex flex-col" dir="rtl">
+    <div className="h-dvh stadium-bg flex flex-col overflow-hidden" dir="rtl">
       {pendingAchievements.length > 0 && (
         <AchievementToast
           achievement={pendingAchievements[0]}
           onClose={() => setPendingAchievements(prev => prev.slice(1))}
         />
       )}
-      <header className="flex items-center justify-between px-4 py-3">
-        <button onClick={onPersonalArea} className="text-xl">👤</button>
-        <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--text)' }}>
-          HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
-          <span className="text-xs font-normal mr-1" style={{ color: 'var(--text-sec)' }}>2026</span>
-        </h1>
-        <button onClick={onLogout} className="text-xs" style={{ color: 'var(--text-sec)' }}>יציאה</button>
-      </header>
 
-      <HeroCard
-        totalPoints={totalPoints}
-        config={config}
-        onPersonalArea={onPersonalArea}
-        onPersonalAreaTier={onPersonalAreaTier}
-      />
+      <div style={{ background: 'var(--hm-bg, #100505)' }}>
+        <header className="flex items-center justify-between px-4 py-3">
+          <button onClick={onPersonalArea} className="text-xl">👤</button>
+          <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--text)' }}>
+            HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
+            <span className="text-xs font-normal mr-1" style={{ color: 'var(--text-sec)' }}>2026</span>
+          </h1>
+          <button onClick={onLogout} className="text-xs" style={{ color: 'var(--text-sec)' }}>יציאה</button>
+        </header>
 
-      {effectiveConfig && (
-        <div className="flex overflow-x-auto gap-2 px-3 mb-3 scrollbar-none">
+        <HeroCard
+          totalPoints={totalPoints}
+          config={config}
+          onPersonalArea={onPersonalArea}
+          onPersonalAreaTier={onPersonalAreaTier}
+          scrolled={scrolled}
+        />
+
+        <div className="grid grid-cols-3 gap-2 px-3 mb-1">
+          <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={scrolled} />
+          <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={() => onVenueCode('arrival')} scrolled={scrolled} />
+          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={scrolled} />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 px-3 mb-2">
           <QuickActionTile
-            icon="⚽" label="ניחוש" pts={config.outcome_points ?? 30}
-            onClick={() => {
-              const first = matches.find(m => m.status === 'open' && !predictions[m.id]);
-              if (first) setActiveCard(first.id);
-            }}
+            icon="⚽"
+            label="ניחוש"
+            sub={`+${config?.outcome_points ?? 30} נ׳`}
+            scrolled={scrolled}
+            onClick={scrollToGames}
           />
-          {effectiveConfig.booking_url && (
-            <QuickActionTile icon="🍽️" label="הזמן שולחן" pts={effectiveConfig.table_booking_points ?? 20} href={effectiveConfig.booking_url} />
-          )}
-          {effectiveConfig.delivery_url && (
-            <QuickActionTile icon="🛵" label="משלוח" pts={effectiveConfig.delivery_points ?? 80} href={effectiveConfig.delivery_url} />
-          )}
-          <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} />
-          <QuickActionTile icon="🏠" label="הגעת לסניף?" onClick={onVenueCode} />
-          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={onVenueCode} />
+          <QuickActionTile
+            icon="🍽️"
+            label="הזמן שולחן"
+            sub={`+${config?.table_booking_points ?? 20} נ׳`}
+            href={effectiveConfig?.booking_url}
+            scrolled={scrolled}
+          />
+          <QuickActionTile
+            icon="🛵"
+            label="משלוח"
+            sub={`+${config?.delivery_points ?? 80} נ׳`}
+            href={effectiveConfig?.delivery_url}
+            scrolled={scrolled}
+          />
         </div>
-      )}
 
-      {todayMatches.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto px-3 pb-2 scrollbar-none">
-          {todayMatches.map(m => {
-            const pred = predictions[m.id];
-            return (
-              <button
-                key={m.id}
-                onClick={() => setActiveCard(m.id)}
-                className="shrink-0 hm-card flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold"
-                style={{ color: 'var(--text)' }}
-              >
-                {m.home_flag || '🏳️'} {m.home_team?.split(' ').pop()} vs {m.away_team?.split(' ').pop()} {m.away_flag || '🏳️'}
-                {pred
-                  ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}>✓</span>
-                  : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(244,193,93,0.15)', color: 'var(--gold)', border: '1px solid var(--gold-dim)' }}>!</span>
-                }
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {stages.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-none border-b" style={{ borderColor: 'var(--border)' }}>
-          <button
-            onClick={() => setActiveStage(null)}
-            className="shrink-0 text-xs px-3 py-1.5 rounded-full border"
-            style={{
-              background: activeStage === null ? 'var(--red)' : 'transparent',
-              borderColor: activeStage === null ? 'var(--red)' : 'var(--border)',
-              color: activeStage === null ? 'var(--text)' : 'var(--text-sec)',
-              fontWeight: activeStage === null ? 'bold' : 'normal',
-            }}
-          >הכל</button>
-          {stages.map(s => (
+        {stages.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-none border-b" style={{ borderColor: 'var(--border)' }}>
             <button
-              key={s}
-              onClick={() => setActiveStage(s === activeStage ? null : s)}
+              onClick={() => setActiveStage(null)}
               className="shrink-0 text-xs px-3 py-1.5 rounded-full border"
               style={{
-                background: activeStage === s ? 'var(--red)' : 'transparent',
-                borderColor: activeStage === s ? 'var(--red)' : 'var(--border)',
-                color: activeStage === s ? 'var(--text)' : 'var(--text-sec)',
-                fontWeight: activeStage === s ? 'bold' : 'normal',
+                background: activeStage === null ? 'var(--red)' : 'transparent',
+                borderColor: activeStage === null ? 'var(--red)' : 'var(--border)',
+                color: activeStage === null ? 'var(--text)' : 'var(--text-sec)',
+                fontWeight: activeStage === null ? 'bold' : 'normal',
               }}
-            >{stageHe(s)}</button>
-          ))}
-        </div>
-      )}
+            >הכל</button>
+            {stages.map(s => (
+              <button
+                key={s}
+                onClick={() => setActiveStage(s === activeStage ? null : s)}
+                className="shrink-0 text-xs px-3 py-1.5 rounded-full border"
+                style={{
+                  background: activeStage === s ? 'var(--red)' : 'transparent',
+                  borderColor: activeStage === s ? 'var(--red)' : 'var(--border)',
+                  color: activeStage === s ? 'var(--text)' : 'var(--text-sec)',
+                  fontWeight: activeStage === s ? 'bold' : 'normal',
+                }}
+              >{stageHe(s)}</button>
+            ))}
+          </div>
+        )}
+      </div>
 
-      <main className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+      <main
+        ref={gamesListRef}
+        className="flex-1 overflow-y-auto"
+        style={{ minHeight: 0 }}
+        onScroll={handleGamesScroll}
+      >
         <div className="p-3">
           {loading && <p className="text-center text-sm mt-8" style={{ color: 'var(--text-sec)' }}>טוען משחקים...</p>}
           {error   && <p className="text-center text-sm mt-8 text-red-400">{error}</p>}
@@ -796,7 +815,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           ))}
         </div>
       </main>
-
     </div>
   );
 }

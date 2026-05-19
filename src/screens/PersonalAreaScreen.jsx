@@ -58,70 +58,25 @@ function LbRow({ entry }) {
   );
 }
 
-function WhatIfCard({ icon, label, max, value, onChange, currentPoints, deltaPerUnit }) {
-  const projected = currentPoints + value * deltaPerUnit;
+function WhatIfCard({ icon, label, value, onChange, pts }) {
   return (
-    <div className="hm-card p-4 mb-2">
-      <div className="text-sm font-bold mb-3" style={{ color: 'var(--text)' }}>
+    <div className="rounded-2xl p-4 mb-2 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'var(--border)' }}>
+      <div className="text-sm font-bold mb-3 text-right" style={{ color: 'var(--text)' }}>
         {icon} {label} <span style={{ color: 'var(--red)' }}>{value}</span> פעמים
       </div>
       <div className="flex items-center gap-3">
+        <div className="text-xl font-black tabular-nums" style={{ color: 'var(--gold)', minWidth: 60 }}>
+          {pts} נ׳
+        </div>
         <input
-          type="range" min="0" max={max} value={value}
+          type="range" min="0" max={10} value={value}
           onChange={e => onChange(Number(e.target.value))}
           className="flex-1 h-1 rounded appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to left, var(--red) ${value / max * 100}%, rgba(255,255,255,0.1) ${value / max * 100}%)`,
+            accentColor: 'var(--red)',
+            background: `linear-gradient(to left, var(--red) ${value / 10 * 100}%, rgba(255,255,255,0.1) ${value / 10 * 100}%)`,
           }}
         />
-        <div className="text-base font-black tabular-nums" style={{ color: 'var(--gold)', minWidth: 72, textAlign: 'left' }}>
-          {projected} נ׳
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BenefitsSheet({ tiers, myTier, onClose }) {
-  const sorted = [...tiers].sort((a, b) => b.min_points - a.min_points);
-  const myPts = myTier?.min_points ?? 0;
-  return (
-    <div className="fixed inset-0 z-40 flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
-      <div
-        className="w-full rounded-t-3xl p-6 pb-8"
-        style={{ background: 'rgba(18,4,4,0.98)', border: '1px solid var(--border)', maxHeight: '75vh', overflowY: 'auto' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="text-center text-base font-black mb-4" style={{ color: 'var(--text)' }}>הטבות לפי דרגה</div>
-        {sorted.map(tier => {
-          const isCurrent  = tier.id === myTier?.id;
-          const isAchieved = tier.min_points <= myPts && !isCurrent;
-          const tierKey    = tier.key || tier.id;
-          return (
-            <div
-              key={tier.id}
-              className={`rounded-2xl p-4 mb-3 ${isCurrent ? 'border-2' : 'border'}`}
-              style={{
-                borderColor: isCurrent ? 'var(--red)' : 'var(--border)',
-                background:  isCurrent ? 'rgba(214,58,54,0.12)' : 'transparent',
-                opacity:     isAchieved || isCurrent ? 1 : 0.38,
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
-                  {tier.label_he}
-                </span>
-                {isAchieved && <span className="text-xs font-bold" style={{ color: 'var(--green)' }}>✓ נצבר</span>}
-                {isCurrent && <span className="text-xs font-bold" style={{ color: 'var(--red)' }}>◉ הדרגה שלך</span>}
-              </div>
-              <ul className="space-y-1">
-                {(tier.benefits || []).map((b, i) => (
-                  <li key={i} className="text-xs" style={{ color: 'var(--text-sec)' }}>• {b}</li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
@@ -135,7 +90,6 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
   const [tableCount, setTableCount]   = useState(3);
   const [delivCount, setDelivCount]   = useState(2);
   const [lastSlider, setLastSlider]   = useState(null);
-  const [showBenefits, setShowBenefits] = useState(false);
   const [tierPerks, setTierPerks]     = useState([]);
   const tierRef = useRef(null);
 
@@ -204,9 +158,9 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
   })();
   const ptsToNext = nextTier ? nextTier.min_points - myPts : 0;
 
-  const predDelta  = whatif.prediction_pts ?? 30;
-  const tableDelta = whatif.table_pts ?? 120;
-  const delivDelta = whatif.delivery_pts ?? 80;
+  const predDelta  = config?.outcome_points ?? 30;
+  const tableDelta = config?.table_booking_points ?? 20;
+  const delivDelta = config?.delivery_points ?? 80;
 
   function handleSlider(which, setter, value) {
     setter(value);
@@ -239,7 +193,7 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
           </div>
         </div>
 
-        <div ref={tierRef}>
+        <div>
           <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>המיקום שלי</div>
           <div className="hm-card p-4" style={{ borderColor: 'var(--red)' }}>
             <div className="flex items-center gap-3">
@@ -250,7 +204,7 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
                 <div className="text-base font-black" style={{ color: 'var(--text)' }}>{myPts} נקודות</div>
                 {myTier && (
                   <button
-                    onClick={() => setShowBenefits(true)}
+                    onClick={() => tierRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                     className={`mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(myTier.key || myTier.id)}`}
                   >
                     {myTier.label_he} ↗
@@ -310,23 +264,64 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
         </div>
 
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>מה אם...</div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2 text-right" style={{ color: 'var(--text-sec)' }}>מה אם...</div>
           <WhatIfCard
-            icon="⚽" label="אנחש נכון עוד" max={20}
-            value={predCount}  onChange={v => handleSlider('pred',  setPredCount,  v)}
-            currentPoints={myPts} deltaPerUnit={predDelta}
+            icon="⚽" label="אנחש נכון עוד"
+            value={predCount} onChange={v => handleSlider('pred', setPredCount, v)}
+            pts={predCount * predDelta}
           />
           <WhatIfCard
-            icon="🍽️" label="אזמין שולחן עוד" max={20}
+            icon="🍽️" label="אזמין שולחן עוד"
             value={tableCount} onChange={v => handleSlider('table', setTableCount, v)}
-            currentPoints={myPts} deltaPerUnit={tableDelta}
+            pts={tableCount * tableDelta}
           />
           <WhatIfCard
-            icon="🛵" label="אזמין משלוח עוד" max={20}
+            icon="🛵" label="אזמין משלוח עוד"
             value={delivCount} onChange={v => handleSlider('deliv', setDelivCount, v)}
-            currentPoints={myPts} deltaPerUnit={delivDelta}
+            pts={delivCount * delivDelta}
           />
+          <button
+            onClick={onBack}
+            className="hm-btn-primary flex items-center justify-center gap-2 w-full py-3 text-sm mt-2"
+          >
+            ⚽ לניחושים ←
+          </button>
         </div>
+
+        {tiers.length > 0 && (
+          <div ref={tierRef}>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-2 text-right" style={{ color: 'var(--text-sec)' }}>הטבות לפי דרגה</div>
+            {[...tiers].sort((a, b) => b.min_points - a.min_points).map(tier => {
+              const isCurrent  = tier.id === myTier?.id;
+              const isAchieved = tier.min_points <= (myTier?.min_points ?? 0) && !isCurrent;
+              const tierKey    = tier.key || tier.id;
+              return (
+                <div
+                  key={tier.id}
+                  className={`rounded-2xl p-4 mb-3 ${isCurrent ? 'border-2' : 'border'}`}
+                  style={{
+                    borderColor: isCurrent ? 'var(--red)' : 'var(--border)',
+                    background:  isCurrent ? 'rgba(214,58,54,0.12)' : 'transparent',
+                    opacity:     isAchieved || isCurrent ? 1 : 0.38,
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
+                      {tier.label_he}
+                    </span>
+                    {isAchieved && <span className="text-xs font-bold" style={{ color: 'var(--green)' }}>✓ נצבר</span>}
+                    {isCurrent && <span className="text-xs font-bold" style={{ color: 'var(--red)' }}>◉ הדרגה שלך</span>}
+                  </div>
+                  <ul className="space-y-1">
+                    {(tier.benefits || []).map((b, i) => (
+                      <li key={i} className="text-xs" style={{ color: 'var(--text-sec)' }}>• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="space-y-2">
           <button
@@ -357,10 +352,6 @@ export default function PersonalAreaScreen({ token, campaignId, config, onBack, 
           )}
         </div>
       </div>
-
-      {showBenefits && (
-        <BenefitsSheet tiers={tiers} myTier={myTier} onClose={() => setShowBenefits(false)} />
-      )}
     </div>
   );
 }
