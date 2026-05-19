@@ -7,6 +7,36 @@ const STAGE_SORT_KEYS = {
   'שלב הבתים': 0, 'שמינית גמר': 1, 'רבע גמר': 2, 'חצי גמר': 3, 'גמר': 4,
 };
 
+const FLAG_MAP = {
+  'גרמניה': '🇩🇪', 'צרפת': '🇫🇷', 'ארגנטינה': '🇦🇷', 'ברזיל': '🇧🇷',
+  'ספרד': '🇪🇸', 'אנגליה': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'פורטוגל': '🇵🇹', 'הולנד': '🇳🇱',
+  'בלגיה': '🇧🇪', 'קרואטיה': '🇭🇷', 'איטליה': '🇮🇹', 'שוויץ': '🇨🇭',
+  'דנמרק': '🇩🇰', 'אורוגוואי': '🇺🇾', 'קולומביה': '🇨🇴', 'מקסיקו': '🇲🇽',
+  'ארה"ב': '🇺🇸', 'יפן': '🇯🇵', 'קוריאה': '🇰🇷', 'סנגל': '🇸🇳',
+  'מרוקו': '🇲🇦', 'תוניסיה': '🇹🇳', 'קמרון': '🇨🇲', 'גאנה': '🇬🇭',
+  'אוסטרליה': '🇦🇺', 'קנדה': '🇨🇦', 'פולין': '🇵🇱', 'סרביה': '🇷🇸',
+  'ניגריה': '🇳🇬', 'מצרים': '🇪🇬', 'אקוודור': '🇪🇨', 'פרגוואי': '🇵🇾',
+};
+
+const DAYS_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function getFlag(teamName, fallback) {
+  return FLAG_MAP[teamName] || fallback || '🏳️';
+}
+
+function fmtTime(utcIso, tz = 'Asia/Jerusalem') {
+  try {
+    return new Intl.DateTimeFormat('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(new Date(utcIso));
+  } catch { return ''; }
+}
+
+function fmtDayDate(utcIso) {
+  try {
+    const d = new Date(utcIso);
+    return `${DAYS_HE[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}`;
+  } catch { return ''; }
+}
+
 const TIER_CSS = { bronze: 'tier-bronze', silver: 'tier-silver', gold: 'tier-gold', legend: 'tier-legend' };
 function tierCss(key) { return TIER_CSS[key] || 'tier-bronze'; }
 
@@ -100,66 +130,117 @@ function QuickActionTile({ icon, label, pts, onClick, href }) {
     : inner;
 }
 
-function PredictionButtons({ match, prediction, onPredict }) {
-  const [selected, setSelected] = useState(() => {
+function PredictionEditor({ match, prediction, config, onPredict }) {
+  const initOutcome = () => {
     if (!prediction) return null;
     if (prediction.home_score > prediction.away_score) return 'home';
     if (prediction.home_score < prediction.away_score) return 'away';
     return 'draw';
-  });
+  };
+  const [selected, setSelected] = useState(initOutcome);
+  const [homeScore, setHomeScore] = useState(prediction?.home_score ?? 0);
+  const [awayScore, setAwayScore] = useState(prediction?.away_score ?? 0);
   const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    if (!prediction) { setSelected(null); return; }
-    if (prediction.home_score > prediction.away_score) setSelected('home');
-    else if (prediction.home_score < prediction.away_score) setSelected('away');
-    else setSelected('draw');
+    if (!prediction) { setSelected(null); setHomeScore(0); setAwayScore(0); return; }
+    setSelected(initOutcome());
+    setHomeScore(prediction.home_score);
+    setAwayScore(prediction.away_score);
   }, [prediction]);
 
-  async function pick(outcome) {
-    if (submitting) return;
+  function pickOutcome(outcome) {
     setSelected(outcome);
+    if (outcome === 'home')  { setHomeScore(1); setAwayScore(0); }
+    else if (outcome === 'away') { setHomeScore(0); setAwayScore(1); }
+    else                     { setHomeScore(0); setAwayScore(0); }
+  }
+
+  async function handleSave() {
+    if (!selected || submitting) return;
     setSubmitting(true);
     setErr('');
-    const scoreMap = { home: [1, 0], draw: [0, 0], away: [0, 1] };
-    const [hs, as_] = scoreMap[outcome];
     try {
-      await onPredict(match.id, hs, as_);
+      await onPredict(match.id, homeScore, awayScore);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       if (e?.data?.error === 'prediction_locked') setErr('המשחק כבר התחיל');
       else setErr(e.message || 'שגיאה');
-      setSelected(null);
     } finally {
       setSubmitting(false);
     }
   }
 
-  const homeName = match.home_team?.split(' ').pop() || '1';
-  const awayName = match.away_team?.split(' ').pop() || '2';
+  const homeName = match.home_team || '?';
+  const awayName = match.away_team || '?';
+  const totalBonus = (config?.participation_points ?? 10) + (config?.outcome_points ?? 30) + (config?.bullseye_points ?? 60);
 
   return (
-    <div>
-      <div className="flex gap-2 justify-center" dir="ltr">
-        {[
-          { key: 'home', label: '1', sub: homeName },
-          { key: 'draw', label: 'X', sub: 'תיקו' },
-          { key: 'away', label: '2', sub: awayName },
-        ].map(btn => (
-          <button
-            key={btn.key}
-            onClick={() => pick(btn.key)}
-            disabled={submitting}
-            className={`score-btn flex-1 py-2.5 flex flex-col items-center gap-0.5 ${selected === btn.key ? 'selected' : ''}`}
-          >
-            <span className="font-black text-base">{btn.label}</span>
-            <span className="text-[9px]" style={{ color: selected === btn.key ? 'rgba(255,255,255,0.7)' : 'var(--text-sec)' }}>
-              {btn.sub}
-            </span>
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-bold text-right mb-2.5" style={{ color: 'var(--text)' }}>מי ינצח?</p>
+        <div className="flex gap-2" dir="ltr">
+          {[
+            { key: 'away', label: '2', sub: awayName },
+            { key: 'draw', label: 'X', sub: 'תיקו' },
+            { key: 'home', label: '1', sub: homeName },
+          ].map(btn => (
+            <button
+              key={btn.key}
+              onClick={() => pickOutcome(btn.key)}
+              disabled={submitting}
+              className={`score-btn flex-1 py-6 flex flex-col items-center gap-1.5 ${selected === btn.key ? 'selected' : ''}`}
+            >
+              <span className="font-black text-3xl">{btn.label}</span>
+              <span className="text-[11px]" style={{ color: selected === btn.key ? 'rgba(255,255,255,0.75)' : 'var(--text-sec)' }}>
+                {btn.sub}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
-      {err && <p className="text-red-400 text-[10px] text-center mt-1">{err}</p>}
+
+      <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="text-xs text-right mb-3" style={{ color: 'var(--text-sec)' }}>
+          תוצאה מדויקת <span style={{ fontWeight: 'normal' }}>(אופציונלי)</span>
+        </p>
+        <div className="flex items-center justify-center gap-3" dir="ltr">
+          <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{homeName}</span>
+          <input
+            type="number" min="0" max="20"
+            value={homeScore}
+            onChange={e => setHomeScore(Math.max(0, parseInt(e.target.value) || 0))}
+            className="w-14 h-12 rounded-xl text-center font-black text-xl outline-none"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text)' }}
+          />
+          <span className="font-black text-lg" style={{ color: 'var(--text)' }}>:</span>
+          <input
+            type="number" min="0" max="20"
+            value={awayScore}
+            onChange={e => setAwayScore(Math.max(0, parseInt(e.target.value) || 0))}
+            className="w-14 h-12 rounded-xl text-center font-black text-xl outline-none"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text)' }}
+          />
+          <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{awayName}</span>
+        </div>
+        <p className="text-center text-[11px] mt-3" style={{ color: 'var(--text-sec)' }}>
+          🎯 נחש נכון = +{totalBonus} נקודות בונוס
+        </p>
+      </div>
+
+      {err && <p className="text-red-400 text-xs text-center">{err}</p>}
+
+      <button
+        onClick={handleSave}
+        disabled={!selected || submitting}
+        className="hm-btn-primary w-full py-4 rounded-2xl text-base font-black"
+        style={{ opacity: !selected || submitting ? 0.5 : 1 }}
+      >
+        {submitting ? 'שומר...' : saved ? '✓ נשמר!' : 'שמור תחזית'}
+      </button>
     </div>
   );
 }
@@ -168,8 +249,8 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
   const isOpen    = match.status === 'open' && !isPending;
+  const isLive    = match.status === 'live';
   const isFinal   = match.status === 'final';
-  const showBooking = (match.status === 'live' || isFinal) && config?.booking_url;
   const hasPrediction = prediction != null;
 
   const predOutcome = hasPrediction
@@ -189,89 +270,144 @@ function MatchCard({ match, prediction, config, onPredict, onBooking, isActive, 
     if (bullseye) spawnConfetti();
   }, [bullseye]);
 
-  const homeFlag = match.home_flag || '🏳️';
-  const awayFlag = match.away_flag || '🏳️';
+  const homeFlag = getFlag(match.home_team, match.home_flag);
+  const awayFlag = getFlag(match.away_team, match.away_flag);
+
+  const kickoffTime = match.kickoff_utc ? fmtTime(match.kickoff_utc) : '';
+  const lockTime    = match.lock_deadline_utc ? fmtTime(match.lock_deadline_utc) : '';
+  const dayDate     = match.kickoff_utc ? fmtDayDate(match.kickoff_utc) : '';
+
+  const predLabel = predOutcome === 'home' ? '1' : predOutcome === 'away' ? '2' : predOutcome === 'draw' ? 'X' : null;
+
+  const statusBadge = isOpen
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}><span>●</span> פתוח</span>
+    : isLive
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>⚽ חי</span>
+    : match.status === 'locked'
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 נעול</span>
+    : isFinal
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(157,133,133,0.15)', color: 'var(--text-sec)', border: '1px solid rgba(157,133,133,0.3)' }}>✓ סיום</span>
+    : null;
 
   return (
-    <div className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''}`}>
+    <div
+      className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''}`}
+      style={isActive ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' } : {}}
+    >
+      {/* Always-visible header */}
       <button
-        className="w-full text-right p-4 flex items-center justify-between"
+        className="w-full text-right p-4"
         onClick={!isPending ? onToggle : undefined}
         disabled={isPending}
       >
-        <div className="flex-1">
-          <div className="flex items-center gap-2 justify-end">
-            <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>
-              {homeFlag} {match.home_team || '?'} — {match.away_team || '?'} {awayFlag}
-            </span>
-          </div>
-          <div className="text-[11px] mt-0.5 flex items-center gap-2 justify-end" style={{ color: 'var(--text-sec)' }}>
-            <span>{match.kickoff_local}</span>
-            {match.status === 'locked' && <span className="text-amber-400">🔒 נעול</span>}
-            {match.status === 'live'   && <span className="text-blue-400">⚽ חי</span>}
-            {isFinal && <span>✓ סיום</span>}
-          </div>
+        {/* Row 1: status badge + stage/date */}
+        <div className="flex items-center justify-between mb-2">
+          {statusBadge || <span />}
+          <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
+            {[match.stage, dayDate].filter(Boolean).join(' — ')}
+          </span>
         </div>
-        {isFinal && (
-          <div className="font-black tabular-nums text-base ml-2" style={{ color: 'var(--text)' }}>
-            {match.final_home_score} – {match.final_away_score}
+
+        {/* Row 2: teams */}
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="font-black text-base leading-tight" style={{ color: 'var(--text)' }}>
+            {match.home_team || '?'} <span className="text-xl">{homeFlag}</span>
+          </span>
+          <span className="text-xs font-normal px-1" style={{ color: 'var(--text-sec)' }}>vs</span>
+          <span className="font-black text-base leading-tight" style={{ color: 'var(--text)' }}>
+            <span className="text-xl">{awayFlag}</span> {match.away_team || '?'}
+          </span>
+        </div>
+
+        {/* Row 3: time + lock */}
+        {kickoffTime && (
+          <div className="text-center text-[11px] mb-2" style={{ color: 'var(--text-sec)' }}>
+            {kickoffTime} שעון ישראל
+            {lockTime && lockTime !== kickoffTime ? ` • נועל ב-${lockTime}` : ''}
+            {isLive && match.live_home_score != null && (
+              <span className="font-black text-blue-400 mr-2">
+                {' '}{match.live_home_score} : {match.live_away_score}
+              </span>
+            )}
+            {isFinal && (
+              <span className="font-black mr-2" style={{ color: 'var(--text)' }}>
+                {' '}{match.final_home_score} : {match.final_away_score}
+              </span>
+            )}
           </div>
         )}
-        {match.status === 'live' && match.live_home_score != null && (
-          <div className="font-black tabular-nums text-base ml-2 text-blue-400">
-            {match.live_home_score} – {match.live_away_score}
+
+        {/* Row 4: prediction summary */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
+              {isActive ? '▲' : '▼'}
+              {hasPrediction ? ` ${prediction.home_score}:${prediction.away_score}` : ''}
+            </span>
+            {predLabel && (
+              <span className="text-[11px] font-black px-2 py-0.5 rounded-md" style={{ background: 'var(--red)', color: 'var(--text)' }}>
+                {predLabel}
+              </span>
+            )}
           </div>
-        )}
-        {!isPending && (
-          <span className="text-xs ml-2" style={{ color: 'var(--text-sec)' }}>{isActive ? '▲' : '▼'}</span>
-        )}
+          <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>הבחירה שלך</span>
+        </div>
       </button>
 
+      {/* Expandable content */}
       <div style={{ display: 'grid', gridTemplateRows: isActive ? '1fr' : '0fr', transition: 'grid-template-rows 0.32s cubic-bezier(.4,0,.2,1)' }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="px-4 pb-4 space-y-3">
+            {/* Open match — prediction editor */}
             {isOpen && (
-              <PredictionButtons match={match} prediction={prediction} onPredict={onPredict} />
+              <PredictionEditor
+                match={match}
+                prediction={prediction}
+                config={config}
+                onPredict={onPredict}
+              />
             )}
+
+            {/* Locked / live with existing prediction */}
             {!isOpen && hasPrediction && (
-              <div className="text-center">
+              <div className="text-center py-2">
                 <div className="text-xs mb-1" style={{ color: 'var(--text-sec)' }}>הניחוש שלך</div>
-                <div className="text-2xl font-black tabular-nums" style={{ color: 'var(--text)' }}>
-                  {prediction.home_score} – {prediction.away_score}
+                <div className="text-3xl font-black tabular-nums" style={{ color: 'var(--text)' }}>
+                  {prediction.home_score} : {prediction.away_score}
                 </div>
                 {isFinal && bullseye && (
-                  <div className="mt-1 text-xs font-bold" style={{ color: 'var(--gold)' }}>
-                    🎯 בולסאי! +{config?.bullseye_points ?? 60}
-                  </div>
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>🎯 בולסאי! +{config?.bullseye_points ?? 60}</div>
                 )}
                 {isFinal && !bullseye && correctOutcome && (
-                  <div className="mt-1 text-xs font-bold" style={{ color: 'var(--green)' }}>
-                    ✓ ניחוש נכון! +{config?.outcome_points ?? 30}
-                  </div>
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--green)' }}>✓ ניחוש נכון! +{config?.outcome_points ?? 30}</div>
                 )}
                 {isFinal && !bullseye && !correctOutcome && (
-                  <div className="mt-1 text-xs" style={{ color: 'var(--text-sec)' }}>✗ ניחוש שגוי</div>
+                  <div className="mt-2 text-xs" style={{ color: 'var(--text-sec)' }}>✗ ניחוש שגוי</div>
                 )}
               </div>
             )}
+
             {!isOpen && !hasPrediction && (
-              <p className="text-center text-xs" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
+              <p className="text-center text-xs py-2" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
             )}
-            {showBooking && (
+
+            {/* Booking CTA — shown for open matches */}
+            {isOpen && config?.booking_url && (
               <a
                 href={config.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => onBooking(match.id)}
-                className="hm-card flex items-center justify-between px-4 py-3 text-sm"
+                className="flex items-center justify-between px-4 py-3 rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
               >
-                <div>
-                  <div className="font-bold" style={{ color: 'var(--text)' }}>צפה ב-Humongous!</div>
+                <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
+                <div className="text-right">
+                  <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ צפה ב-Humongous!</div>
                   <div className="text-xs" style={{ color: 'var(--green)' }}>
-                    הזמן מקום וקבל +{config.table_booking_points ?? 20} נקודות
+                    הזמן מקום {match.away_team} vs {match.home_team} וקבל +{config.table_booking_points ?? 15} נקודות
                   </div>
                 </div>
-                <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
               </a>
             )}
           </div>
