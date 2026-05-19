@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { callFn } from '../lib/api.js';
 import { setToken } from '../lib/session.js';
 
-export default function OtpScreen({ phone, onSuccess, onBack }) {
+export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
   const [code, setCode]       = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
@@ -14,7 +14,7 @@ export default function OtpScreen({ phone, onSuccess, onBack }) {
     setError('');
     setLoading(true);
     try {
-      const { token, playerId } = await callFn('promoVerifyOtp', { phone, code });
+      const { token, playerId } = await callFn('promoVerifyOtp', { phone, code, acceptTerms: isNewUser === true });
       setToken(token);
       onSuccess(playerId, token);
     } catch (err) {

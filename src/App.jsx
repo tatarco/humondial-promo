@@ -37,10 +37,11 @@ async function fetchSession() {
 }
 
 export default function App() {
-  const [screen, setScreen]           = useState(SCREEN.SPLASH);
-  const [phone,  setPhone]            = useState('');
-  const [token,  setTokenState]       = useState('');
-  const [player, setPlayer]           = useState(null);
+  const [screen,     setScreen]      = useState(SCREEN.SPLASH);
+  const [phone,      setPhone]       = useState('');
+  const [token,      setTokenState]  = useState('');
+  const [player,     setPlayer]      = useState(null);
+  const [isNewUser,  setIsNewUser]   = useState(false);
   const [config, setConfig]           = useState(null);
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [pendingCid, setPendingCid]   = useState('');
@@ -70,15 +71,16 @@ export default function App() {
     }
   }
 
-  function handlePhoneSuccess(normalizedPhone) {
+  function handlePhoneSuccess(normalizedPhone, newUser) {
     setPhone(normalizedPhone);
+    setIsNewUser(newUser);
     setScreen(SCREEN.OTP);
   }
 
   function handleOtpSuccess(playerId, tok) {
     setPlayer(playerId);
     setTokenState(tok);
-    setScreen(SCREEN.LEGAL);
+    setScreen(SCREEN.SHELL);
   }
 
   function handleLegalSuccess() {
@@ -121,6 +123,7 @@ export default function App() {
       return (
         <OtpScreen
           phone={phone}
+          isNewUser={isNewUser}
           onSuccess={handleOtpSuccess}
           onBack={() => setScreen(SCREEN.PHONE)}
         />

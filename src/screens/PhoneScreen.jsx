@@ -18,26 +18,54 @@ function isValidNickname(n) {
 }
 
 export default function PhoneScreen({ onSuccess }) {
-  const [phone,    setPhone]    = useState('');
-  const [nickname, setNickname] = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
+  const [phone,     setPhone]    = useState('');
+  const [nickname,  setNickname] = useState('');
+  const [terms,     setTerms]    = useState(false);
+  const [whatsapp,  setWhatsapp] = useState(false);
+  const [phase,     setPhase]    = useState('phone'); // 'phone' | 'checking' | 'new-user' | 'returning'
+  const [loading,   setLoading]  = useState(false);
+  const [error,     setError]    = useState('');
 
-  const canSubmit = isValidPhone(phone) && isValidNickname(nickname) && !loading;
+  const phoneValid   = isValidPhone(phone);
+  const canCheck     = phoneValid && !loading;
+  const canSubmitNew = phoneValid && isValidNickname(nickname) && terms && whatsapp && !loading;
+  const canSubmitRet = phoneValid && !loading;
+
+  async function handleCheck(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const { isNewUser } = await callFn('promoCheckPhone', { phone });
+      setPhase(isNewUser ? 'new-user' : 'returning');
+    } catch {
+      setError('שגיאה — נסה שוב');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await callFn('promoRequestOtp', { phone, nickname: nickname.trim() });
-      onSuccess(normalizePhone(phone));
+      const payload = phase === 'new-user'
+        ? { phone, nickname: nickname.trim() }
+        : { phone };
+      await callFn('promoRequestOtp', payload);
+      onSuccess(normalizePhone(phone), phase === 'new-user');
     } catch (err) {
       setError(err.message || 'שגיאה — נסה שוב');
     } finally {
       setLoading(false);
     }
   }
+
+  const isPhasePhone    = phase === 'phone';
+  const isPhaseChecking = phase === 'checking';
+  const isNewUser       = phase === 'new-user';
+  const isReturning     = phase === 'returning';
 
   return (
     <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center px-6">
@@ -58,21 +86,14 @@ export default function PhoneScreen({ onSuccess }) {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-hm-white font-semibold text-right">כינוי בלוח התוצאות</label>
-            <input
-              type="text"
-              placeholder="כינוי (2–20 תווים)"
-              value={nickname}
-              onChange={e => setNickname(e.target.value)}
-              maxLength={20}
-              className="w-full bg-hm-card border border-hm-dim rounded-xl px-4 py-3 text-hm-white
-                         text-base text-right placeholder-hm-muted
-                         focus:outline-none focus:border-hm-red"
-              dir="rtl"
-            />
-          </div>
+        <form onSubmit={isPhasePhone ? handleCheck : handleSubmit} className="flex flex-col gap-4">
+
+          {isReturning && (
+            <div className="flex items-center gap-2 bg-hm-card border border-hm-dim rounded-xl px-4 py-3 text-right">
+              <span className="text-green-400 text-lg">✓</span>
+              <span className="text-hm-white text-sm">ברוך שובך! נשלח לך קוד אימות</span>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className="text-sm text-hm-white font-semibold text-right">מספר טלפון</label>
@@ -80,14 +101,61 @@ export default function PhoneScreen({ onSuccess }) {
               type="tel"
               placeholder="05X-XXX-XXXX"
               value={phone}
-              onChange={e => setPhone(e.target.value)}
+              onChange={e => { setPhone(e.target.value); setPhase('phone'); setError(''); }}
               inputMode="numeric"
+              disabled={loading}
               className="w-full bg-hm-card border border-hm-dim rounded-xl px-4 py-3 text-hm-white
                          text-lg tracking-wider text-right placeholder-hm-muted
-                         focus:outline-none focus:border-hm-red"
+                         focus:outline-none focus:border-hm-red disabled:opacity-60"
               dir="ltr"
             />
           </div>
+
+          {isNewUser && (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-hm-white font-semibold text-right">כינוי בלוח התוצאות</label>
+                <input
+                  type="text"
+                  placeholder="כינוי (2–20 תווים)"
+                  value={nickname}
+                  onChange={e => setNickname(e.target.value)}
+                  maxLength={20}
+                  autoFocus
+                  className="w-full bg-hm-card border border-hm-dim rounded-xl px-4 py-3 text-hm-white
+                             text-base text-right placeholder-hm-muted
+                             focus:outline-none focus:border-hm-red"
+                  dir="rtl"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3 pt-1">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={terms}
+                    onChange={e => setTerms(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 accent-hm-red flex-shrink-0"
+                  />
+                  <span className="text-hm-white text-sm text-right leading-relaxed">
+                    אני מסכים/ה לתנאי השימוש ומדיניות הפרטיות
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={whatsapp}
+                    onChange={e => setWhatsapp(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 accent-hm-red flex-shrink-0"
+                  />
+                  <span className="text-hm-white text-sm text-right leading-relaxed">
+                    אני מסכים/ה לקבל הודעות WhatsApp במסגרת המשחק
+                  </span>
+                </label>
+              </div>
+            </>
+          )}
 
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
@@ -95,7 +163,7 @@ export default function PhoneScreen({ onSuccess }) {
 
           <button
             type="submit"
-            disabled={!canSubmit}
+            disabled={isPhasePhone ? !canCheck : isNewUser ? !canSubmitNew : !canSubmitRet}
             className="w-full bg-hm-red text-hm-white font-bold py-3 rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        active:scale-95 transition-transform"
