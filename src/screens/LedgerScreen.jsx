@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { callFn } from '../lib/api.js';
 
 const REASON_MAP = {
@@ -12,7 +12,9 @@ const REASON_MAP = {
 const groupByDate = (rows) => {
   const groups = {};
   const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  const yesterday = y.toDateString();
   for (const row of rows) {
     const d = new Date(row.created_at);
     const key = d.toDateString();
@@ -48,6 +50,13 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
 
   useEffect(() => { load(); }, [load]);
 
+  const { rows = [], total_points = 0 } = data || {};
+  const groups = useMemo(() => {
+    const sorted = [...rows].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return groupByDate(sorted);
+  }, [rows]);
+  const groupEntries = Object.entries(groups);
+
   if (loading) {
     return (
       <div className="min-h-dvh stadium-bg flex items-center justify-center">
@@ -64,10 +73,6 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
       </div>
     );
   }
-
-  const { rows = [], total_points = 0 } = data || {};
-  const groups = groupByDate(rows);
-  const groupEntries = Object.entries(groups);
 
   return (
     <div className="min-h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">

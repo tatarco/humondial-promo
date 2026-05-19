@@ -76,4 +76,21 @@ describe('LedgerScreen', () => {
     render(<LedgerScreen token="t" campaignId="c" onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText(/אין נקודות עדיין/)).toBeInTheDocument());
   });
+
+  test('calls getPlayerLedger with correct args', async () => {
+    callFn.mockResolvedValue(MOCK_DATA);
+    render(<LedgerScreen token="t" campaignId="c" onBack={vi.fn()} />);
+    await waitFor(() => screen.getByText('85'));
+    expect(callFn).toHaveBeenCalledWith('getPlayerLedger', { token: 't', campaign_id: 'c' });
+  });
+
+  test('retry button re-fetches data', async () => {
+    callFn
+      .mockRejectedValueOnce(new Error('fail'))
+      .mockResolvedValueOnce(MOCK_DATA);
+    render(<LedgerScreen token="t" campaignId="c" onBack={vi.fn()} />);
+    await waitFor(() => screen.getByRole('button', { name: /נסה שוב/i }));
+    fireEvent.click(screen.getByRole('button', { name: /נסה שוב/i }));
+    await waitFor(() => expect(screen.getByText('85')).toBeInTheDocument());
+  });
 });
