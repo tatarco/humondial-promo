@@ -17,10 +17,6 @@ export default defineConfig({
         url: 'http://localhost/',
       },
     },
-    poolOptions: {
-      forks: {
-        execArgv: ['--localstorage-file=/tmp/vitest-ls.json'],
-      },
-    },
+    pool: 'vmThreads',
   },
 });
