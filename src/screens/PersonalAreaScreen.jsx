@@ -12,18 +12,6 @@ function tierCss(key) {
   return TIER_CSS[key] || 'tier-bronze';
 }
 
-const BADGES = [
-  { id: 'silver',    emoji: '🥈', label: 'חבר סילבר',     description: 'צברת מספיק נקודות ועברת לדרגת סילבר — אתה בלהקה!',       threshold: 'silver', check: (t, c) => ['silver','gold','legend'].includes(t) },
-  { id: 'gold',      emoji: '🥇', label: 'חבר זהב',       description: 'דרגת זהב — שחקן רציני שמחויב ל-HUMONDIAL לגמרי!',       threshold: 'gold',   check: (t, c) => ['gold','legend'].includes(t) },
-  { id: 'legend',    emoji: '🏆', label: 'אגדה',           description: 'הגעת לפסגה. אגדה של HUMONDIAL — לנצח.',                  threshold: 'legend', check: (t, c) => t === 'legend' },
-  { id: 'delivery1', emoji: '🛵', label: 'הזמנה ראשונה',   description: 'ביצעת הזמנת משלוח ראשונה — ממשיכים, מה קנית? 🤤',      check: (t, c) => (c.delivery ?? 0) >= 1 },
-  { id: 'table1',    emoji: '🍽️', label: 'מסעדה ראשונה',   description: 'הזמנת שולחן במסעדה — לצפות במונדיאל זה חוויה אחרת!',   check: (t, c) => (c.table_booking ?? 0) >= 1 },
-  { id: 'visit1',    emoji: '🏟️', label: 'ביקור ראשון',    description: 'הגעת לסניף ורשמת את הביקור הראשון שלך — כיף לראות!',   check: (t, c) => (c.venue_visit ?? 0) >= 1 },
-  { id: 'pred5',     emoji: '⚽', label: '5 ניחושים',      description: 'שלחת ניחוש ל-5 משחקים — אתה עוקב אחרי המונדיאל!',      check: (t, c) => (c.prediction_participation ?? 0) >= 5 },
-  { id: 'pred10',    emoji: '🔥', label: '10 ניחושים',     description: '10 ניחושים — אתה מהמחויבים הכי גדולים כאן, ממש!',       check: (t, c) => (c.prediction_participation ?? 0) >= 10 },
-  { id: 'achieve1',  emoji: '🏅', label: 'הישג',           description: 'קיבלת הישג מיוחד מהצוות — מזל טוב, מגיע לך!',          check: (t, c) => (c.achievement ?? 0) >= 1 },
-];
-
 function MiniPodium({ top3 }) {
   const ORDER = [2, 1, 3];
   const META = {
@@ -105,7 +93,13 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const myPts   = me.total_points ?? 0;
   const myTier  = me.tier || null;
   const tierKey = myTier?.key || myTier?.id || '';
-  const counts  = me.ledger_counts ?? {};
+
+  const allAchievements = me.achievements ?? [];
+  const unlockedAchievements = allAchievements
+    .filter(a => a.unlocked)
+    .sort((a, b) => new Date(b.unlocked_at || 0).getTime() - new Date(a.unlocked_at || 0).getTime());
+  const lockedAchievements = allAchievements.filter(a => !a.unlocked);
+  const stripItems = [...unlockedAchievements.slice(0, 2), ...lockedAchievements.slice(0, 3)];
 
   const currentTier = dataTiers.find(t => t.key === tierKey) || { min_points: 0 };
   const nextTier = dataTiers.slice().sort((a, b) => a.min_points - b.min_points).find(t => t.min_points > myPts);
@@ -114,7 +108,6 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const progPct = bandMax > bandMin
     ? Math.min(100, Math.round(((myPts - bandMin) / (bandMax - bandMin)) * 100))
     : 100;
-  const badges  = BADGES.map(b => ({ ...b, unlocked: b.check(tierKey, counts) }));
 
   const formatEndDate = (iso) => {
     if (!iso) return null;
@@ -214,7 +207,10 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           <div className="hm-card p-3">
             {!achievementsExpanded ? (
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {badges.map(b => (
+                {stripItems.length === 0 && (
+                  <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים עדיין</div>
+                )}
+                {stripItems.map(b => (
                   <div
                     key={b.id}
                     className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
@@ -225,23 +221,22 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                       minWidth: 60,
                     }}
                   >
-                    <span className="text-xl leading-none">{b.emoji}</span>
+                    <span className="text-xl leading-none">{b.badge}</span>
                     <span
                       className="text-[10px] font-bold text-center leading-tight"
                       style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}
                     >
-                      {b.label}
+                      {b.label_he}
                     </span>
-                    {!b.unlocked && b.threshold && (() => {
-                      const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
-                      return tierPts ? <div style={{ fontSize: 8, color: 'var(--text-sec)', marginTop: 2 }}>{tierPts} נ׳</div> : null;
-                    })()}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="space-y-2">
-                {badges.map(b => (
+                {allAchievements.length === 0 && (
+                  <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים מוגדרים עדיין</div>
+                )}
+                {[...unlockedAchievements, ...lockedAchievements].map(b => (
                   <div
                     key={b.id}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
@@ -251,22 +246,19 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                       opacity: b.unlocked ? 1 : 0.45,
                     }}
                   >
-                    <span className="text-2xl leading-none flex-shrink-0">{b.emoji}</span>
+                    <span className="text-2xl leading-none flex-shrink-0">{b.badge}</span>
                     <div className="flex-1 min-w-0 text-right">
                       <div className="text-sm font-bold leading-tight" style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}>
-                        {b.label}
+                        {b.label_he}
                       </div>
-                      <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
-                        {b.description}
-                      </div>
-                      {!b.unlocked && b.threshold && (() => {
-                        const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
-                        return tierPts ? (
-                          <div className="text-[10px] mt-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                            נדרש: {tierPts} נ׳
-                          </div>
-                        ) : null;
-                      })()}
+                      {b.description_he && (
+                        <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
+                          {b.description_he}
+                        </div>
+                      )}
+                      {b.unlocked && b.bonus_points > 0 && (
+                        <div className="text-[10px] mt-1 font-bold" style={{ color: 'var(--gold)' }}>+{b.bonus_points} נ׳ בונוס</div>
+                      )}
                     </div>
                     {b.unlocked && (
                       <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>

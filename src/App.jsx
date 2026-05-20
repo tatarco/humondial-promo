@@ -30,10 +30,12 @@ const SCREEN = {
   LEDGER:           'ledger',
 };
 
-async function fetchSession() {
+async function fetchSession(campaignId) {
   if (!isLoggedIn()) return { nextScreen: SCREEN.PHONE, playerId: null };
   try {
-    const { valid, playerId, termsAccepted } = await callFn('promoValidateSession', { token: getToken() });
+    const payload = { token: getToken() };
+    if (campaignId) payload.campaign_id = campaignId;
+    const { valid, playerId, termsAccepted } = await callFn('promoValidateSession', payload);
     if (!valid)         return { nextScreen: SCREEN.PHONE, playerId: null };
     if (!termsAccepted) return { nextScreen: SCREEN.LEGAL, playerId };
     return { nextScreen: SCREEN.SHELL, playerId };
@@ -59,11 +61,9 @@ export default function App() {
     if (vc) { setPendingVenueCode(vc); setPendingCid(cid || ''); }
     history.replaceState(null, '', window.location.pathname);
     setScreen(SCREEN.LOADING);
-    const [sessionResult, cfg] = await Promise.all([
-      fetchSession().catch(() => ({ nextScreen: SCREEN.PHONE, playerId: null })),
-      loadConfig().catch(() => null),
-    ]);
+    const cfg = await loadConfig().catch(() => null);
     setConfig(cfg);
+    const sessionResult = await fetchSession(cfg?.id).catch(() => ({ nextScreen: SCREEN.PHONE, playerId: null }));
     if (sessionResult.nextScreen === SCREEN.LEGAL) {
       setTokenState(getToken());
       setPlayer(sessionResult.playerId);
