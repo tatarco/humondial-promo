@@ -1,13 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { callFn } from '../lib/api.js';
 import { setToken } from '../lib/session.js';
 
 export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
-  const [code, setCode]       = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [code, setCode]         = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
+  const [countdown, setCountdown] = useState(60);
+  const [resending, setResending] = useState(false);
+  const timerRef = useRef(null);
 
   const displayPhone = phone.replace(/^(972)(\d{5})(\d{4})$/, '+972-****$3');
+
+  useEffect(() => {
+    startCountdown();
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  function startCountdown() {
+    clearInterval(timerRef.current);
+    setCountdown(60);
+    timerRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) { clearInterval(timerRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  }
 
   async function handleVerify(e) {
     e.preventDefault();
@@ -17,10 +36,25 @@ export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
       const { token, playerId } = await callFn('promoVerifyOtp', { phone, code, acceptTerms: isNewUser === true });
       setToken(token);
       onSuccess(playerId, token);
-    } catch (err) {
-      setError('קוד שגוי או פג תוקף — נסה שוב');
+    } catch {
+      setCode('');
+      setError('קוד שגוי — נסה להזין שוב');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    setError('');
+    setCode('');
+    try {
+      await callFn('promoRequestOtp', { phone });
+      startCountdown();
+    } catch {
+      setError('שגיאה בשליחת קוד חדש — נסה שוב');
+    } finally {
+      setResending(false);
     }
   }
 
@@ -34,15 +68,23 @@ export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
       <div className="w-full max-w-sm">
         <button
           onClick={onBack}
-          className="text-hm-muted text-sm mb-8 flex items-center gap-1 hover:text-hm-white"
+          className="text-hm-muted text-xs mb-8 flex items-center gap-1 opacity-40 hover:opacity-70"
         >
-          ← חזור
+          ← חזרה לשינוי מספר
         </button>
 
         <h2 className="text-2xl font-bold text-hm-white mb-2">הזן קוד אימות</h2>
-        <p className="text-hm-muted text-sm mb-8">
+        <p className="text-hm-muted text-sm mb-2">
           שלחנו קוד ב-WhatsApp למספר {displayPhone}
         </p>
+
+        {countdown > 0 ? (
+          <p className="text-hm-muted text-xs mb-6">
+            הקוד יכול לקחת עד {countdown} שניות להגיע
+          </p>
+        ) : (
+          <p className="text-hm-muted text-xs mb-6">לא קיבלת קוד?</p>
+        )}
 
         <form onSubmit={handleVerify} className="flex flex-col gap-4">
           <input
@@ -70,6 +112,18 @@ export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
           >
             {loading ? '...' : 'אימות'}
           </button>
+
+          {countdown === 0 && (
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="w-full border border-hm-dim text-hm-white font-semibold py-3 rounded-xl
+                         disabled:opacity-40 active:scale-95 transition-transform"
+            >
+              {resending ? '...' : 'שלח קוד חדש'}
+            </button>
+          )}
         </form>
       </div>
     </div>
