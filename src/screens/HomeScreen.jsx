@@ -839,7 +839,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     if (openUnguessed) setActiveCard(target.id);
     setTimeout(() => {
       document.querySelector(`[data-match-id="${target.id}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
   }
 
