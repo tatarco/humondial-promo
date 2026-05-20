@@ -62,7 +62,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
     setError('');
     try {
       const result = await callFn('getLeaderboard', { token, campaign_id: campaignId });
-      setData(result);
+      setData(result?.data ?? result);
     } catch (e) {
       setError(e.message || 'שגיאה בטעינה');
     } finally {
@@ -95,10 +95,14 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const tierKey = myTier?.key || myTier?.id || '';
 
   const allAchievements = me.achievements ?? [];
+  const isAchUnlocked = (a) => !!(a.unlocked || a.unlocked_at);
   const unlockedAchievements = allAchievements
-    .filter(a => a.unlocked)
+    .filter(isAchUnlocked)
     .sort((a, b) => new Date(b.unlocked_at || 0).getTime() - new Date(a.unlocked_at || 0).getTime());
-  const lockedAchievements = allAchievements.filter(a => !a.unlocked);
+  const lockedAchievements = allAchievements
+    .filter(a => !isAchUnlocked(a))
+    .sort((a, b) => String(a.id ?? '').localeCompare(String(b.id ?? '')));
+  const achievementsOrdered = [...unlockedAchievements, ...lockedAchievements];
   const stripItems = [...unlockedAchievements.slice(0, 2), ...lockedAchievements.slice(0, 3)];
 
   const currentTier = dataTiers.find(t => t.key === tierKey) || { min_points: 0 };
@@ -210,45 +214,50 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                 {stripItems.length === 0 && (
                   <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים עדיין</div>
                 )}
-                {stripItems.map(b => (
+                {stripItems.map(b => {
+                  const done = isAchUnlocked(b);
+                  return (
                   <div
                     key={b.id}
                     className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
                     style={{
-                      background: b.unlocked ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                      opacity: b.unlocked ? 1 : 0.38,
+                      background: done ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${done ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                      opacity: done ? 1 : 0.38,
                       minWidth: 60,
                     }}
                   >
                     <span className="text-xl leading-none">{b.badge}</span>
                     <span
                       className="text-[10px] font-bold text-center leading-tight"
-                      style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}
+                      style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}
                     >
                       {b.label_he}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-2">
-                {allAchievements.length === 0 && (
+                {achievementsOrdered.length === 0 && (
                   <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים מוגדרים עדיין</div>
                 )}
-                {[...unlockedAchievements, ...lockedAchievements].map(b => (
+                {achievementsOrdered.map(b => {
+                  const done = isAchUnlocked(b);
+                  return (
                   <div
                     key={b.id}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
                     style={{
-                      background: b.unlocked ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                      opacity: b.unlocked ? 1 : 0.45,
+                      background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                      opacity: done ? 1 : 0.45,
                     }}
                   >
                     <span className="text-2xl leading-none flex-shrink-0">{b.badge}</span>
                     <div className="flex-1 min-w-0 text-right">
-                      <div className="text-sm font-bold leading-tight" style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}>
+                      <div className="text-sm font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
                         {b.label_he}
                       </div>
                       {b.description_he && (
@@ -256,15 +265,16 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                           {b.description_he}
                         </div>
                       )}
-                      {b.unlocked && b.bonus_points > 0 && (
+                      {done && b.bonus_points > 0 && (
                         <div className="text-[10px] mt-1 font-bold" style={{ color: 'var(--gold)' }}>+{b.bonus_points} נ׳ בונוס</div>
                       )}
                     </div>
-                    {b.unlocked && (
+                    {done && (
                       <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

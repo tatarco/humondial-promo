@@ -55,7 +55,7 @@ describe('PersonalAreaScreen', () => {
   it('shows achievements section header', async () => {
     callFn.mockResolvedValue(MOCK_DATA);
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
-    await waitFor(() => expect(screen.getByText(/הישגים/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByText(/^הישגים/)).toBeTruthy());
   });
 
   it('shows top-3 leader nicknames in podium', async () => {
