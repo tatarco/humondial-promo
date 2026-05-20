@@ -137,7 +137,7 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scrolled, openMatchCount, onScrollToGames, onBranchBooking }) {
+function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scrolled, openMatchCount, onScrollToGames, onBranchBooking, deliveryUrl }) {
   const tier      = getTier(config, totalPoints);
   const nextTier  = getNextTier(config, totalPoints);
   const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
@@ -167,8 +167,9 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scr
 
   return (
     <div
-      className="hm-card mb-3 mx-3 overflow-hidden"
+      className="hm-card mb-3 mx-3 overflow-hidden cursor-pointer"
       style={{ border: '1px solid rgba(244,193,93,0.45)', boxShadow: '0 0 40px rgba(244,193,93,0.14), 0 0 80px rgba(214,58,54,0.18)' }}
+      onClick={onPersonalArea}
     >
       {/* Tagline + trophy */}
       <div className="relative px-5 pt-5 pb-3">
@@ -231,13 +232,23 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scr
       </div>
 
       {/* CTAs */}
-      <div className="px-5 pb-5 grid grid-cols-2 gap-3" dir="rtl">
-        <button onClick={onScrollToGames} className="hm-btn-primary py-3 text-sm font-black">
+      <div className="px-5 pb-5 space-y-2.5" dir="rtl" onClick={e => e.stopPropagation()}>
+        <button onClick={onScrollToGames} className="hm-btn-primary w-full py-3 text-sm font-black">
           נחש עכשיו ←
         </button>
-        <button onClick={onBranchBooking} className="hm-btn-secondary py-3 text-sm font-bold flex items-center justify-center gap-1.5">
-          📅 שמור לי שולחן
-        </button>
+        <div className="grid grid-cols-2 gap-2.5">
+          <button onClick={onBranchBooking} className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1">
+            📅 שמור לי שולחן
+          </button>
+          <a
+            href={deliveryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1 text-center"
+          >
+            🛵 הזמן משלוח
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -439,6 +450,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onBooki
 
   return (
     <div
+      data-match-id={match.id}
       className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''}`}
       style={isActive ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' } : {}}
     >
@@ -783,10 +795,23 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     setScrolled(heroRef.current.getBoundingClientRect().bottom <= 0);
   }
 
-  function scrollToGames() {
-    if (gamesRef.current) {
-      gamesRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function handleGuessNow() {
+    const openUnguessed = visibleMatches.find(m =>
+      m.status === 'open' && !lockedMatchIds.has(m.id) && !predictions[m.id]
+    );
+    const firstOpen = visibleMatches.find(m =>
+      m.status === 'open' && !lockedMatchIds.has(m.id)
+    );
+    const target = openUnguessed || firstOpen;
+    if (!target) {
+      gamesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
     }
+    if (openUnguessed) setActiveCard(target.id);
+    setTimeout(() => {
+      document.querySelector(`[data-match-id="${target.id}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
   }
 
   async function handlePredict(matchId, home, away) {
@@ -821,7 +846,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
       <div
         ref={scrollContainerRef}
-        className="h-dvh overflow-y-auto pb-20"
+        className="h-dvh overflow-y-auto pb-6"
         onScroll={handleScroll}
       >
         <div style={{ background: 'var(--hm-bg, #100505)' }}>
@@ -856,8 +881,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               onPersonalAreaTier={onPersonalAreaTier}
               scrolled={false}
               openMatchCount={openMatchCount}
-              onScrollToGames={scrollToGames}
+              onScrollToGames={handleGuessNow}
               onBranchBooking={onBranchBooking}
+              deliveryUrl={effectiveConfig?.delivery_url}
             />
           </div>
 
@@ -894,7 +920,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
       </div>
 
     </div>
-    <FloatingDock config={config} onScrollToGames={scrollToGames} onBranchBooking={onBranchBooking} />
     {scrolled && (
       <div className="fixed top-0 left-0 right-0 z-50" dir="rtl" style={{ background: 'var(--hm-bg, #100505)' }}>
         <HeroCard
@@ -904,7 +929,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           onPersonalAreaTier={onPersonalAreaTier}
           scrolled={true}
           openMatchCount={openMatchCount}
-          onScrollToGames={scrollToGames}
+          onScrollToGames={handleGuessNow}
           onBranchBooking={onBranchBooking}
         />
         <div className="grid grid-cols-3 gap-2 px-3 mb-1">
