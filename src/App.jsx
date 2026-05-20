@@ -190,7 +190,14 @@ export default function App() {
       );
     }
     if (screen === SCREEN.BRANCH_BOOKING) {
-      return <BranchBookingScreen onBack={() => setScreen(SCREEN.SHELL)} />;
+      return (
+        <BranchBookingScreen
+          token={getToken()}
+          campaignId={config?.id}
+          tableBookingPoints={config?.table_booking_points}
+          onBack={() => setScreen(SCREEN.SHELL)}
+        />
+      );
     }
     return <HomeScreen
       playerId={player}

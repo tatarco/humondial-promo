@@ -50,7 +50,7 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const { rows = [], total_points = 0 } = data || {};
+  const { rows = [], total_points = 0, pending_table_booking_points = 0 } = data || {};
   const groups = useMemo(() => {
     const sorted = [...rows].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     return groupByDate(sorted);
@@ -89,13 +89,20 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
 
       <div className="px-4 space-y-4">
         <div
-          className="hm-card p-4 flex items-center justify-between"
+          className="hm-card p-4 flex flex-col gap-1"
           style={{ borderColor: 'rgba(244,193,93,0.3)', borderWidth: 1 }}
         >
-          <div className="text-sm" style={{ color: 'var(--text-sec)' }}>{rows.length} אירועים</div>
-          <div className="text-4xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>
-            {total_points}
+          <div className="flex items-center justify-between">
+            <div className="text-sm" style={{ color: 'var(--text-sec)' }}>{rows.length} אירועים</div>
+            <div className="text-4xl font-black tabular-nums" style={{ color: 'var(--gold)' }}>
+              {total_points}
+            </div>
           </div>
+          {pending_table_booking_points > 0 && (
+            <div className="text-xs text-right" style={{ color: 'var(--gold)' }}>
+              +{pending_table_booking_points} נק׳ הזמנת שולחן ממתינות (אחרי קוד ביקור)
+            </div>
+          )}
         </div>
 
         {rows.length === 0 ? (
@@ -124,7 +131,7 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
                         <span className="text-xl leading-none">{meta.emoji}</span>
                         <div>
                           <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>{meta.label}</div>
-                          <div className="text-xs" style={{ color: 'var(--text-sec)' }}>{formatTime(row.created_at)}</div>
+                          <div className="text-xs" style={{ color: 'var(--text-sec)' }}>{formatTime(row.created_at)}{row.pending ? ' · ממתין' : ''}</div>
                         </div>
                       </div>
                       <div

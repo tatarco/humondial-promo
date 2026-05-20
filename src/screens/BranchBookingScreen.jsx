@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { callFn } from '../lib/api.js';
+
 const RESERVATION_BASE = 'https://tabitisrael.co.il/%D7%94%D7%96%D7%9E%D7%A0%D7%AA-%D7%9E%D7%A7%D7%95%D7%9D/create-reservation?step=search&locale=he-IL&source=website&type=future_reservation&orgId=';
 
 const BRANCHES = [
@@ -10,7 +13,28 @@ const BRANCHES = [
   { name: 'גבעת ברנר',    orgId: '579e766f2063921e00fb4551' },
 ];
 
-export default function BranchBookingScreen({ onBack }) {
+export default function BranchBookingScreen({ token, campaignId, tableBookingPoints, onBack }) {
+  const [msg, setMsg]       = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function registerPendingPoints() {
+    if (!token || !campaignId) {
+      setMsg('שגיאת התחברות');
+      return;
+    }
+    setSaving(true);
+    setMsg('');
+    try {
+      await callFn('recordTableBooking', { token, campaign_id: campaignId });
+      const pts = tableBookingPoints ?? 15;
+      setMsg(`נרשמו +${pts} נק׳ ממתינות. יופעלו אחרי הזנת קוד ביקור יומי במסעדה.`);
+    } catch {
+      setMsg('לא הצלחנו לשמור — נסה שוב');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="min-h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
       <header className="flex items-center justify-between px-4 py-3">
@@ -47,6 +71,22 @@ export default function BranchBookingScreen({ onBack }) {
             </div>
           </a>
         ))}
+      </div>
+
+      <div className="mx-4 mt-8 hm-card p-4 space-y-3">
+        <p className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>אחרי שקבעת תור — רישום לנקודות</p>
+        <p className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
+          הנקודות ממתינות עד שתזין קוד ביקור יומי במסעדה. בלי הזמנה מראש — רק נקודות ביקור בקוד.
+        </p>
+        <button
+          type="button"
+          onClick={registerPendingPoints}
+          disabled={saving}
+          className="w-full hm-btn-primary py-3 text-sm font-bold rounded-xl"
+        >
+          {saving ? 'שומר...' : 'רשמו את ההזמנה שלי (נק׳ ממתינות)'}
+        </button>
+        {msg && <p className="text-xs text-right" style={{ color: 'var(--green)' }}>{msg}</p>}
       </div>
     </div>
   );

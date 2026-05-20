@@ -20,7 +20,7 @@ function AchievementToast({ achievement, onClose }) {
 export default function VenueCodeScreen({ token, campaignId, prefillCode, onBack }) {
   const [code, setCode] = useState(prefillCode || '');
   const [status, setStatus] = useState('idle');
-  const [pointsGranted, setPointsGranted] = useState(0);
+  const [bookingReleased, setBookingReleased] = useState(0);
   const [pendingAchievements, setPendingAchievements] = useState([]);
 
   async function handleSubmit(e) {
@@ -32,6 +32,7 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, onBack
       const d = r?.data ?? r;
       if (d?.success) {
         setPointsGranted(d.points_granted ?? 0);
+        setBookingReleased(d.booking_points_released ?? 0);
         setStatus('success');
         const unlocked = d.achievements_unlocked ?? [];
         if (unlocked.length) setPendingAchievements(unlocked);
@@ -60,7 +61,10 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, onBack
       {status === 'success' && (
         <div className="w-full bg-green-900/50 rounded-xl p-6 text-center">
           <div className="text-4xl mb-2">🎉</div>
-          <div className="text-hm-white text-xl font-bold">קיבלת {pointsGranted} נקודות!</div>
+          <div className="text-hm-white text-xl font-bold">קיבלת {pointsGranted} נקודות ביקור!</div>
+          {bookingReleased > 0 && (
+            <div className="text-hm-muted text-sm mt-2">+{bookingReleased} נק׳ מהזמנת השולחן הופעלו עכשיו</div>
+          )}
         </div>
       )}
 

@@ -137,7 +137,7 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scrolled, openMatchCount, onScrollToGames, onBranchBooking, deliveryUrl }) {
+function HeroCard({ totalPoints, pendingBookingPoints, config, onPersonalArea, onPersonalAreaTier, scrolled, openMatchCount, onScrollToGames, onBranchBooking, deliveryUrl }) {
   const tier      = getTier(config, totalPoints);
   const nextTier  = getNextTier(config, totalPoints);
   const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
@@ -189,7 +189,11 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scr
           <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
         </div>
         <p className="text-xs mt-0.5" style={{ color: 'var(--text-sec)' }}>
-          {totalPoints ?? 0} נקודות. אתה מתחמם.
+          {totalPoints ?? 0} נקודות פעילות
+          {(pendingBookingPoints ?? 0) > 0 && (
+            <span className="mr-2"> · +{pendingBookingPoints} הזמנת שולחן ממתינות לסריקת קוד</span>
+          )}
+          . אתה מתחמם.
         </p>
       </div>
 
@@ -226,7 +230,9 @@ function HeroCard({ totalPoints, config, onPersonalArea, onPersonalAreaTier, scr
         <p className="text-xs font-bold mb-2 text-right" style={{ color: 'var(--gold)' }}>Today's Snapshot</p>
         <div className="space-y-1.5 text-sm text-right" style={{ color: 'var(--text)' }}>
           {openMatchCount > 0 && <p>⚽ {openMatchCount} משחקים פתוחים לניחוש</p>}
-          {(config?.table_booking_points ?? 0) > 0 && <p>🔥 הזמנת שולחן = +{config.table_booking_points} נקודות</p>}
+          {(config?.table_booking_points ?? 0) > 0 && (
+            <p>🔥 הזמנת שולחן = +{config.table_booking_points} נק׳ (ממתינות עד קוד ביקור יומי)</p>
+          )}
           <p>🍔 צפייה ביומנגס = {delivPts}+ נקודות</p>
         </div>
       </div>
@@ -600,7 +606,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                     href={resolvedBookingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => onBooking(match.id)}
+                    onClick={() => onBooking?.()}
                     className="flex items-center justify-between px-4 py-3 rounded-xl"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
@@ -798,6 +804,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const [pendingAchievements, setPendingAchievements] = useState([]);
   const [scrolled, setScrolled]       = useState(false);
   const [totalPoints, setTotalPoints] = useState(null);
+  const [pendingBookingPoints, setPendingBookingPoints] = useState(null);
   const scrollContainerRef            = useRef(null);
   const heroRef                       = useRef(null);
   const gamesRef                      = useRef(null);
@@ -829,6 +836,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         .then(lbRes => {
           const d = lbRes?.data ?? lbRes;
           if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
+          setPendingBookingPoints(d?.me?.pending_table_booking_points ?? 0);
         })
         .catch(() => {});
     }
@@ -926,14 +934,18 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     await load();
   }
 
-  function handleBooking(matchId) {
+  async function handleBooking() {
     if (!campaignId || !token) return;
-    callFn('recordTableBooking', { token, campaign_id: campaignId, match_id: matchId })
-      .then(result => {
-        const unlocked = result?.data?.achievements_unlocked ?? result?.achievements_unlocked ?? [];
-        if (unlocked.length) setPendingAchievements(prev => [...prev, ...unlocked]);
-      })
-      .catch(() => {});
+    try {
+      const result = await callFn('recordTableBooking', { token, campaign_id: campaignId });
+      const unlocked = result?.data?.achievements_unlocked ?? result?.achievements_unlocked ?? [];
+      if (unlocked.length) setPendingAchievements(prev => [...prev, ...unlocked]);
+      const r = await callFn('getLeaderboard', { campaign_id: campaignId, token });
+      const d = r?.data ?? r;
+      if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
+      setPendingBookingPoints(d?.me?.pending_table_booking_points ?? 0);
+    } catch {
+    }
   }
 
   return (
@@ -978,6 +990,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           <div ref={heroRef}>
             <HeroCard
               totalPoints={totalPoints}
+              pendingBookingPoints={pendingBookingPoints}
               config={config}
               onPersonalArea={onPersonalArea}
               onPersonalAreaTier={onPersonalAreaTier}
@@ -1027,6 +1040,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
       <div className="fixed top-0 left-0 right-0 z-50" dir="rtl" style={{ background: 'var(--hm-bg, #100505)' }}>
         <HeroCard
           totalPoints={totalPoints}
+          pendingBookingPoints={pendingBookingPoints}
           config={config}
           onPersonalArea={onPersonalArea}
           onPersonalAreaTier={onPersonalAreaTier}
@@ -1034,6 +1048,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           openMatchCount={openMatchCount}
           onScrollToGames={handleGuessNow}
           onBranchBooking={onBranchBooking}
+          deliveryUrl={effectiveConfig?.delivery_url}
         />
         <div className="grid grid-cols-3 gap-2 px-3 mb-1">
           <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />

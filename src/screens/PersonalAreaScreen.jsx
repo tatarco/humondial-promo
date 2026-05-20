@@ -91,6 +91,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const { top50 = [], me = {}, trajectory = {}, tiers: dataTiers = [] } = data || {};
   const top3    = top50.filter(r => r.rank <= 3);
   const myPts   = me.total_points ?? 0;
+  const pendingBk = me.pending_table_booking_points ?? 0;
   const myTier  = me.tier || null;
   const tierKey = myTier?.key || myTier?.id || '';
 
@@ -148,6 +149,11 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             </div>
             <div>
               <div className="text-base font-black" style={{ color: 'var(--text)' }}>{myPts} נקודות</div>
+              {pendingBk > 0 && (
+                <div className="text-xs mt-1" style={{ color: 'var(--gold)' }}>
+                  +{pendingBk} הזמנת שולחן ממתינות — יופעלו אחרי הזנת קוד ביקור יומי
+                </div>
+              )}
               {myTier && (
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
                   {myTier.label_he}
