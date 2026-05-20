@@ -13,15 +13,15 @@ function tierCss(key) {
 }
 
 const BADGES = [
-  { id: 'silver',    emoji: '🥈', label: 'חבר סילבר', threshold: 'silver', check: (t, c) => ['silver','gold','legend'].includes(t) },
-  { id: 'gold',      emoji: '🥇', label: 'חבר זהב',   threshold: 'gold',   check: (t, c) => ['gold','legend'].includes(t) },
-  { id: 'legend',    emoji: '🏆', label: 'אגדה',       threshold: 'legend', check: (t, c) => t === 'legend' },
-  { id: 'delivery1', emoji: '🛵', label: 'הזמנה ראשונה',    check: (t, c) => (c.delivery ?? 0) >= 1 },
-  { id: 'table1',    emoji: '🍽️',label: 'מסעדה ראשונה',    check: (t, c) => (c.table_booking ?? 0) >= 1 },
-  { id: 'visit1',    emoji: '🏟️', label: 'ביקור ראשון',     check: (t, c) => (c.venue_visit ?? 0) >= 1 },
-  { id: 'pred5',     emoji: '⚽', label: '5 ניחושים',       check: (t, c) => (c.prediction_participation ?? 0) >= 5 },
-  { id: 'pred10',    emoji: '🔥', label: '10 ניחושים',      check: (t, c) => (c.prediction_participation ?? 0) >= 10 },
-  { id: 'achieve1',  emoji: '🏅', label: 'הישג',            check: (t, c) => (c.achievement ?? 0) >= 1 },
+  { id: 'silver',    emoji: '🥈', label: 'חבר סילבר',     description: 'צברת מספיק נקודות ועברת לדרגת סילבר — אתה בלהקה!',       threshold: 'silver', check: (t, c) => ['silver','gold','legend'].includes(t) },
+  { id: 'gold',      emoji: '🥇', label: 'חבר זהב',       description: 'דרגת זהב — שחקן רציני שמחויב ל-HUMONDIAL לגמרי!',       threshold: 'gold',   check: (t, c) => ['gold','legend'].includes(t) },
+  { id: 'legend',    emoji: '🏆', label: 'אגדה',           description: 'הגעת לפסגה. אגדה של HUMONDIAL — לנצח.',                  threshold: 'legend', check: (t, c) => t === 'legend' },
+  { id: 'delivery1', emoji: '🛵', label: 'הזמנה ראשונה',   description: 'ביצעת הזמנת משלוח ראשונה — ממשיכים, מה קנית? 🤤',      check: (t, c) => (c.delivery ?? 0) >= 1 },
+  { id: 'table1',    emoji: '🍽️', label: 'מסעדה ראשונה',   description: 'הזמנת שולחן במסעדה — לצפות במונדיאל זה חוויה אחרת!',   check: (t, c) => (c.table_booking ?? 0) >= 1 },
+  { id: 'visit1',    emoji: '🏟️', label: 'ביקור ראשון',    description: 'הגעת לסניף ורשמת את הביקור הראשון שלך — כיף לראות!',   check: (t, c) => (c.venue_visit ?? 0) >= 1 },
+  { id: 'pred5',     emoji: '⚽', label: '5 ניחושים',      description: 'שלחת ניחוש ל-5 משחקים — אתה עוקב אחרי המונדיאל!',      check: (t, c) => (c.prediction_participation ?? 0) >= 5 },
+  { id: 'pred10',    emoji: '🔥', label: '10 ניחושים',     description: '10 ניחושים — אתה מהמחויבים הכי גדולים כאן, ממש!',       check: (t, c) => (c.prediction_participation ?? 0) >= 10 },
+  { id: 'achieve1',  emoji: '🏅', label: 'הישג',           description: 'קיבלת הישג מיוחד מהצוות — מזל טוב, מגיע לך!',          check: (t, c) => (c.achievement ?? 0) >= 1 },
 ];
 
 function MiniPodium({ top3 }) {
@@ -64,9 +64,10 @@ function MiniPodium({ top3 }) {
 }
 
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
-  const [data, setData]       = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [data, setData]                     = useState(null);
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState('');
+  const [achievementsExpanded, setAchievementsExpanded] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -122,7 +123,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   };
 
   return (
-    <div className="min-h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
+    <div className="h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
       <header className="flex items-center justify-between px-4 py-3">
         <button
           onClick={onBack}
@@ -199,9 +200,18 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
 
         {/* Block 3 — הישגים */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>הישגים 🏅</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-sec)' }}>הישגים 🏅</div>
+            <button
+              onClick={() => setAchievementsExpanded(e => !e)}
+              className="text-[10px] px-2 py-0.5 rounded-full"
+              style={{ color: 'var(--text-sec)', border: '1px solid var(--border)' }}
+            >
+              {achievementsExpanded ? 'פחות ▲' : 'הצג הכל ▼'}
+            </button>
+          </div>
           <div className="hm-card p-3">
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               {badges.map(b => (
                 <div
                   key={b.id}
@@ -226,6 +236,51 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                   })()}
                 </div>
               ))}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateRows: achievementsExpanded ? '1fr' : '0fr',
+                transition: 'grid-template-rows 0.35s cubic-bezier(.4,0,.2,1)',
+              }}
+            >
+              <div style={{ overflow: 'hidden' }}>
+                <div className="mt-3 space-y-2">
+                  {badges.map(b => (
+                    <div
+                      key={b.id}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                      style={{
+                        background: b.unlocked ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                        opacity: b.unlocked ? 1 : 0.45,
+                      }}
+                    >
+                      <span className="text-2xl leading-none flex-shrink-0">{b.emoji}</span>
+                      <div className="flex-1 min-w-0 text-right">
+                        <div className="text-sm font-bold leading-tight" style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}>
+                          {b.label}
+                        </div>
+                        <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
+                          {b.description}
+                        </div>
+                        {!b.unlocked && b.threshold && (() => {
+                          const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
+                          return tierPts ? (
+                            <div className="text-[10px] mt-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                              נדרש: {tierPts} נ׳
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                      {b.unlocked && (
+                        <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
