@@ -319,7 +319,8 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
 
   const homeName = match.home_team || '?';
   const awayName = match.away_team || '?';
-  const totalBonus = (config?.participation_points ?? 10) + (config?.outcome_points ?? 30) + (config?.bullseye_points ?? 60);
+  const totalBonus = (config?.participation_points ?? 10) + (config?.outcome_points ?? 15)
+    + Math.max(config?.bullseye_points ?? 30, config?.draw_stripe_points ?? 10);
 
   return (
     <div className="space-y-4">
@@ -425,6 +426,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
   const bullseye = isFinal && hasPrediction &&
     prediction.home_score === match.final_home_score &&
     prediction.away_score === match.final_away_score;
+  const exactDrawMatch = bullseye && match.final_home_score === match.final_away_score;
   const correctOutcome = predOutcome && actualOutcome && predOutcome === actualOutcome;
 
   useEffect(() => {
@@ -437,6 +439,11 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
   const kickoffTime = match.kickoff_utc ? fmtTime(match.kickoff_utc) : '';
   const lockTime    = match.lock_deadline_utc ? fmtTime(match.lock_deadline_utc) : '';
   const dayDate     = match.kickoff_utc ? fmtDayDate(match.kickoff_utc) : '';
+
+  const resolvedBookingUrl = (match.booking_url_override && String(match.booking_url_override).trim())
+    || (config?.booking_url && String(config.booking_url).trim())
+    || '';
+  const showTableBooking = Boolean(match.broadcasts_in_venues && resolvedBookingUrl);
 
   const predLabel = predOutcome === 'home' ? homeFlag : predOutcome === 'away' ? awayFlag : predOutcome === 'draw' ? 'X' : null;
 
@@ -588,9 +595,9 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                     </div>
                   )}
                 </div>
-                {config?.booking_url ? (
+                {showTableBooking ? (
                   <a
-                    href={config.booking_url}
+                    href={resolvedBookingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onBooking(match.id)}
@@ -639,11 +646,16 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                 <div className="text-3xl font-black tabular-nums" style={{ color: 'var(--text)' }}>
                   {prediction.home_score} : {prediction.away_score}
                 </div>
-                {isFinal && bullseye && (
-                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>🎯 בולסאי! +{config?.bullseye_points ?? 60}</div>
+                {isFinal && bullseye && exactDrawMatch && (
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>
+                    🤝 תיקו מדויק (+{config?.outcome_points ?? 15} תוצאה +{config?.draw_stripe_points ?? 10} שכבת תיקו)
+                  </div>
+                )}
+                {isFinal && bullseye && !exactDrawMatch && (
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>🎯 ניחוש מדויק! +{config?.bullseye_points ?? 30}</div>
                 )}
                 {isFinal && !bullseye && correctOutcome && (
-                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--green)' }}>✓ ניחוש נכון! +{config?.outcome_points ?? 30}</div>
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--green)' }}>✓ ניחוש נכון! +{config?.outcome_points ?? 15}</div>
                 )}
                 {isFinal && !bullseye && !correctOutcome && (
                   <div className="mt-2 text-xs" style={{ color: 'var(--text-sec)' }}>✗ ניחוש שגוי</div>
@@ -710,27 +722,50 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
 }
 
 function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
-  const effectiveCfg = config ? {
-    ...config,
-    delivery_url: config.delivery_url || 'https://humongous.co.il/delivery',
-  } : config;
-  const items = [
-    { icon: '⚽', label: 'ניחוש', pts: config?.outcome_points ?? 30, onClick: onScrollToGames },
+  const deliveryUrl = (config?.delivery_url || 'https://humongous.co.il/delivery');
+  const outcome = config?.outcome_points ?? 15;
+  const bullseye = config?.bullseye_points ?? 30;
+  const drawStripe = config?.draw_stripe_points ?? 10;
+  const scoringChips = [
+    { key: 'outcome', icon: '⚽', label: 'ניחוש', pts: outcome, onClick: onScrollToGames },
+    { key: 'bullseye', icon: '🎯', label: 'ניחוש מדויק', pts: bullseye, onClick: onScrollToGames },
+    { key: 'draw', icon: '🤝', label: 'תיקו מדויק', pts: drawStripe, onClick: onScrollToGames },
+  ];
+  const venueItems = [
     { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 20, onClick: onBranchBooking },
-    { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 80, href: effectiveCfg?.delivery_url },
+    { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 80, href: deliveryUrl },
   ];
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40"
+      className="fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto"
+      dir="rtl"
       style={{
-        background: 'rgba(16,5,5,0.9)',
+        background: 'rgba(16,5,5,0.92)',
         backdropFilter: 'blur(14px)',
         borderTop: '1px solid rgba(255,255,255,0.09)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
       }}
     >
-      <div className="flex items-stretch justify-around px-2 py-2 max-w-lg mx-auto" dir="rtl">
-        {items.map(item => {
+      <div className="flex gap-2 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'thin' }}>
+        {scoringChips.map(c => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={c.onClick}
+            className="shrink-0 flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[4.75rem] text-right"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            <span className="text-xl leading-none" aria-hidden>{c.icon}</span>
+            <span className="text-[10px] font-bold leading-tight" style={{ color: 'var(--text)' }}>{c.label}</span>
+            <span className="text-[10px] font-black" style={{ color: 'var(--gold)' }}>+{c.pts} נ׳</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex items-stretch justify-around px-2 pb-2 pt-1">
+        {venueItems.map(item => {
           const inner = (
             <div className="flex flex-col items-center gap-0.5 py-1 cursor-pointer" onClick={item.onClick}>
               <span className="text-2xl leading-none">{item.icon}</span>
@@ -885,7 +920,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
       <div
         ref={scrollContainerRef}
-        className="h-dvh overflow-y-auto pb-6"
+        className="h-dvh overflow-y-auto pb-32"
         onScroll={handleScroll}
       >
         <div style={{ background: 'var(--hm-bg, #100505)' }}>
@@ -980,6 +1015,11 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
       </div>
     )}
+    <FloatingDock
+      config={effectiveConfig}
+      onScrollToGames={handleGuessNow}
+      onBranchBooking={onBranchBooking}
+    />
     </>
   );
 }
