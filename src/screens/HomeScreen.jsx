@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
@@ -839,19 +839,47 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const stages = [...new Set(matches.map(m => m.stage))].sort((a, b) =>
     (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
   );
-  const windowGames = effectiveConfig?.prediction_window_games ?? 5;
-  const allFiltered = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
-  const lockedMatchIds = (() => {
-    let openCount = 0;
+
+  const { lockedMatchIds, openMatchCount } = useMemo(() => {
+    const pwm = effectiveConfig?.prediction_window_mode === 'days' ? 'days' : 'games';
+    const windowGames =
+      typeof effectiveConfig?.prediction_window_games === 'number' && effectiveConfig.prediction_window_games >= 1
+        ? effectiveConfig.prediction_window_games
+        : 5;
+    const windowDays =
+      typeof effectiveConfig?.prediction_window_days === 'number' && effectiveConfig.prediction_window_days >= 1
+        ? effectiveConfig.prediction_window_days
+        : 3;
+
     const ids = new Set();
-    allFiltered.forEach(m => {
-      if (m.status !== 'open') return;
-      openCount++;
-      if (openCount > windowGames) ids.add(m.id);
-    });
-    return ids;
-  })();
-  const openMatchCount = matches.filter(m => m.status === 'open' && !lockedMatchIds.has(m.id)).length;
+    if (pwm === 'days') {
+      const maxTs = Date.now() + windowDays * 86400000;
+      for (const m of matches) {
+        if (m.status !== 'open') continue;
+        if (new Date(m.kickoff_utc).getTime() > maxTs) ids.add(m.id);
+      }
+    } else {
+      const sorted = [...matches].sort(
+        (a, b) => new Date(a.kickoff_utc).getTime() - new Date(b.kickoff_utc).getTime(),
+      );
+      let openCount = 0;
+      for (const m of sorted) {
+        if (m.status !== 'open') continue;
+        openCount++;
+        if (openCount > windowGames) ids.add(m.id);
+      }
+    }
+
+    const omc = matches.filter(m => m.status === 'open' && !ids.has(m.id)).length;
+    return { lockedMatchIds: ids, openMatchCount: omc };
+  }, [
+    matches,
+    effectiveConfig?.prediction_window_mode,
+    effectiveConfig?.prediction_window_games,
+    effectiveConfig?.prediction_window_days,
+  ]);
+
+  const allFiltered = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
   const visibleMatches = allFiltered;
 
   function handleScroll() {
