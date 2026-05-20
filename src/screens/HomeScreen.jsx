@@ -388,7 +388,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, windowLocked, onPredict, onBooking, onVenueCode, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelete, onBooking, onVenueCode, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
   const isOpen    = match.status === 'open' && !isPending && !windowLocked;
@@ -397,13 +397,17 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onBooki
   const isFinal   = match.status === 'final';
   const hasPrediction = prediction != null;
 
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode]         = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting]           = useState(false);
   const [showPointsFlash, setShowPointsFlash] = useState(false);
   const flashTimer = useRef(null);
   const prevActive = useRef(isActive);
   useEffect(() => {
     if (prevActive.current && !isActive) {
       setEditMode(false);
+      setConfirmDelete(false);
+      setDeleting(false);
       setShowPointsFlash(false);
       if (flashTimer.current) clearTimeout(flashTimer.current);
     }
@@ -539,13 +543,38 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onBooki
                 )}
                 <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setEditMode(true)}
-                      className="text-xs underline"
-                      style={{ color: 'var(--text-sec)' }}
-                    >
-                      שנה בחירה
-                    </button>
+                    {confirmDelete ? (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setConfirmDelete(false)}
+                          className="text-xs"
+                          style={{ color: 'var(--text-sec)' }}
+                        >ביטול</button>
+                        <button
+                          onClick={async () => {
+                            setDeleting(true);
+                            try { await onDelete(match.id); }
+                            catch { setDeleting(false); setConfirmDelete(false); }
+                          }}
+                          disabled={deleting}
+                          className="text-xs font-bold"
+                          style={{ color: 'var(--red)' }}
+                        >{deleting ? 'מוחק...' : 'אשר הסרה ✕'}</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setEditMode(true)}
+                          className="text-xs underline"
+                          style={{ color: 'var(--text-sec)' }}
+                        >שנה בחירה</button>
+                        <button
+                          onClick={() => setConfirmDelete(true)}
+                          className="text-xs underline"
+                          style={{ color: 'var(--red)', opacity: 0.65 }}
+                        >הסר ניחוש</button>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
                       <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
@@ -814,6 +843,16 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     }, 50);
   }
 
+  async function handleDeletePrediction(matchId) {
+    if (!campaignId || !token) return;
+    await callFn('deletePromoPrediction', { token, campaign_id: campaignId, match_id: matchId });
+    setPredictions(prev => {
+      const next = { ...prev };
+      delete next[matchId];
+      return next;
+    });
+  }
+
   async function handlePredict(matchId, home, away) {
     if (!campaignId || !token) throw new Error('לא מחובר');
     const result = await callFn('upsertPromoPrediction', {
@@ -910,6 +949,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               config={effectiveConfig}
               windowLocked={lockedMatchIds.has(match.id)}
               onPredict={handlePredict}
+              onDelete={handleDeletePrediction}
               onBooking={handleBooking}
               onVenueCode={onVenueCode}
               isActive={activeCard === match.id}

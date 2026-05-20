@@ -123,7 +123,8 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   };
 
   return (
-    <div className="h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
+    <div className="h-dvh stadium-bg" dir="rtl">
+    <div className="h-dvh overflow-y-auto pb-8">
       <header className="flex items-center justify-between px-4 py-3">
         <button
           onClick={onBack}
@@ -211,77 +212,69 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             </button>
           </div>
           <div className="hm-card p-3">
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {badges.map(b => (
-                <div
-                  key={b.id}
-                  className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
-                  style={{
-                    background: b.unlocked ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                    opacity: b.unlocked ? 1 : 0.38,
-                    minWidth: 60,
-                  }}
-                >
-                  <span className="text-xl leading-none">{b.emoji}</span>
-                  <span
-                    className="text-[10px] font-bold text-center leading-tight"
-                    style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}
+            {!achievementsExpanded ? (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {badges.map(b => (
+                  <div
+                    key={b.id}
+                    className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
+                    style={{
+                      background: b.unlocked ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                      opacity: b.unlocked ? 1 : 0.38,
+                      minWidth: 60,
+                    }}
                   >
-                    {b.label}
-                  </span>
-                  {!b.unlocked && b.threshold && (() => {
-                    const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
-                    return tierPts ? <div style={{ fontSize: 8, color: 'var(--text-sec)', marginTop: 2 }}>{tierPts} נ׳</div> : null;
-                  })()}
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateRows: achievementsExpanded ? '1fr' : '0fr',
-                transition: 'grid-template-rows 0.35s cubic-bezier(.4,0,.2,1)',
-              }}
-            >
-              <div style={{ overflow: 'hidden' }}>
-                <div className="mt-3 space-y-2">
-                  {badges.map(b => (
-                    <div
-                      key={b.id}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                      style={{
-                        background: b.unlocked ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                        opacity: b.unlocked ? 1 : 0.45,
-                      }}
+                    <span className="text-xl leading-none">{b.emoji}</span>
+                    <span
+                      className="text-[10px] font-bold text-center leading-tight"
+                      style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}
                     >
-                      <span className="text-2xl leading-none flex-shrink-0">{b.emoji}</span>
-                      <div className="flex-1 min-w-0 text-right">
-                        <div className="text-sm font-bold leading-tight" style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}>
-                          {b.label}
-                        </div>
-                        <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
-                          {b.description}
-                        </div>
-                        {!b.unlocked && b.threshold && (() => {
-                          const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
-                          return tierPts ? (
-                            <div className="text-[10px] mt-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                              נדרש: {tierPts} נ׳
-                            </div>
-                          ) : null;
-                        })()}
-                      </div>
-                      {b.unlocked && (
-                        <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      {b.label}
+                    </span>
+                    {!b.unlocked && b.threshold && (() => {
+                      const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
+                      return tierPts ? <div style={{ fontSize: 8, color: 'var(--text-sec)', marginTop: 2 }}>{tierPts} נ׳</div> : null;
+                    })()}
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                {badges.map(b => (
+                  <div
+                    key={b.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    style={{
+                      background: b.unlocked ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${b.unlocked ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                      opacity: b.unlocked ? 1 : 0.45,
+                    }}
+                  >
+                    <span className="text-2xl leading-none flex-shrink-0">{b.emoji}</span>
+                    <div className="flex-1 min-w-0 text-right">
+                      <div className="text-sm font-bold leading-tight" style={{ color: b.unlocked ? 'var(--gold)' : 'var(--text-sec)' }}>
+                        {b.label}
+                      </div>
+                      <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
+                        {b.description}
+                      </div>
+                      {!b.unlocked && b.threshold && (() => {
+                        const tierPts = dataTiers.find(t => t.key === b.threshold)?.min_points;
+                        return tierPts ? (
+                          <div className="text-[10px] mt-1 font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                            נדרש: {tierPts} נ׳
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                    {b.unlocked && (
+                      <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -320,6 +313,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

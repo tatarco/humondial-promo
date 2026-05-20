@@ -75,7 +75,8 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
   }
 
   return (
-    <div className="h-dvh stadium-bg overflow-y-auto pb-8" dir="rtl">
+    <div className="h-dvh stadium-bg" dir="rtl">
+    <div className="h-dvh overflow-y-auto pb-8">
       <header className="flex items-center justify-between px-4 py-3">
         <button
           onClick={onBack}
@@ -140,6 +141,7 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
           ))
         )}
       </div>
+    </div>
     </div>
   );
 }
