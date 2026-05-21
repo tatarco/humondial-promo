@@ -54,6 +54,7 @@ export default function App() {
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [pendingCid, setPendingCid]   = useState('');
   const [bookingContext, setBookingContext]       = useState(null);
+  const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
 
   const UUID_CTX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -91,6 +92,7 @@ export default function App() {
       setPlayer(sessionResult.playerId);
     }
     if (vc && sessionResult.nextScreen === SCREEN.SHELL) {
+      setVenueCodeEntryContext('neutral');
       setScreen(SCREEN.VENUE_CODE);
     } else {
       setScreen(sessionResult.nextScreen);
@@ -186,7 +188,8 @@ export default function App() {
           token={getToken()}
           campaignId={config?.id || pendingCid}
           prefillCode={pendingVenueCode}
-          onBack={() => { setPendingVenueCode(''); setScreen(SCREEN.SHELL); }}
+          entryContext={venueCodeEntryContext}
+          onBack={() => { setPendingVenueCode(''); setVenueCodeEntryContext('neutral'); setScreen(SCREEN.SHELL); }}
         />
       );
     }
@@ -225,7 +228,13 @@ export default function App() {
       playerId={player}
       onLogout={handleLogout}
       onPersonalArea={handlePersonalArea}
-      onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
+      onVenueCode={(ctx = 'neutral') => {
+        setVenueCodeEntryContext(
+          ctx === 'delivery' ? 'delivery' : ctx === 'venue' ? 'venue' : 'neutral',
+        );
+        setPendingVenueCode('');
+        setScreen(SCREEN.VENUE_CODE);
+      }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
       onBranchBooking={openBranchBooking}
     />;

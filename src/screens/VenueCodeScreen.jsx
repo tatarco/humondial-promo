@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { callFn } from '../lib/api.js';
 
+const VENUE_CODE_COPY = {
+  neutral: {
+    heading: 'הזן קוד ביקור',
+    subtitle: 'הזינו כאן את שש הספרות מהסניף או מתוך אישור סיום ההזמנה למשלוח.',
+  },
+  delivery: {
+    heading: 'קוד אחרי משלוח',
+    subtitle: 'אחרי שההזמנה הגיעה — הזינו את הקוד שקיבלתם מתוך אישור המשלוח או מתוך פרטי ההזמנה באפליקציה.',
+  },
+  venue: {
+    heading: 'הגעתי לסניף',
+    subtitle: 'הזינו את קוד הביקור שהמארח או ההזמנה קיבלה בסניף יומנגס.',
+  },
+};
+
 function AchievementToast({ achievement, onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
   return (
@@ -17,11 +32,22 @@ function AchievementToast({ achievement, onClose }) {
   );
 }
 
-export default function VenueCodeScreen({ token, campaignId, prefillCode, onBack }) {
+export default function VenueCodeScreen({ token, campaignId, prefillCode, entryContext = 'neutral', onBack }) {
   const [code, setCode] = useState(prefillCode || '');
   const [status, setStatus] = useState('idle');
+  const [pointsGranted, setPointsGranted] = useState(0);
   const [bookingReleased, setBookingReleased] = useState(0);
   const [pendingAchievements, setPendingAchievements] = useState([]);
+
+  const copy = VENUE_CODE_COPY[entryContext] ?? VENUE_CODE_COPY.neutral;
+
+  useEffect(() => {
+    setCode(prefillCode || '');
+  }, [prefillCode]);
+
+  useEffect(() => {
+    setStatus('idle');
+  }, [entryContext]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -54,9 +80,12 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, onBack
           onClose={() => setPendingAchievements(prev => prev.slice(1))}
         />
       )}
-      <button onClick={onBack} className="self-start text-hm-muted text-sm">← חזרה</button>
+      <button type="button" onClick={onBack} className="self-start text-hm-muted text-sm">← חזרה</button>
 
-      <h1 className="text-2xl font-black text-hm-white text-right w-full">הזן קוד ביקור</h1>
+      <div className="w-full space-y-2">
+        <h1 className="text-2xl font-black text-hm-white text-right w-full">{copy.heading}</h1>
+        <p className="text-sm text-hm-muted text-right leading-snug">{copy.subtitle}</p>
+      </div>
 
       {status === 'success' && (
         <div className="w-full bg-green-900/50 rounded-xl p-6 text-center">
@@ -81,6 +110,7 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, onBack
             inputMode="numeric"
             pattern="[0-9]*"
             maxLength={6}
+            dir="ltr"
             value={code}
             onChange={e => { setCode(e.target.value.replace(/\D/g, '')); setStatus('idle'); }}
             placeholder="000000"

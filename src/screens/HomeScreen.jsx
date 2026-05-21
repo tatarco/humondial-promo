@@ -386,13 +386,18 @@ function QuickActionTile({ icon, label, sub, onClick, href, scrolled }) {
       style={{ padding: scrolled ? '8px 4px' : '10px 6px' }}
       onClick={onClick}
     >
-      <div className="text-2xl leading-none">{icon}</div>
-      {!scrolled && (
-        <div className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--text)' }}>{label}</div>
-      )}
-      {!scrolled && sub && (
+      <div className={`${scrolled ? 'text-xl' : 'text-2xl'} leading-none`}>{icon}</div>
+      {label ? (
+        <div
+          className={`font-bold text-center leading-tight ${scrolled ? 'text-[9px]' : 'text-[10px]'}`}
+          style={{ color: 'var(--text)' }}
+        >
+          {label}
+        </div>
+      ) : null}
+      {!scrolled && sub ? (
         <div className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--gold)' }}>{sub}</div>
-      )}
+      ) : null}
     </div>
   );
   return href
@@ -515,7 +520,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onVenueCode, onOpenGames, onBranchBooking, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onOpenGames, onBranchBooking, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
   const outsideGuessWindow = !isPending && windowLocked && match.status === 'open';
@@ -1147,6 +1152,8 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
 }
 
 export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onBranchBooking }) {
+  const openVenueDelivery = () => onVenueCode?.('delivery');
+  const openVenueAtBranch = () => onVenueCode?.('venue');
   const config = useConfig();
   const effectiveConfig = config ? {
     ...config,
@@ -1419,9 +1426,10 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2 px-3 mb-1">
+          <div className="grid grid-cols-3 gap-2 px-3 mb-1">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
-            <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={false} />
+            <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={false} />
+            <QuickActionTile icon="📍" label="הגעתי לסניף" onClick={openVenueAtBranch} scrolled={false} />
           </div>
 
           <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
@@ -1451,7 +1459,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
                 predictionWindowOpensHint={guessOpensHintById[match.id]}
                 onPredict={handlePredict}
                 onDelete={handleDeletePrediction}
-                onVenueCode={onVenueCode}
                 onBranchBooking={onBranchBooking}
                 isActive={activeCard === match.id}
                 onToggle={() => setActiveCard((prev) => (prev === match.id ? null : match.id))}
@@ -1478,9 +1485,10 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           onBranchBooking={onBranchBooking}
           deliveryUrl={effectiveConfig?.delivery_url}
         />
-        <div className="grid grid-cols-2 gap-2 px-3 mb-1">
+        <div className="grid grid-cols-3 gap-2 px-3 mb-1">
           <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
-          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={true} />
+          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={true} />
+          <QuickActionTile icon="📍" label="הגעתי לסניף" onClick={openVenueAtBranch} scrolled={true} />
         </div>
         <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
       </div>
