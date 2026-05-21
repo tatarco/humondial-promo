@@ -28,7 +28,7 @@ export default function BranchBookingScreen({ token, campaignId, tableBookingPoi
     try {
       await callFn('recordTableBooking', { token, campaign_id: campaignId });
       const pts = tableBookingPoints ?? 15;
-      setMsg(`נרשמו +${pts} נק׳ ממתינות. יופעלו אחרי הזנת קוד ביקור יומי במסעדה.`);
+      setMsg(`נרשמו +${pts} נק׳ במצב ממתין להזמנת שולחן. השלב הבא: ביקור בסניף והזנת קוד הביקור היומי; עד אז הנקודות לא נכללות בדירוג או בדרגה.`);
     } catch {
       setMsg('לא הצלחנו לשמור — נסה שוב');
     } finally {
@@ -52,7 +52,7 @@ export default function BranchBookingScreen({ token, campaignId, tableBookingPoi
 
       <div className="px-4 mb-4">
         <p className="text-sm" style={{ color: 'var(--text-sec)' }}>
-          בחר סניף להזמנת מקום ב-Humongous. אפשר גם לרשום נקודות ממתינות כאן או דרך כרטיס משחק משודר במסך הבית.
+          בחר סניף להזמנת מקום ב-Humongous. לאחר ההזמנה אפשר לרשום כאן הזמנה ממתינה לנקודות או להשתמש בכרטיס משחק משודר במסך הבית — בשתי הדרכים אותם כללים: הנקודות נשמרות במצב ממתין ולא משפיעות על דירוג או דרגה עד שתזינו את קוד הביקור היומי במסך &quot;הגעת לסניף?&quot; לאחר ההגעה למסעדה.
         </p>
       </div>
 
@@ -81,8 +81,8 @@ export default function BranchBookingScreen({ token, campaignId, tableBookingPoi
 
       <div className="mx-4 mt-8 hm-card p-4 space-y-3">
         <p className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>אחרי שקבעת תור — רישום לנקודות</p>
-        <p className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
-          הנקודות ממתינות עד שתזין קוד ביקור יומי במסעדה. בלי רישום — רק נקודות ביקור בקוד.
+        <p className="text-xs text-right leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+          אחרי שמופיע רישום בהצלחה: הנקודות במצב ממתין — לא בדירוג ולא בשדרוג דרגה. השלב הבא הוא ביקור בסניף והזנה של הקוד היומי (&quot;הגעת לסניף?&quot;). במבקר אחד נסגרת לפחות הזמנה ממתינה אחת (לפי סדר ההרשמה שלכם).
         </p>
         <button
           type="button"

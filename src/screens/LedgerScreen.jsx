@@ -99,8 +99,16 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
             </div>
           </div>
           {pending_table_booking_points > 0 && (
-            <div className="text-xs text-right" style={{ color: 'var(--gold)' }}>
-              +{pending_table_booking_points} נק׳ הזמנת שולחן ממתינות (אחרי קוד ביקור)
+            <div
+              className="text-xs text-right rounded-lg px-3 py-2 mt-1 space-y-1"
+              style={{ background: 'rgba(244,193,93,0.08)', border: '1px solid rgba(244,193,93,0.28)' }}
+            >
+              <div className="font-bold" style={{ color: 'var(--gold)' }}>
+                +{pending_table_booking_points} נק׳ הזמנת שולחן במצב ממתין
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
+                לא חלק מהניקוד המאושר (דירוג/דרגה) עד הזנת קוד הביקור היומי בסניף. בכל ביקור מתאשרת לפחות הזמנה אחת (לפי סדר ההרשמה).
+              </div>
             </div>
           )}
         </div>
@@ -132,6 +140,11 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
                         <div>
                           <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>{meta.label}</div>
                           <div className="text-xs" style={{ color: 'var(--text-sec)' }}>{formatTime(row.created_at)}{row.pending ? ' · ממתין' : ''}</div>
+                          {row.reason === 'table_booking' && row.pending && (
+                            <div className="text-[10px] mt-1 leading-snug text-right max-w-[14rem]" style={{ color: 'var(--gold)' }}>
+                              הנקודות ייכנסו לניקוד המאושר אחרי קוד ביקור יומי בסניף
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div

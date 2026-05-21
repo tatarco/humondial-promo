@@ -168,8 +168,11 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             <div>
               <div className="text-base font-black" style={{ color: 'var(--text)' }}>{myPts} נקודות</div>
               {pendingBk > 0 && (
-                <div className="text-xs mt-1" style={{ color: 'var(--gold)' }}>
-                  +{pendingBk} הזמנת שולחן ממתינות — יופעלו אחרי הזנת קוד ביקור יומי
+                <div className="text-xs mt-1 space-y-1 text-right" style={{ color: 'var(--gold)' }}>
+                  <div className="font-bold">+{pendingBk} נק׳ מהזמנת שולחן — במצב ממתין</div>
+                  <div className="text-[10px] leading-snug font-normal" style={{ color: 'rgba(246,239,237,0.78)' }}>
+                    לא נכללות בדירוג או במעבר דרגה עד הפעלה. אחרי ביקור בסניף הזינו את קוד הביקור היומי במסך &quot;הגעת לסניף?&quot; — בכל ביקור נסגרת לפחות הזמנה ממתינה אחת (לפי סדר ההרשמה).
+                  </div>
                 </div>
               )}
               {myTier && (

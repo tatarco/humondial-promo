@@ -172,7 +172,7 @@ function HeroCard({
 
   const tierKey   = tier?.key || tier?.id || 'bronze';
   const tierMedal = tierKey === 'legend' ? '🏅' : tierKey === 'gold' ? '🥇' : tierKey === 'silver' ? '🥈' : '🥉';
-  const delivPts  = config?.delivery_points ?? 80;
+  const delivPts  = config?.delivery_points ?? 20;
 
   if (scrolled) {
     return (
@@ -216,13 +216,25 @@ function HeroCard({
           </span>
           <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
         </div>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-sec)' }}>
-          {totalPoints ?? 0} נקודות פעילות
-          {(pendingBookingPoints ?? 0) > 0 && (
-            <span className="mr-2"> · +{pendingBookingPoints} הזמנת שולחן ממתינות לסריקת קוד</span>
-          )}
-          . אתה מתחמם.
+        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+          <span className="font-bold" style={{ color: 'var(--text)' }}>{totalPoints ?? 0}</span>
+          {' '}נקודות מאושרות — אלה נספרות בדירוג ובדרגה. אתה מתחמם.
         </p>
+        {(pendingBookingPoints ?? 0) > 0 && (
+          <div
+            className="mt-2 rounded-xl px-3 py-2.5 text-right space-y-1"
+            style={{ background: 'rgba(244,193,93,0.08)', border: '1px solid rgba(244,193,93,0.35)' }}
+          >
+            <div className="text-xs font-black" style={{ color: 'var(--gold)' }}>
+              +{pendingBookingPoints} נק׳ ממתינות · הזמנת שולחן
+            </div>
+            <p className="text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
+              עדיין לא חלק מהניקוד המאושר. כדי להפוך אותן למאושרות: לבוא ליומנגס ולהזין את{' '}
+              <span className="font-bold" style={{ color: 'var(--text)' }}>קוד הביקור היומי</span> במסך &quot;הגעת לסניף?&quot;.
+              בכל ביקור משוחררת לפחות הזמנה ממתינה אחת (לפי סדר ההרשמה).
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Tier progress */}
@@ -280,7 +292,7 @@ function HeroCard({
         <div className="space-y-1.5 text-sm text-right" style={{ color: 'var(--text)' }}>
           {openMatchCount > 0 && <p>⚽ {openMatchCount} משחקים פתוחים לניחוש</p>}
           {(config?.table_booking_points ?? 0) > 0 && (
-            <p>🔥 הזמנת שולחן = +{config.table_booking_points} נק׳ (ממתינות עד קוד ביקור יומי)</p>
+            <p>🔥 אחרי הזמנת שולחן: +{config.table_booking_points} נק׳ <span className="opacity-90">ממתינות</span> עד קוד ביקור יומי בסניף</p>
           )}
           <p>🍔 צפייה ביומנגס = {delivPts}+ נקודות</p>
         </div>
@@ -374,8 +386,9 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
 
   const homeName = match.home_team || '?';
   const awayName = match.away_team || '?';
-  const totalBonus = (config?.participation_points ?? 10) + (config?.outcome_points ?? 15)
-    + Math.max(config?.bullseye_points ?? 30, config?.draw_stripe_points ?? 10);
+  const totalBonus = (config?.participation_points ?? 10)
+    + (config?.bullseye_points ?? 30)
+    + (config?.draw_stripe_points ?? 10);
 
   return (
     <div className="space-y-4">
@@ -426,7 +439,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
           <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{awayName}</span>
         </div>
         <p className="text-center text-[11px] mt-3" style={{ color: 'var(--text-sec)' }}>
-          🎯 נחש נכון = +{totalBonus} נקודות בונוס
+          עד +{totalBonus} נק׳ צבירה מהמשחק (הצטרפות + התאמה למצב הניקוד בפועל)
         </p>
       </div>
 
@@ -695,7 +708,9 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                     <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
                     <div className="text-right">
                       <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ הזמן מקום</div>
-                      <div className="text-xs" style={{ color: 'var(--green)' }}>רואים יחד? +{config?.table_booking_points ?? 20} נ׳</div>
+                      <div className="text-xs" style={{ color: 'var(--green)' }}>
+                        יתווספו לניקוד המאושר אחרי קוד ביקור יומי בסניף · ביקור אחד משחרר הזמנה אחת בסדר
+                      </div>
                     </div>
                   </a>
                 ) : config?.delivery_url ? (
@@ -709,7 +724,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                     <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
                     <div className="text-right">
                       <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🛵 הזמן משלוח!</div>
-                      <div className="text-xs" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points ?? 80} נ׳</div>
+                      <div className="text-xs" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points ?? 20} נ׳</div>
                     </div>
                   </a>
                 ) : onVenueCode ? (
@@ -736,7 +751,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                 </div>
                 {isFinal && bullseye && exactDrawMatch && (
                   <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>
-                    🤝 תיקו מדויק (+{config?.outcome_points ?? 15} תוצאה +{config?.draw_stripe_points ?? 10} שכבת תיקו)
+                    🤝 תיקו מדויק (+{config?.bullseye_points ?? 30} תוצאה מדויקת +{config?.draw_stripe_points ?? 10} שכבת תיקו)
                   </div>
                 )}
                 {isFinal && bullseye && !exactDrawMatch && (
@@ -820,8 +835,8 @@ function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
     { key: 'draw', icon: '🤝', label: 'תיקו מדויק', pts: drawStripe, onClick: onScrollToGames },
   ];
   const venueItems = [
-    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 20, onClick: onBranchBooking },
-    { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 80, href: deliveryUrl },
+    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 15, onClick: onBranchBooking },
+    { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 20, href: deliveryUrl },
   ];
   return (
     <div

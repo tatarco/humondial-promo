@@ -98,8 +98,8 @@ export default function LeaderboardScreen({ token, campaignId, config, onBack })
   const myTier  = me.tier || null;
 
   const predDelta  = whatif.prediction_pts ?? config?.outcome_points ?? 30;
-  const tableDelta = whatif.table_pts ?? config?.table_booking_points ?? 20;
-  const delivDelta = whatif.delivery_pts ?? config?.delivery_points ?? 80;
+  const tableDelta = whatif.table_pts ?? config?.table_booking_points ?? 15;
+  const delivDelta = whatif.delivery_pts ?? config?.delivery_points ?? 20;
 
   const PODIUM_ORDER = [2, 1, 3];
   const PODIUM_META = {
