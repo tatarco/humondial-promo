@@ -677,7 +677,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 {liveScoresKnown ? (
                   <div
                     dir="ltr"
-                    className="font-black tabular-nums tracking-tight leading-none text-sky-300"
+                    className="font-black tabular-nums tracking-tight leading-none text-sky-300 opacity-95"
                     style={{
                       fontSize: 'clamp(1.75rem, 8vw, 2.5rem)',
                       textShadow: '0 0 24px rgba(56,189,248,0.42)',
@@ -693,18 +693,17 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 )}
                 {hasPrediction ? (
                   <div
-                    dir="ltr"
-                    className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[10px] sm:text-[11px] leading-tight"
+                    dir="rtl"
+                    className="mt-1.5 px-2 text-center text-[10px] leading-snug font-extrabold"
+                    style={{ color: 'rgba(245,245,245,0.42)' }}
                   >
-                    <span className="font-semibold whitespace-nowrap" style={{ color: 'rgba(244,193,93,0.78)' }}>
-                      ניחושך
-                    </span>
-                    <span className="font-black tabular-nums" style={{ color: 'var(--gold)' }}>
+                    <span className="whitespace-nowrap">ניחושך </span>
+                    <span dir="ltr" className="inline whitespace-nowrap align-middle tabular-nums text-[13px] font-black" style={{ color: 'var(--gold)' }}>
                       {prediction.home_score}:{prediction.away_score}
+                      {liveScoresKnown && guessMatchesLiveScores ? (
+                        <span className="ml-1.5 whitespace-nowrap text-[10px] font-black text-emerald-400">✓ מתאים</span>
+                      ) : null}
                     </span>
-                    {liveScoresKnown && guessMatchesLiveScores ? (
-                      <span className="text-[10px] font-black text-emerald-400 whitespace-nowrap">✓ מתאים</span>
-                    ) : null}
                   </div>
                 ) : null}
               </div>
