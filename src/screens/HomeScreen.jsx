@@ -603,7 +603,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
     : canGuess
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}><span>●</span> פתוח</span>
     : isLive
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>⚽ חי</span>
+    ? <span className="inline-flex flex-row-reverse items-center gap-0.5 text-[11px] font-bold pl-2.5 pr-2 py-1 rounded-full shrink-0" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}><span className="leading-tight">חי</span><span className="shrink-0 text-[13px] leading-none pb-px" aria-hidden>⚽</span></span>
     : preKickLocked
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 text-right leading-tight max-w-[11rem]" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 נעול לפני הפתיחה</span>
     : isFinal
@@ -716,9 +716,19 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               </div>
             ) : null}
             {isLive && match.live_home_score != null && (
-              <span className="font-black text-blue-400 block">
-                {match.live_home_score} : {match.live_away_score}
-              </span>
+              <div
+                dir="ltr"
+                className="mt-3 block font-black tabular-nums tracking-tight leading-none text-sky-300"
+                style={{
+                  fontSize: 'clamp(1.875rem, 9vw, 2.875rem)',
+                  textShadow: '0 0 28px rgba(56,189,248,0.42)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {match.live_home_score}
+                <span className="mx-2 opacity-50">:</span>
+                {match.live_away_score}
+              </div>
             )}
             {isFinal && (
               <span className="font-black block text-sm" style={{ color: 'var(--text)' }}>
