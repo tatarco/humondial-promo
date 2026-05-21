@@ -137,11 +137,39 @@ function BenefitsSheet({ tiers, myTier, onClose }) {
   );
 }
 
-function HeroCard({ totalPoints, pendingBookingPoints, config, onPersonalArea, onPersonalAreaTier, scrolled, openMatchCount, onScrollToGames, onBranchBooking, deliveryUrl }) {
-  const tier      = getTier(config, totalPoints);
-  const nextTier  = getNextTier(config, totalPoints);
-  const ptsToNext = nextTier ? nextTier.min_points - totalPoints : 0;
-  const pct       = nextTier ? Math.min(100, Math.round((totalPoints / nextTier.min_points) * 100)) : 100;
+function HeroCard({
+  totalPoints,
+  pendingBookingPoints,
+  config,
+  onPersonalArea,
+  onPersonalAreaTier,
+  scrolled,
+  openMatchCount,
+  onScrollToGames,
+  onBranchBooking,
+  deliveryUrl,
+  tierFromServer,
+  tierDetail,
+}) {
+  const tierFromPts = getTier(config, totalPoints ?? 0);
+  const tier = tierFromServer ?? tierFromPts;
+
+  const nextTierPtsOnly = totalPoints != null ? getNextTier(config, totalPoints) : null;
+  const ptsToNextPlain = nextTierPtsOnly ? nextTierPtsOnly.min_points - (totalPoints ?? 0) : 0;
+
+  let pct = tier && nextTierPtsOnly ? Math.min(100, Math.round(((totalPoints ?? 0) / nextTierPtsOnly.min_points) * 100)) : (tier ? 100 : 0);
+  let nextLabel = nextTierPtsOnly?.label_he;
+  let commercialUi = !!(tierDetail?.show_commercial_requirements_ui && tierDetail?.requirements_for_next?.length);
+
+  if (commercialUi && tierDetail.next_tier) {
+    nextLabel = tierDetail.next_tier.label_he;
+    const reqs = tierDetail.requirements_for_next.filter((x) => x.required > 0);
+    const fracs = reqs.length
+      ? reqs.map(r => Math.min(1, r.required > 0 ? r.current / r.required : 1))
+      : [pct / 100];
+    pct = Math.round((fracs.reduce((a, b) => a + b, 0) / Math.max(fracs.length, 1)) * 100);
+  }
+
   const tierKey   = tier?.key || tier?.id || 'bronze';
   const tierMedal = tierKey === 'legend' ? '🏅' : tierKey === 'gold' ? '🥇' : tierKey === 'silver' ? '🥈' : '🥉';
   const delivPts  = config?.delivery_points ?? 80;
@@ -217,12 +245,33 @@ function HeroCard({ totalPoints, pendingBookingPoints, config, onPersonalArea, o
         </div>
         <div className="flex items-center justify-between mt-1.5">
           <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>{pct}%</span>
-          {nextTier && (
-            <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
-              עוד {ptsToNext} נקודות ואתה עולה ל{nextTier.label_he}
+          {nextLabel && commercialUi ? (
+            <span className="text-xs text-right max-w-[70%]" style={{ color: 'var(--text-sec)' }}>
+              מתקדמים ל{nextLabel} לפי הכללים (נקודות + מסעדה / משלוח כשמוגדרים)
             </span>
-          )}
+          ) : nextTierPtsOnly ? (
+            <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
+              עוד {ptsToNextPlain} נקודות ואתה עולה ל{nextTierPtsOnly.label_he}
+            </span>
+          ) : null}
         </div>
+        {commercialUi && tierDetail?.summary_lines_he?.length > 0 && (
+          <div className="mt-3 space-y-1 text-[10px] text-right px-1" style={{ color: 'var(--text-sec)' }}>
+            {tierDetail.summary_lines_he.slice(0, 3).map((line, i) => (
+              <p key={i} style={{ margin: '2px 0', lineHeight: 1.35 }}>{line}</p>
+            ))}
+            <div className="rounded-lg mt-2 space-y-1 p-2" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+              {tierDetail.requirements_for_next.map((r, i) => (
+                <div key={r.key ?? i} className="flex flex-row-reverse justify-between gap-2 leading-tight">
+                  <span className={`font-bold ${r.satisfied ? 'text-green-400' : 'text-amber-200'}`}>
+                    {r.satisfied ? '✓' : `${r.shortfall}`}
+                  </span>
+                  <span className="opacity-95">{r.label_he} — {r.current}/{r.required}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Today's Snapshot */}
@@ -450,6 +499,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
     || (config?.booking_url && String(config.booking_url).trim())
     || '';
   const showTableBooking = Boolean(match.broadcasts_in_venues && resolvedBookingUrl);
+  const isBroadcastVenue = Boolean(match.broadcasts_in_venues);
 
   const predLabel = predOutcome === 'home' ? homeFlag : predOutcome === 'away' ? awayFlag : predOutcome === 'draw' ? 'X' : null;
 
@@ -465,22 +515,46 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
     ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(156,163,175,0.15)', color: '#9ca3af', border: '1px solid rgba(156,163,175,0.3)' }}>⏳ בקרוב</span>
     : null;
 
+  const outerCardStyle = isActive
+    ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' }
+    : isBroadcastVenue
+      ? {
+          border: '1px solid rgba(244,193,93,0.42)',
+          boxShadow: '0 0 22px rgba(244,193,93,0.14), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }
+      : {};
+
   return (
     <div
       data-match-id={match.id}
       className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''}`}
-      style={isActive ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' } : {}}
+      style={outerCardStyle}
     >
       <button
         className="w-full text-right p-4"
         onClick={!isPending ? onToggle : undefined}
         disabled={isPending}
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
           {statusBadge || <span />}
-          <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
-            {[match.stage, dayDate].filter(Boolean).join(' — ')}
-          </span>
+          <div className="flex flex-row-reverse items-center gap-1.5 flex-wrap justify-end min-w-0">
+            {isBroadcastVenue && (
+              <span
+                className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+                style={{
+                  background: 'rgba(244,193,93,0.18)',
+                  color: '#fbbf24',
+                  border: '1px solid rgba(244,193,93,0.45)',
+                }}
+                aria-label="משחק משודר במסעדות יומנגס"
+              >
+                📺 משודר אצלנו
+              </span>
+            )}
+            <span className="text-[11px] text-right whitespace-pre-wrap leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+              {[match.stage, dayDate].filter(Boolean).join(' — ')}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center justify-between mb-1.5">
@@ -606,7 +680,15 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                     href={resolvedBookingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => onBooking?.()}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      try {
+                        await onBooking?.(match.id);
+                      } catch {
+                        /* recordTableBooking may fail if session expired */
+                      }
+                      window.open(resolvedBookingUrl, '_blank', 'noopener,noreferrer');
+                    }}
                     className="flex items-center justify-between px-4 py-3 rounded-xl"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
@@ -805,6 +887,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const [scrolled, setScrolled]       = useState(false);
   const [totalPoints, setTotalPoints] = useState(null);
   const [pendingBookingPoints, setPendingBookingPoints] = useState(null);
+  const [tierDetailLb, setTierDetailLb]             = useState(null);
+  const [tierFromLb, setTierFromLb]               = useState(null);
   const scrollContainerRef            = useRef(null);
   const heroRef                       = useRef(null);
   const gamesRef                      = useRef(null);
@@ -837,6 +921,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           const d = lbRes?.data ?? lbRes;
           if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
           setPendingBookingPoints(d?.me?.pending_table_booking_points ?? 0);
+          setTierDetailLb(d?.me?.tier_detail ?? null);
+          setTierFromLb(d?.me?.tier ?? null);
         })
         .catch(() => {});
     }
@@ -934,16 +1020,20 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     await load();
   }
 
-  async function handleBooking() {
+  async function handleBooking(matchId) {
     if (!campaignId || !token) return;
     try {
-      const result = await callFn('recordTableBooking', { token, campaign_id: campaignId });
+      const payload = { token, campaign_id: campaignId };
+      if (matchId) payload.match_id = matchId;
+      const result = await callFn('recordTableBooking', payload);
       const unlocked = result?.data?.achievements_unlocked ?? result?.achievements_unlocked ?? [];
       if (unlocked.length) setPendingAchievements(prev => [...prev, ...unlocked]);
       const r = await callFn('getLeaderboard', { campaign_id: campaignId, token });
       const d = r?.data ?? r;
       if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
       setPendingBookingPoints(d?.me?.pending_table_booking_points ?? 0);
+      setTierDetailLb(d?.me?.tier_detail ?? null);
+      setTierFromLb(d?.me?.tier ?? null);
     } catch {
     }
   }
@@ -992,6 +1082,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               totalPoints={totalPoints}
               pendingBookingPoints={pendingBookingPoints}
               config={config}
+              tierFromServer={tierFromLb}
+              tierDetail={tierDetailLb}
               onPersonalArea={onPersonalArea}
               onPersonalAreaTier={onPersonalAreaTier}
               scrolled={false}
@@ -1042,6 +1134,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           totalPoints={totalPoints}
           pendingBookingPoints={pendingBookingPoints}
           config={config}
+          tierFromServer={tierFromLb}
+          tierDetail={tierDetailLb}
           onPersonalArea={onPersonalArea}
           onPersonalAreaTier={onPersonalAreaTier}
           scrolled={true}

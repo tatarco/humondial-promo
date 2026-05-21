@@ -106,13 +106,31 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const achievementsOrdered = [...unlockedAchievements, ...lockedAchievements];
   const stripItems = [...unlockedAchievements.slice(0, 2), ...lockedAchievements.slice(0, 3)];
 
-  const currentTier = dataTiers.find(t => t.key === tierKey) || { min_points: 0 };
-  const nextTier = dataTiers.slice().sort((a, b) => a.min_points - b.min_points).find(t => t.min_points > myPts);
-  const bandMin = currentTier.min_points || 0;
-  const bandMax = nextTier?.min_points ?? bandMin;
-  const progPct = bandMax > bandMin
-    ? Math.min(100, Math.round(((myPts - bandMin) / (bandMax - bandMin)) * 100))
+  const td            = me.tier_detail ?? null;
+  const commercialUi  = !!(td?.show_commercial_requirements_ui && td.requirements_for_next?.length);
+
+  const currentTier = dataTiers.find(t => t.key === tierKey || t.id === tierKey) || dataTiers.find(t => t.id === myTier?.id) || { min_points: 0 };
+
+  const nextTierLegacy =
+    [...dataTiers].sort((a, b) => (a.min_points ?? 0) - (b.min_points ?? 0)).find((t) => (t.min_points ?? 0) > myPts) || null;
+
+  const nextTierTarget = td?.next_tier
+    ? { label_he: td.next_tier.label_he, min_points: td.next_tier.min_points }
+    : nextTierLegacy;
+
+  const bandMin       = currentTier.min_points ?? 0;
+  const bandMaxPts    = nextTierTarget?.min_points ?? bandMin;
+  let progPct         = bandMaxPts > bandMin
+    ? Math.min(100, Math.round(((myPts - bandMin) / (bandMaxPts - bandMin)) * 100))
     : 100;
+
+  if (commercialUi && td.requirements_for_next?.length) {
+    const reqs = td.requirements_for_next.filter((r) => r.required > 0);
+    if (reqs.length) {
+      const fr = reqs.map((r) => Math.min(1, r.current / Math.max(r.required, 1)));
+      progPct = Math.round((fr.reduce((a, b) => a + b, 0) / fr.length) * 100);
+    }
+  }
 
   const formatEndDate = (iso) => {
     if (!iso) return null;
@@ -162,18 +180,48 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             </div>
           </div>
           <div className="mt-3">
-            {nextTier ? (
+            {(nextTierTarget || commercialUi) ? (
               <>
                 <div className="hm-progress-bg h-1.5">
                   <div className="hm-progress-fill h-1.5" style={{ width: `${progPct}%` }} />
                 </div>
-                <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
-                  {nextTier.min_points - myPts} נקודות עד {nextTier.label_he}
-                </div>
+
+                {!commercialUi && nextTierLegacy && (
+                  <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
+                    {Math.max(0, (nextTierLegacy.min_points ?? 0) - myPts)} נקודות מאושרות עד {nextTierLegacy.label_he || 'הדרגה הבאה'}
+                  </div>
+                )}
+
+                {commercialUi && td?.summary_lines_he?.length ? (
+                  <div className="mt-3 space-y-1.5 text-right">
+                    {(td.summary_lines_he || []).map((ln, idx) => (
+                      <div key={idx} className="text-[10px]" style={{ color: 'var(--text-sec)', lineHeight: 1.38 }}>
+                        {ln}
+                      </div>
+                    ))}
+                    <div className="rounded-lg p-2 mt-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div className="text-[9px] font-bold mb-1" style={{ color: 'var(--gold)' }}>
+                        מה נדרש ל{td?.next_tier?.label_he || nextTierTarget?.label_he || 'הדרגה הבאה'}
+                      </div>
+                      {(td.requirements_for_next || []).map((r, ri) => (
+                        <div key={r.key + String(ri)} className="flex flex-row-reverse justify-between gap-2 text-[10px] py-0.5" style={{ color: 'var(--text)' }}>
+                          <span className={r.satisfied ? 'text-green-400 font-bold shrink-0' : 'text-amber-300 font-bold shrink-0'}>
+                            {r.satisfied ? '✓' : `−${r.shortfall}`}
+                          </span>
+                          <span className="text-right">{r.label_he}</span>
+                          <span dir="ltr" className="tabular-nums opacity-85 shrink-0">{r.current}/{r.required}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[9px] mt-1" style={{ color: 'var(--text-sec)' }}>
+                      ביקורים/משלוחים נספרים רק אחרי הפעלה בקוד; נקודות ממתינות להזמנת שולחן לא נספרות לדרגה.
+                    </div>
+                  </div>
+                ) : null}
               </>
             ) : (
               <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 8, fontWeight: 700, textAlign: 'right' }}>
-                🏆 הגעת לדרגת האגדה — שמור על המקום שלך!
+                🏆 הגעת לדרגת היעד הגבוהה ביחס לכללים אלה — גם מהכאן משפרים בספאטים!
               </div>
             )}
           </div>
