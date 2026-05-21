@@ -1,9 +1,13 @@
-import { useState, useEffect, useCallback, useRef, useMemo, Fragment } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, Fragment } from 'react';
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 
 import { DEFAULT_BOOKING_URL, DEFAULT_DELIVERY_ORDER_URL } from '../lib/campaignUrls.js';
+
+function leaderboardSnapshotKey(cid) {
+  return `hm_leaderboard_snap_v1:${cid}`;
+}
 
 const STAGE_HE = {
   'group': 'שלב הבתים', 'Group Stage': 'שלב הבתים',
@@ -277,29 +281,38 @@ function HeroCard({
             השלב שלי: {tier?.label_he || 'ברונזה'} ↗
           </button>
         </div>
-        <div
-          className="relative h-3 rounded-full overflow-visible"
-          dir="ltr"
-          style={{ background: 'rgba(255,255,255,0.1)' }}
-          aria-hidden
-        >
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${Math.min(100, Math.max(0, pct))}%`,
-              marginLeft: 'auto',
-              background: 'linear-gradient(to right, var(--red), var(--gold))',
-            }}
-          />
-          <span
-            className="absolute top-1/2 text-sm leading-none pointer-events-none select-none"
-            style={{
-              left: `${Math.min(100, Math.max(0, 100 - pct))}%`,
-              transform: 'translate(-50%, -50%)',
-              right: 'auto',
-            }}
-          >⚽</span>
-        </div>
+        {(() => {
+          const p = Math.min(100, Math.max(0, pct));
+          const leftGrow = Math.max(0, 100 - p);
+          return (
+            <div
+              className="relative h-3 w-full overflow-visible rounded-full"
+              dir="ltr"
+              lang="en"
+              style={{ background: 'rgba(255,255,255,0.1)', isolation: 'isolate' }}
+            >
+              <div className="relative h-full w-full overflow-hidden rounded-full">
+                <div className="absolute inset-0 flex flex-row" dir="ltr">
+                  <div style={{ flex: `${leftGrow} 0 0px`, minHeight: '100%' }} aria-hidden />
+                  <div
+                    style={{
+                      flex: `${p} 0 0px`,
+                      minHeight: '100%',
+                      borderRadius: 9999,
+                      background: 'linear-gradient(to right, var(--red), var(--gold))',
+                    }}
+                    aria-hidden
+                  />
+                </div>
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 top-1/2 z-[1] flex -translate-y-1/2 flex-row" dir="ltr" aria-hidden>
+                <div style={{ flex: `${leftGrow} 0 0px` }} />
+                <span className="shrink-0 text-sm leading-none">⚽</span>
+                <div style={{ flex: `${p} 0 0px` }} />
+              </div>
+            </div>
+          );
+        })()}
         <div className="flex items-center justify-between mt-1.5">
           <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>{pct}%</span>
           {nextLabel && commercialUi ? (
@@ -909,23 +922,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     </div>
                     <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך למשלוח ←</span>
                   </a>
-                ) : onVenueCode ? (
-                  <button
-                    type="button"
-                    onClick={onVenueCode}
-                    className="flex flex-col gap-3 w-full px-4 py-3 rounded-xl min-h-[4.75rem]"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
-                  >
-                    <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
-                      <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">📍</span>
-                      <div className="min-w-0 flex-1 space-y-1 px-0.5">
-                        <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>הגעת לסניף?</div>
-                        <div className="text-xs leading-relaxed px-1" style={{ color: 'var(--green)' }}>הזן קוד וצבור נקודות</div>
-                      </div>
-                    </div>
-                    <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">הזן קוד ←</span>
-                  </button>
-                ) : null}
+                )}
               </div>
             )}
 
@@ -1107,35 +1104,61 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const token = getToken();
   const campaignId = config?.id;
 
+  useLayoutEffect(() => {
+    if (!campaignId) return;
+    try {
+      const raw = sessionStorage.getItem(leaderboardSnapshotKey(campaignId));
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.total_points === 'number' && Number.isFinite(s.total_points)) setTotalPoints(s.total_points);
+      if (typeof s.pending_booking_points === 'number') setPendingBookingPoints(s.pending_booking_points);
+      if (Object.prototype.hasOwnProperty.call(s, 'tier_detail')) setTierDetailLb(s.tier_detail);
+      if (Object.prototype.hasOwnProperty.call(s, 'tier')) setTierFromLb(s.tier);
+    } catch (_) {}
+  }, [campaignId]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
+    const wantLb = !!(campaignId && token);
     try {
-      const [matchesRes, predsRes] = await Promise.all([
+      const [matchesRes, predsRes, lbRes] = await Promise.all([
         callFn('listMatches', {}),
         campaignId && token
           ? callFn('listMyPredictions', { token, campaign_id: campaignId })
           : Promise.resolve({ predictions: [] }),
+        wantLb ? callFn('getLeaderboard', { campaign_id: campaignId, token }) : Promise.resolve(null),
       ]);
       setMatches(matchesRes.matches || []);
       const predMap = {};
       for (const p of (predsRes.predictions || [])) predMap[p.match_id] = p;
       setPredictions(predMap);
+
+      if (lbRes != null && campaignId) {
+        const d = lbRes?.data ?? lbRes;
+        if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
+        const pbp = d?.me?.pending_table_booking_points ?? 0;
+        setPendingBookingPoints(pbp);
+        const td = d?.me?.tier_detail ?? null;
+        const tf = d?.me?.tier ?? null;
+        setTierDetailLb(td);
+        setTierFromLb(tf);
+        try {
+          sessionStorage.setItem(
+            leaderboardSnapshotKey(campaignId),
+            JSON.stringify({
+              total_points: d.me?.total_points,
+              pending_booking_points: pbp,
+              tier_detail: td,
+              tier: tf,
+            }),
+          );
+        } catch (_) {}
+      }
     } catch (e) {
       setError(e.message || 'שגיאה בטעינה');
     } finally {
       setLoading(false);
-    }
-    if (campaignId && token) {
-      callFn('getLeaderboard', { campaign_id: campaignId, token })
-        .then(lbRes => {
-          const d = lbRes?.data ?? lbRes;
-          if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
-          setPendingBookingPoints(d?.me?.pending_table_booking_points ?? 0);
-          setTierDetailLb(d?.me?.tier_detail ?? null);
-          setTierFromLb(d?.me?.tier ?? null);
-        })
-        .catch(() => {});
     }
   }, [campaignId, token]);
 
