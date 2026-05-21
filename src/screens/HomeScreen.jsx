@@ -1182,7 +1182,7 @@ function FloatingDock({ config, onScrollToGames }) {
   );
 }
 
-export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onLeaderboard, onBranchBooking }) {
+export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onBranchBooking }) {
   const config = useConfig();
   const effectiveConfig = config ? {
     ...config,
@@ -1455,9 +1455,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2 px-3 mb-1">
+          <div className="grid grid-cols-2 gap-2 px-3 mb-1">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
-            <QuickActionTile icon="🏆" label="דירוג" onClick={onLeaderboard} scrolled={false} />
             <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={false} />
           </div>
 
@@ -1515,9 +1514,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           onBranchBooking={onBranchBooking}
           deliveryUrl={effectiveConfig?.delivery_url}
         />
-        <div className="grid grid-cols-3 gap-2 px-3 mb-1">
+        <div className="grid grid-cols-2 gap-2 px-3 mb-1">
           <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
-          <QuickActionTile icon="🏆" label="דירוג" onClick={onLeaderboard} scrolled={true} />
           <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={() => onVenueCode('delivery')} scrolled={true} />
         </div>
         <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />

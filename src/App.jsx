@@ -227,7 +227,6 @@ export default function App() {
       onPersonalArea={handlePersonalArea}
       onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
-      onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
       onBranchBooking={openBranchBooking}
     />;
   })();

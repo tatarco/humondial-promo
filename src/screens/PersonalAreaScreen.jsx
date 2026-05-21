@@ -337,28 +337,31 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           </div>
         </div>
 
-        {/* Block 4 — Mini podium */}
+        {/* Block 4 — Mini podium + דירוג מלא */}
         <div>
           <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>3 המובילים</div>
-          <div className="hm-card">
+          <div className="hm-card overflow-hidden">
             <MiniPodium top3={top3} />
+            <div className="border-t px-3 py-3" style={{ borderColor: 'var(--border)' }}>
+              <button
+                type="button"
+                onClick={onLeaderboard}
+                className="w-full flex flex-row-reverse items-center justify-between gap-3 px-4 py-3 rounded-2xl font-bold text-sm text-white"
+                style={{ background: 'var(--red)' }}
+              >
+                <span style={{ opacity: 0.5 }} aria-hidden>←</span>
+                <div className="text-right min-w-0">
+                  <div className="text-[10px] mb-0.5 font-bold" style={{ opacity: 0.82 }}>דירוג מלא · 50 הראשונים</div>
+                  <div>🏆 לוח האלופים</div>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Block 5 — Navigation */}
         <div>
           <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>ניווט</div>
-          <button
-            onClick={onLeaderboard}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl mb-2 font-bold text-sm text-white"
-            style={{ background: 'var(--red)' }}
-          >
-            <div>
-              <div className="text-[10px] mb-0.5" style={{ opacity: 0.7 }}>כל 50 השחקנים</div>
-              🏆 לוח האלופים
-            </div>
-            <span style={{ opacity: 0.5 }}>←</span>
-          </button>
           <button
             onClick={onLedger}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl font-bold text-sm"
