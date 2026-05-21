@@ -14,25 +14,99 @@ const BRANCHES = [
   { name: 'גבעת ברנר', orgId: '579e766f2063921e00fb4551' },
 ];
 
-export default function BranchBookingScreen({ token, campaignId, tableBookingPoints, onBack }) {
-  const [msg, setMsg] = useState('');
-  const [saving, setSaving] = useState(false);
+function unwrap(payload) {
+  return payload?.data ?? payload;
+}
+
+export default function BranchBookingScreen({
+  token,
+  campaignId,
+  tableBookingPoints,
+  bookingContext,
+  onBack,
+}) {
+  const [msg, setMsg]       = useState('');
+  const [branchTip, setBranchTip] = useState('');
+  const [busy, setBusy]       = useState(null);
+
+  const matchId = bookingContext?.matchId;
+  const matchKickoffUtc = bookingContext?.matchKickoffUtc;
+
+  async function flushPending(branch) {
+    if (!token || !campaignId) return;
+    const payload = {
+      token,
+      campaign_id: campaignId,
+      tabit_org_id: branch.orgId,
+      branch_name: branch.name,
+    };
+    if (matchId) {
+      payload.match_id = matchId;
+      if (matchKickoffUtc) payload.match_kickoff_utc = matchKickoffUtc;
+    }
+    const raw = await callFn('recordTableBooking', payload);
+    const body = unwrap(raw);
+    const duplicate = Boolean(body.duplicate);
+    const ach = Array.isArray(body.achievements_unlocked) ? body.achievements_unlocked : [];
+    const pts = tableBookingPoints ?? body.points_pending ?? 15;
+    let tip =
+      duplicate
+        ? matchId
+          ? 'כבר רשום לכרטיס הזה — ממשיכים לטאבּיט להזמנה.'
+          : 'כבר יש סטטוס ממתין בזיכוי כללי — ממשיכים לטאבּיט להזמנה.'
+        : `נשמרו +${pts} נק׳ ממתין. נפתח טאבּיט להזמנה — אחר כך הקוד היומי בסניף משחרר למאושר.`;
+    if (!duplicate && ach.length) {
+      const extras = ach
+        .map(a => `${a.badge ?? ''} ${a.label_he ?? ''}`.trim())
+        .filter(Boolean);
+      if (extras.length) tip += ` · ${extras.join(' · ')}`;
+    }
+    setBranchTip(tip);
+  }
+
+  async function branchReserve(branch, e) {
+    e.preventDefault();
+    const url = `${RESERVATION_BASE}${branch.orgId}`;
+    setBranchTip('');
+    if (token && campaignId) {
+      setBusy(branch.orgId);
+      try {
+        await flushPending(branch);
+      } catch {
+        setBranchTip('לא הצלחנו לשמור נקודות ממתינות — עדיין אפשר להמשיך לטאבּיט מהקישור שייפתח.');
+      } finally {
+        setBusy(null);
+      }
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 
   async function registerPendingPoints() {
     if (!token || !campaignId) {
       setMsg('שגיאת התחברות');
       return;
     }
-    setSaving(true);
+    setBusy('manual');
     setMsg('');
     try {
-      await callFn('recordTableBooking', { token, campaign_id: campaignId });
-      const pts = tableBookingPoints ?? 15;
-      setMsg(`נרשמו +${pts} נק׳ במצב ממתין להזמנת שולחן. השלב הבא: ביקור בסניף והזנת קוד הביקור היומי; עד אז הנקודות לא נכללות בדירוג או בדרגה.`);
+      const payload = { token, campaign_id: campaignId };
+      if (matchId) {
+        payload.match_id = matchId;
+        if (matchKickoffUtc) payload.match_kickoff_utc = matchKickoffUtc;
+      }
+      const raw = await callFn('recordTableBooking', payload);
+      const body = unwrap(raw);
+      const pts = tableBookingPoints ?? body.points_pending ?? 15;
+      const duplicate = Boolean(body.duplicate);
+      setMsg(
+        duplicate
+          ? `כבר יש רישום למצב זה (${pts} נ׳ במתנה במערכת). אם טרם הזמנת — בחר סניף למעלה.`
+          : `נרשמו +${pts} נק׳ במצב ממתין להזמנת שולחן. השלב הבא: ביקור בסניף והזנת קוד הביקור היומי; עד אז הנקודות לא נכללות בדירוג או בדרגה.`,
+      );
     } catch {
       setMsg('לא הצלחנו לשמור — נסה שוב');
     } finally {
-      setSaving(false);
+      setBusy(null);
     }
   }
 
@@ -50,20 +124,38 @@ export default function BranchBookingScreen({ token, campaignId, tableBookingPoi
         </button>
       </header>
 
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-4 space-y-2">
         <p className="text-sm" style={{ color: 'var(--text-sec)' }}>
-          בחר סניף להזמנת מקום ב-Humongous. לאחר ההזמנה אפשר לרשום כאן הזמנה ממתינה לנקודות או להשתמש בכרטיס משחק משודר במסך הבית — בשתי הדרכים אותם כללים: הנקודות נשמרות במצב ממתין ולא משפיעות על דירוג או דרגה עד שתזינו את קוד הביקור היומי במסך &quot;הגעת לסניף?&quot; לאחר ההגעה למסעדה.
+          בחר סניף להזמנת מקום ב-Humongous. אל תשכח להזין את קוד הביקור בסניף כדי שהנק׳ במתנה יאושרו.
+        </p>
+        <p className="text-xs" style={{ color: 'var(--text-sec)' }}>
+          עם לחיצה על סניף נשמרות נקודות ממתינות (אוטומטית) ואז נפתח טאבּיט להזמנה.
+          {matchId ? (
+            <>
+              {' '}
+              במסלול הזה הרישום מקושר לכרטיס המשחק.
+            </>
+          ) : (
+            <>
+              {' '}
+              מהדוק או מתפריט הדירוג — רישום כללי (בלי משחק ספציפי).
+            </>
+          )}
         </p>
       </div>
 
+      {branchTip && (
+        <p className="px-4 mb-3 text-xs text-right" style={{ color: 'var(--green)' }}>{branchTip}</p>
+      )}
+
       <div className="px-4 grid grid-cols-2 gap-3">
         {BRANCHES.map((branch) => (
-          <a
+          <button
             key={branch.orgId}
-            href={`${RESERVATION_BASE}${branch.orgId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hm-card flex flex-col items-center justify-center gap-2 py-5 text-center"
+            type="button"
+            disabled={!!busy}
+            onClick={(e) => branchReserve(branch, e)}
+            className="hm-card flex flex-col items-center justify-center gap-2 py-5 text-center border-0 cursor-pointer appearance-none disabled:opacity-55"
           >
             <div className="text-2xl">🍔</div>
             <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>
@@ -73,24 +165,24 @@ export default function BranchBookingScreen({ token, campaignId, tableBookingPoi
               className="text-xs px-2 py-1 rounded-full font-bold"
               style={{ background: 'var(--red)', color: '#fff' }}
             >
-              הזמן ←
+              {busy === branch.orgId ? 'שומר...' : 'הזמן ←'}
             </div>
-          </a>
+          </button>
         ))}
       </div>
 
       <div className="mx-4 mt-8 hm-card p-4 space-y-3">
-        <p className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>אחרי שקבעת תור — רישום לנקודות</p>
+        <p className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>אחרי שקבעת תור — רישום נקודות</p>
         <p className="text-xs text-right leading-relaxed" style={{ color: 'var(--text-sec)' }}>
-          אחרי שמופיע רישום בהצלחה: הנקודות במצב ממתין — לא בדירוג ולא בשדרוג דרגה. השלב הבא הוא ביקור בסניף והזנה של הקוד היומי (&quot;הגעת לסניף?&quot;). במבקר אחד נסגרת לפחות הזמנה ממתינה אחת (לפי סדר ההרשמה שלכם).
+          אם לחיצה על הסניף למעלה כבר הצליחה להוסיף ממתין אז אין צורך בכפתור — לחץ כאן רק אם הזמנת דרך ערוץ אחר ועדיין אין למצב הזה רישום משלך במערכת.
         </p>
         <button
           type="button"
           onClick={registerPendingPoints}
-          disabled={saving}
-          className="w-full hm-btn-primary py-3 text-sm font-bold rounded-xl"
+          disabled={!!busy}
+          className="w-full hm-btn-primary py-3 text-sm font-bold rounded-xl disabled:opacity-55"
         >
-          {saving ? 'שומר...' : 'רשמו את ההזמנה שלי (נק׳ ממתינות)'}
+          {busy === 'manual' ? 'שומר...' : 'רשמו את ההזמנה שלי (נק׳ ממתינות)'}
         </button>
         {msg && <p className="text-xs text-right" style={{ color: 'var(--green)' }}>{msg}</p>}
       </div>

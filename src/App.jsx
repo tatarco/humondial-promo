@@ -53,6 +53,26 @@ export default function App() {
   const [config, setConfig]           = useState(null);
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [pendingCid, setPendingCid]   = useState('');
+  const [bookingContext, setBookingContext]       = useState(null);
+
+  const UUID_CTX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  function openBranchBooking(ctx) {
+    if (
+      ctx &&
+      typeof ctx === 'object' &&
+      typeof ctx.matchId === 'string' &&
+      UUID_CTX.test(ctx.matchId.trim())
+    ) {
+      const mid = ctx.matchId.trim();
+      let kick = ctx.matchKickoffUtc;
+      if (kick != null && typeof kick !== 'string') kick = null;
+      setBookingContext({ matchId: mid, matchKickoffUtc: kick || null });
+    } else {
+      setBookingContext(null);
+    }
+    setScreen(SCREEN.BRANCH_BOOKING);
+  }
 
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -186,6 +206,7 @@ export default function App() {
           campaignId={config?.id}
           config={config}
           onBack={() => setScreen(SCREEN.SHELL)}
+          onBranchBooking={openBranchBooking}
         />
       );
     }
@@ -195,7 +216,8 @@ export default function App() {
           token={getToken()}
           campaignId={config?.id}
           tableBookingPoints={config?.table_booking_points}
-          onBack={() => setScreen(SCREEN.SHELL)}
+          bookingContext={bookingContext}
+          onBack={() => { setBookingContext(null); setScreen(SCREEN.SHELL); }}
         />
       );
     }
@@ -206,7 +228,7 @@ export default function App() {
       onVenueCode={() => { setPendingVenueCode(''); setScreen(SCREEN.VENUE_CODE); }}
       onMyQR={() => setScreen(SCREEN.MY_QR)}
       onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
-      onBranchBooking={() => setScreen(SCREEN.BRANCH_BOOKING)}
+      onBranchBooking={openBranchBooking}
     />;
   })();
 

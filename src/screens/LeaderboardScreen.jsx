@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
-import { DEFAULT_BOOKING_URL, DEFAULT_DELIVERY_ORDER_URL } from '../lib/campaignUrls.js';
+import { DEFAULT_DELIVERY_ORDER_URL } from '../lib/campaignUrls.js';
 
 const TIER_CSS = {
   bronze: 'tier-bronze',
@@ -49,7 +49,7 @@ function WhatIfCard({ icon, label, value, onChange, pts }) {
   );
 }
 
-export default function LeaderboardScreen({ token, campaignId, config, onBack }) {
+export default function LeaderboardScreen({ token, campaignId, config, onBack, onBranchBooking }) {
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
@@ -207,10 +207,13 @@ export default function LeaderboardScreen({ token, campaignId, config, onBack })
           <WhatIfCard icon="🍽️" label="אזמין שולחן עוד" value={tableCount} onChange={setTableCount} pts={tableCount * tableDelta} />
           <WhatIfCard icon="🛵" label="אזמין משלוח עוד" value={delivCount} onChange={setDelivCount} pts={delivCount * delivDelta} />
           <button onClick={onBack} className="hm-btn-primary w-full py-3 text-sm">⚽ לניחושים ←</button>
-          <a href={config?.booking_url || DEFAULT_BOOKING_URL} target="_blank" rel="noopener noreferrer"
-              className="hm-btn-secondary flex items-center justify-center w-full py-3 text-sm">
-              🍽️ הזמן שולחן ↗
-          </a>
+          <button
+            type="button"
+            onClick={() => onBranchBooking?.()}
+            className="hm-btn-secondary flex items-center justify-center w-full py-3 text-sm"
+          >
+            🍽️ הזמן שולחן ←
+          </button>
           <a href={config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL} target="_blank" rel="noopener noreferrer"
               className="hm-btn-secondary flex items-center justify-center w-full py-3 text-sm">
               🛵 הזמן משלוח ↗

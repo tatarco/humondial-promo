@@ -362,7 +362,7 @@ function HeroCard({
           נחש עכשיו ←
         </button>
         <div className="grid grid-cols-2 gap-2.5">
-          <button onClick={onBranchBooking} className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1">
+          <button type="button" onClick={() => onBranchBooking?.()} className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1">
             📅 שמור לי שולחן
           </button>
           <a
@@ -515,7 +515,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onBooking, onVenueCode, onOpenGames, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onVenueCode, onOpenGames, onBranchBooking, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
   const outsideGuessWindow = !isPending && windowLocked && match.status === 'open';
@@ -588,10 +588,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const lockTime    = match.lock_deadline_utc ? fmtTime(match.lock_deadline_utc) : '';
   const dayDate     = match.kickoff_utc ? fmtDayDate(match.kickoff_utc) : '';
 
-  const resolvedBookingUrl = (match.booking_url_override && String(match.booking_url_override).trim())
-    || (config?.booking_url && String(config.booking_url).trim())
-    || '';
-  const showTableBooking = Boolean(match.broadcasts_in_venues && resolvedBookingUrl);
+  const showTableBooking = Boolean(match.broadcasts_in_venues);
   const isBroadcastVenue = Boolean(match.broadcasts_in_venues);
 
   const predLabel = predOutcome === 'home' ? homeFlag : predOutcome === 'away' ? awayFlag : predOutcome === 'draw' ? 'X' : null;
@@ -889,20 +886,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   )}
                 </div>
                 {showTableBooking ? (
-                  <a
-                    href={resolvedBookingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={async (e) => {
+                  <button
+                    type="button"
+                    onClick={(e) => {
                       e.preventDefault();
-                      try {
-                        await onBooking?.(match.id);
-                      } catch {
-                      }
-                      window.open(resolvedBookingUrl, '_blank', 'noopener,noreferrer');
+                      e.stopPropagation();
+                      onBranchBooking?.({ matchId: match.id, matchKickoffUtc: match.kickoff_utc ?? null });
                     }}
-                    className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem]"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem] w-full text-right border-0 appearance-none cursor-pointer"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'inherit' }}
                   >
                     <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
                       <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">🗓️</span>
@@ -914,7 +906,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                       </div>
                     </div>
                     <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך להזמנה ←</span>
-                  </a>
+                  </button>
                 ) : (
                   <a
                     href={config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL}
@@ -1038,7 +1030,7 @@ function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
     { key: 'draw', icon: '🤝', label: 'תיקו מדויק', pts: drawStripe, onClick: onScrollToGames },
   ];
   const venueItems = [
-    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 15, onClick: onBranchBooking },
+    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 15, onClick: () => onBranchBooking?.() },
     { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 20, href: deliveryUrl },
   ];
   return (
@@ -1300,24 +1292,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     await load();
   }
 
-  async function handleBooking(matchId) {
-    if (!campaignId || !token) return;
-    try {
-      const payload = { token, campaign_id: campaignId };
-      if (matchId) payload.match_id = matchId;
-      const result = await callFn('recordTableBooking', payload);
-      const unlocked = result?.data?.achievements_unlocked ?? result?.achievements_unlocked ?? [];
-      if (unlocked.length) setPendingAchievements(prev => [...prev, ...unlocked]);
-      const r = await callFn('getLeaderboard', { campaign_id: campaignId, token });
-      const d = r?.data ?? r;
-      if (d?.me?.total_points != null) setTotalPoints(d.me.total_points);
-      setPendingBookingPoints(d?.me?.pending_table_booking_points ?? 0);
-      setTierDetailLb(d?.me?.tier_detail ?? null);
-      setTierFromLb(d?.me?.tier ?? null);
-    } catch {
-    }
-  }
-
   return (
     <>
     <div className="h-dvh stadium-bg relative" dir="rtl">
@@ -1407,8 +1381,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
                 predictionWindowOpensHint={guessOpensHintById[match.id]}
                 onPredict={handlePredict}
                 onDelete={handleDeletePrediction}
-                onBooking={handleBooking}
                 onVenueCode={onVenueCode}
+                onBranchBooking={onBranchBooking}
                 isActive={activeCard === match.id}
                 onToggle={() => setActiveCard((prev) => (prev === match.id ? null : match.id))}
               />
