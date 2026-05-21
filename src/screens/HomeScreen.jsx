@@ -651,29 +651,35 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
         {showLiveBroadcastLayout ? (
           <>
             <div
-              className="flex flex-row-reverse items-start justify-between gap-2 pt-3 pr-3 pl-3 pb-3 mb-3 -mx-4 -mt-4"
+              className="relative pt-3 pr-3 pl-3 pb-3 mb-3 -mx-4 -mt-4"
               style={{
                 background: 'linear-gradient(270deg, rgba(96,165,250,0.14), rgba(96,165,250,0.02))',
                 borderBottom: '1px solid rgba(255,255,255,0.06)',
               }}
             >
-              <div className="shrink-0 flex flex-col gap-1.5 items-end max-w-[44%]">
-                {statusBadge}
-                {isBroadcastVenue && (
-                  <span
-                    className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                    style={{
-                      background: 'rgba(244,193,93,0.18)',
-                      color: '#fbbf24',
-                      border: '1px solid rgba(244,193,93,0.45)',
-                    }}
-                    aria-label="משחק משודר במסעדות יומנגס"
-                  >
-                    📺 משודר אצלנו
-                  </span>
-                )}
+              <div
+                className="absolute top-3 z-10 max-w-[42%]"
+                style={{ left: 'max(12px, env(safe-area-inset-left))' }}
+                dir="rtl"
+              >
+                <div className="flex flex-col gap-1.5 items-start">
+                  {statusBadge}
+                  {isBroadcastVenue && (
+                    <span
+                      className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+                      style={{
+                        background: 'rgba(244,193,93,0.18)',
+                        color: '#fbbf24',
+                        border: '1px solid rgba(244,193,93,0.45)',
+                      }}
+                      aria-label="משחק משודר במסעדות יומנגס"
+                    >
+                      📺 משודר אצלנו
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="min-w-0 flex-1 flex flex-col items-center justify-center pt-1">
+              <div className="flex min-h-[52px] w-full flex-col items-center justify-center px-14 pt-1">
                 {liveScoresKnown ? (
                   <div
                     dir="ltr"
