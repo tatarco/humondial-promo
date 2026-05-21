@@ -1140,48 +1140,6 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
   );
 }
 
-function FloatingDock({ config, onScrollToGames }) {
-  const outcome = config?.outcome_points ?? 15;
-  const bullseye = config?.bullseye_points ?? 30;
-  const drawStripe = config?.draw_stripe_points ?? 10;
-  const scoringChips = [
-    { key: 'outcome', icon: '⚽', label: 'ניחוש', pts: outcome, onClick: onScrollToGames },
-    { key: 'bullseye', icon: '🎯', label: 'ניחוש מדויק', pts: bullseye, onClick: onScrollToGames },
-    { key: 'draw', icon: '🤝', label: 'תיקו מדויק', pts: drawStripe, onClick: onScrollToGames },
-  ];
-  return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto"
-      dir="rtl"
-      style={{
-        background: 'rgba(16,5,5,0.92)',
-        backdropFilter: 'blur(14px)',
-        borderTop: '1px solid rgba(255,255,255,0.09)',
-        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
-      }}
-    >
-      <div className="flex gap-2 overflow-x-auto px-3 pt-2 pb-2" style={{ scrollbarWidth: 'thin' }}>
-        {scoringChips.map(c => (
-          <button
-            key={c.key}
-            type="button"
-            onClick={c.onClick}
-            className="shrink-0 flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[4.75rem] text-right"
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-            }}
-          >
-            <span className="text-xl leading-none" aria-hidden>{c.icon}</span>
-            <span className="text-[10px] font-bold leading-tight" style={{ color: 'var(--text)' }}>{c.label}</span>
-            <span className="text-[10px] font-black" style={{ color: 'var(--gold)' }}>+{c.pts} נ׳</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onBranchBooking }) {
   const config = useConfig();
   const effectiveConfig = config ? {
@@ -1411,7 +1369,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
       <div
         ref={scrollContainerRef}
-        className="h-dvh overflow-y-auto pb-32"
+        className="h-dvh overflow-y-auto pb-[max(12px,env(safe-area-inset-bottom))]"
         onScroll={handleScroll}
       >
         <div style={{ background: 'var(--hm-bg, #100505)' }}>
@@ -1521,10 +1479,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
       </div>
     )}
-    <FloatingDock
-      config={effectiveConfig}
-      onScrollToGames={handleGuessNow}
-    />
     </>
   );
 }
