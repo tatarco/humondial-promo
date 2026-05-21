@@ -1140,8 +1140,7 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
   );
 }
 
-function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
-  const deliveryUrl = config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL;
+function FloatingDock({ config, onScrollToGames }) {
   const outcome = config?.outcome_points ?? 15;
   const bullseye = config?.bullseye_points ?? 30;
   const drawStripe = config?.draw_stripe_points ?? 10;
@@ -1149,10 +1148,6 @@ function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
     { key: 'outcome', icon: '⚽', label: 'ניחוש', pts: outcome, onClick: onScrollToGames },
     { key: 'bullseye', icon: '🎯', label: 'ניחוש מדויק', pts: bullseye, onClick: onScrollToGames },
     { key: 'draw', icon: '🤝', label: 'תיקו מדויק', pts: drawStripe, onClick: onScrollToGames },
-  ];
-  const venueItems = [
-    { icon: '🍽️', label: 'שולחן', pts: config?.table_booking_points ?? 15, onClick: () => onBranchBooking?.() },
-    { icon: '🛵', label: 'משלוח', pts: config?.delivery_points ?? 20, href: deliveryUrl },
   ];
   return (
     <div
@@ -1165,7 +1160,7 @@ function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
         paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
       }}
     >
-      <div className="flex gap-2 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex gap-2 overflow-x-auto px-3 pt-2 pb-2" style={{ scrollbarWidth: 'thin' }}>
         {scoringChips.map(c => (
           <button
             key={c.key}
@@ -1182,20 +1177,6 @@ function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
             <span className="text-[10px] font-black" style={{ color: 'var(--gold)' }}>+{c.pts} נ׳</span>
           </button>
         ))}
-      </div>
-      <div className="flex items-stretch justify-around px-2 pb-2 pt-1">
-        {venueItems.map(item => {
-          const inner = (
-            <div className="flex flex-col items-center gap-0.5 py-1 cursor-pointer" onClick={item.onClick}>
-              <span className="text-2xl leading-none">{item.icon}</span>
-              <span className="text-[10px] font-bold" style={{ color: 'var(--text)' }}>{item.label}</span>
-              <span className="text-[10px] font-bold" style={{ color: 'var(--gold)' }}>+{item.pts} נ׳</span>
-            </div>
-          );
-          return item.href
-            ? <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center">{inner}</a>
-            : <div key={item.label} className="flex-1 flex justify-center">{inner}</div>;
-        })}
       </div>
     </div>
   );
@@ -1545,7 +1526,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     <FloatingDock
       config={effectiveConfig}
       onScrollToGames={handleGuessNow}
-      onBranchBooking={onBranchBooking}
     />
     </>
   );
