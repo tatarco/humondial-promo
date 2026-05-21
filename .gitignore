@@ -8,3 +8,6 @@ dist/
 *.local
 .DS_Store
 .worktrees/
+.superpowers/
+design/match-card-mocks.html
+public/header-mockups.html
