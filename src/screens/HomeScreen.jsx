@@ -611,6 +611,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
     predictionWindowOpensHint ||
     (preKickLocked && lockTime ? `לא ניתן לפתוח ניחוש חדש — נעילה בשעה ${lockTime}` : null);
 
+  const showLiveBroadcastLayout = isLive && !isPending;
+  const liveScoresKnown =
+    match.live_home_score != null && match.live_away_score != null;
+  const guessMatchesLiveScores =
+    hasPrediction &&
+    liveScoresKnown &&
+    prediction.home_score === match.live_home_score &&
+    prediction.away_score === match.live_away_score;
+
   function handleHeaderActivate() {
     if (isPending || !canExpandCard) return;
     onToggle?.();
@@ -639,100 +648,205 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
         onClick={handleHeaderActivate}
         disabled={isPending}
       >
-        <div className="flex flex-row-reverse items-start justify-between mb-2 gap-2">
-          <div className="shrink-0 flex flex-col gap-1.5 items-end max-w-[48%]">
-            {statusBadge}
-            {isBroadcastVenue && (
-              <span
-                className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                style={{
-                  background: 'rgba(244,193,93,0.18)',
-                  color: '#fbbf24',
-                  border: '1px solid rgba(244,193,93,0.45)',
-                }}
-                aria-label="משחק משודר במסעדות יומנגס"
-              >
-                📺 משודר אצלנו
-              </span>
-            )}
-          </div>
-          <div className="min-w-0 flex-1 text-right">
-            <span className="text-[11px] leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+        {showLiveBroadcastLayout ? (
+          <>
+            <div
+              className="flex flex-row-reverse items-start justify-between gap-2 pt-3 pr-3 pl-3 pb-3 mb-3 -mx-4 -mt-4"
+              style={{
+                background: 'linear-gradient(270deg, rgba(96,165,250,0.14), rgba(96,165,250,0.02))',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <div className="shrink-0 flex flex-col gap-1.5 items-end max-w-[44%]">
+                {statusBadge}
+                {isBroadcastVenue && (
+                  <span
+                    className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+                    style={{
+                      background: 'rgba(244,193,93,0.18)',
+                      color: '#fbbf24',
+                      border: '1px solid rgba(244,193,93,0.45)',
+                    }}
+                    aria-label="משחק משודר במסעדות יומנגס"
+                  >
+                    📺 משודר אצלנו
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 flex flex-col items-center justify-center pt-1">
+                {liveScoresKnown ? (
+                  <div
+                    dir="ltr"
+                    className="font-black tabular-nums tracking-tight leading-none text-sky-300"
+                    style={{
+                      fontSize: 'clamp(1.75rem, 8vw, 2.5rem)',
+                      textShadow: '0 0 24px rgba(56,189,248,0.42)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {match.live_home_score}
+                    <span className="mx-1.5 opacity-50">:</span>
+                    {match.live_away_score}
+                  </div>
+                ) : (
+                  <div className="text-xs font-black text-sky-300/90 px-2 text-center leading-tight">בשידור</div>
+                )}
+                {hasPrediction ? (
+                  <div
+                    dir="ltr"
+                    className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[10px] sm:text-[11px] leading-tight"
+                  >
+                    <span className="font-semibold whitespace-nowrap" style={{ color: 'rgba(244,193,93,0.78)' }}>
+                      ניחושך
+                    </span>
+                    <span className="font-black tabular-nums" style={{ color: 'var(--gold)' }}>
+                      {prediction.home_score}:{prediction.away_score}
+                    </span>
+                    {liveScoresKnown && guessMatchesLiveScores ? (
+                      <span className="text-[10px] font-black text-emerald-400 whitespace-nowrap">✓ מתאים</span>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="text-[11px] leading-snug break-words text-right mb-2" style={{ color: 'var(--text-sec)' }}>
               {[match.stage, dayDate].filter(Boolean).join(' — ')}
-            </span>
-          </div>
-        </div>
-
-        {openerHint ? (
-          <p className="text-[10px] leading-snug mb-3 text-right break-words px-0.5" style={{ color: 'var(--text-sec)' }}>
-            {openerHint}
-          </p>
-        ) : null}
-
-        <div className="flex flex-col gap-2 mb-3" dir="rtl">
-          <div className="flex flex-row-reverse items-start gap-2">
-            <span className="text-xl shrink-0 leading-none pt-0.5">{homeFlag}</span>
-            <div className="min-w-0 flex-1 text-right">
-              <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
-                {homeParts.clean}
-              </div>
-              {homeParts.aside ? (
-                <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
-                  {homeParts.aside}
-                </div>
-              ) : null}
             </div>
-          </div>
-          <div className="text-center text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>vs</div>
-          <div className="flex flex-row-reverse items-start gap-2">
-            <span className="text-xl shrink-0 leading-none pt-0.5">{awayFlag}</span>
-            <div className="min-w-0 flex-1 text-right">
-              <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
-                {awayParts.clean}
-              </div>
-              {awayParts.aside ? (
-                <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
-                  {awayParts.aside}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        {kickoffTime && (
-          <div className="text-center text-[11px] mb-2 space-y-1" style={{ color: 'var(--text-sec)' }}>
-            <div>
-              <span className="font-medium text-white/85">פתיחת משחק:</span>{' '}
-              {kickoffTime} שעון ישראל
-              {dayDate ? ` · ${dayDate}` : ''}
-            </div>
-            {lockTime && lockTime !== kickoffTime ? (
-              <div>
-                <span className="font-medium text-white/85">סגירת ניחוש:</span>{' '}
-                {lockTime}
-              </div>
+            {openerHint ? (
+              <p className="text-[10px] leading-snug mb-2 text-right break-words px-0.5" style={{ color: 'var(--text-sec)' }}>
+                {openerHint}
+              </p>
             ) : null}
-            {isLive && match.live_home_score != null && (
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1" dir="rtl">
+              <div className="min-w-0 text-center px-px">
+                <div className="text-xl leading-none mb-1.5">{homeFlag}</div>
+                <div className="font-black text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
+                  {homeParts.clean}
+                </div>
+                {homeParts.aside ? (
+                  <div className="text-[9px] mt-1 leading-snug break-words mx-auto max-w-[7.75rem]" style={{ color: 'var(--text-sec)' }}>
+                    {homeParts.aside}
+                  </div>
+                ) : null}
+              </div>
               <div
-                dir="ltr"
-                className="mt-3 block font-black tabular-nums tracking-tight leading-none text-sky-300"
-                style={{
-                  fontSize: 'clamp(1.875rem, 9vw, 2.875rem)',
-                  textShadow: '0 0 28px rgba(56,189,248,0.42)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
+                aria-hidden
+                className="self-center px-2 pt-6 text-[9px] font-black uppercase tracking-wide"
+                style={{ color: 'rgba(255,255,255,0.28)' }}
               >
-                {match.live_home_score}
-                <span className="mx-2 opacity-50">:</span>
-                {match.live_away_score}
+                vs
+              </div>
+              <div className="min-w-0 text-center px-px">
+                <div className="text-xl leading-none mb-1.5">{awayFlag}</div>
+                <div className="font-black text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
+                  {awayParts.clean}
+                </div>
+                {awayParts.aside ? (
+                  <div className="text-[9px] mt-1 leading-snug break-words mx-auto max-w-[7.75rem]" style={{ color: 'var(--text-sec)' }}>
+                    {awayParts.aside}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-row-reverse items-start justify-between mb-2 gap-2">
+              <div className="shrink-0 flex flex-col gap-1.5 items-end max-w-[48%]">
+                {statusBadge}
+                {isBroadcastVenue && (
+                  <span
+                    className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+                    style={{
+                      background: 'rgba(244,193,93,0.18)',
+                      color: '#fbbf24',
+                      border: '1px solid rgba(244,193,93,0.45)',
+                    }}
+                    aria-label="משחק משודר במסעדות יומנגס"
+                  >
+                    📺 משודר אצלנו
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 text-right">
+                <span className="text-[11px] leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                  {[match.stage, dayDate].filter(Boolean).join(' — ')}
+                </span>
+              </div>
+            </div>
+
+            {openerHint ? (
+              <p className="text-[10px] leading-snug mb-3 text-right break-words px-0.5" style={{ color: 'var(--text-sec)' }}>
+                {openerHint}
+              </p>
+            ) : null}
+
+            <div className="flex flex-col gap-2 mb-3" dir="rtl">
+              <div className="flex flex-row-reverse items-start gap-2">
+                <span className="text-xl shrink-0 leading-none pt-0.5">{homeFlag}</span>
+                <div className="min-w-0 flex-1 text-right">
+                  <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
+                    {homeParts.clean}
+                  </div>
+                  {homeParts.aside ? (
+                    <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                      {homeParts.aside}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              <div className="text-center text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>vs</div>
+              <div className="flex flex-row-reverse items-start gap-2">
+                <span className="text-xl shrink-0 leading-none pt-0.5">{awayFlag}</span>
+                <div className="min-w-0 flex-1 text-right">
+                  <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
+                    {awayParts.clean}
+                  </div>
+                  {awayParts.aside ? (
+                    <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                      {awayParts.aside}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {kickoffTime && (
+              <div className="text-center text-[11px] mb-2 space-y-1" style={{ color: 'var(--text-sec)' }}>
+                <div>
+                  <span className="font-medium text-white/85">פתיחת משחק:</span>{' '}
+                  {kickoffTime} שעון ישראל
+                  {dayDate ? ` · ${dayDate}` : ''}
+                </div>
+                {lockTime && lockTime !== kickoffTime ? (
+                  <div>
+                    <span className="font-medium text-white/85">סגירת ניחוש:</span>{' '}
+                    {lockTime}
+                  </div>
+                ) : null}
+                {isLive && match.live_home_score != null && (
+                  <div
+                    dir="ltr"
+                    className="mt-3 block font-black tabular-nums tracking-tight leading-none text-sky-300"
+                    style={{
+                      fontSize: 'clamp(1.875rem, 9vw, 2.875rem)',
+                      textShadow: '0 0 28px rgba(56,189,248,0.42)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {match.live_home_score}
+                    <span className="mx-2 opacity-50">:</span>
+                    {match.live_away_score}
+                  </div>
+                )}
+                {isFinal && (
+                  <span className="font-black block text-sm" style={{ color: 'var(--text)' }}>
+                    תוצאה סופית: {match.final_home_score} : {match.final_away_score}
+                  </span>
+                )}
               </div>
             )}
-            {isFinal && (
-              <span className="font-black block text-sm" style={{ color: 'var(--text)' }}>
-                תוצאה סופית: {match.final_home_score} : {match.final_away_score}
-              </span>
-            )}
-          </div>
+          </>
         )}
 
         {isFinal && !isPending && match.final_home_score != null && match.final_away_score != null && (
@@ -793,7 +907,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
         {canExpandCard ? (
           <div className="flex items-center justify-between pt-1 border-t border-white/5 flex-row-reverse">
             <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
-              {isFinal ? (hasPrediction ? 'פתח לפרט ניקוד והודעות' : 'פתח להסבר והמלצה') : hasPrediction ? 'הבחירה שלך' : 'הקש לניחוש'}
+              {isFinal
+                ? (hasPrediction ? 'פתח לפרט ניקוד והודעות' : 'פתח להסבר והמלצה')
+                : isLive && hasPrediction
+                  ? 'ניחוש · הזמנות והטבות'
+                  : isLive
+                    ? 'פתח למידע משחק'
+                    : hasPrediction
+                      ? 'הבחירה שלך'
+                      : 'הקש לניחוש'}
             </span>
             <div className="flex items-center gap-2 flex-row-reverse">
               {predLabel && hasPrediction ? (
@@ -1131,7 +1253,12 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           : Promise.resolve({ predictions: [] }),
         wantLb ? callFn('getLeaderboard', { campaign_id: campaignId, token }) : Promise.resolve(null),
       ]);
-      setMatches(matchesRes.matches || []);
+      setMatches(
+        (matchesRes.matches || []).map((m) => {
+          const st = typeof m.status === 'string' ? m.status.trim().toLowerCase() : m.status;
+          return { ...m, status: st };
+        }),
+      );
       const predMap = {};
       for (const p of (predsRes.predictions || [])) predMap[p.match_id] = p;
       setPredictions(predMap);
