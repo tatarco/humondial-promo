@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, Fragment } from 'react';
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
+
+import { DEFAULT_BOOKING_URL, DEFAULT_DELIVERY_ORDER_URL } from '../lib/campaignUrls.js';
 
 const STAGE_HE = {
   'group': 'שלב הבתים', 'Group Stage': 'שלב הבתים',
@@ -53,11 +55,41 @@ function fmtTime(utcIso, tz = 'Asia/Jerusalem') {
   } catch { return ''; }
 }
 
-function fmtDayDate(utcIso) {
+function fmtDayDate(utcIso, tz = 'Asia/Jerusalem') {
   try {
-    const d = new Date(utcIso);
-    return `${DAYS_HE[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}`;
-  } catch { return ''; }
+    return new Intl.DateTimeFormat('he-IL', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'numeric',
+      timeZone: tz,
+    }).format(new Date(utcIso));
+  } catch {
+    try {
+      const d = new Date(utcIso);
+      return `${DAYS_HE[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}`;
+    } catch {
+      return '';
+    }
+  }
+}
+
+function extractTrailingBracketAside(raw) {
+  if (!raw || typeof raw !== 'string') return { clean: raw || '?', aside: null };
+  const trimmed = raw.trim();
+  const idx = trimmed.indexOf(' [');
+  if (idx <= 0) return { clean: trimmed, aside: null };
+  const aside = trimmed.slice(idx).trim();
+  const clean = trimmed.slice(0, idx).trim();
+  return { clean: clean || trimmed, aside };
+}
+
+const DISPLAY_MATCH_ORDER = { live: 0, locked: 1, open: 2, final: 3 };
+
+function compareDisplayMatchOrder(a, b) {
+  const ra = DISPLAY_MATCH_ORDER[a?.status] ?? 99;
+  const rb = DISPLAY_MATCH_ORDER[b?.status] ?? 99;
+  if (ra !== rb) return ra - rb;
+  return new Date(a?.kickoff_utc || 0).getTime() - new Date(b?.kickoff_utc || 0).getTime();
 }
 
 const TIER_CSS = { bronze: 'tier-bronze', silver: 'tier-silver', gold: 'tier-gold', legend: 'tier-legend' };
@@ -245,14 +277,27 @@ function HeroCard({
             השלב שלי: {tier?.label_he || 'ברונזה'} ↗
           </button>
         </div>
-        <div className="relative h-3 rounded-full overflow-visible" style={{ background: 'rgba(255,255,255,0.1)' }}>
+        <div
+          className="relative h-3 rounded-full overflow-visible"
+          dir="ltr"
+          style={{ background: 'rgba(255,255,255,0.1)' }}
+          aria-hidden
+        >
           <div
             className="h-full rounded-full"
-            style={{ width: pct + '%', background: 'linear-gradient(to right, var(--gold), var(--red))' }}
+            style={{
+              width: `${Math.min(100, Math.max(0, pct))}%`,
+              marginLeft: 'auto',
+              background: 'linear-gradient(to right, var(--red), var(--gold))',
+            }}
           />
           <span
-            className="absolute top-1/2 -translate-y-1/2 text-sm leading-none"
-            style={{ left: `calc(${Math.max(2, pct)}% - 10px)` }}
+            className="absolute top-1/2 text-sm leading-none pointer-events-none select-none"
+            style={{
+              left: `${Math.min(100, Math.max(0, 100 - pct))}%`,
+              transform: 'translate(-50%, -50%)',
+              right: 'auto',
+            }}
           >⚽</span>
         </div>
         <div className="flex items-center justify-between mt-1.5">
@@ -457,14 +502,17 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
   );
 }
 
-function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelete, onBooking, onVenueCode, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onBooking, onVenueCode, onOpenGames, isActive, onToggle }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
-  const isOpen    = match.status === 'open' && !isPending && !windowLocked;
-  const isLocked  = match.status === 'locked' || windowLocked;
-  const isLive    = match.status === 'live';
-  const isFinal   = match.status === 'final';
+  const outsideGuessWindow = !isPending && windowLocked && match.status === 'open';
+  const canGuess =
+    match.status === 'open' && !isPending && !windowLocked;
+  const preKickLocked = match.status === 'locked';
+  const isLive = match.status === 'live';
+  const isFinal = match.status === 'final';
   const hasPrediction = prediction != null;
+  const canExpandCard = Boolean(canGuess || hasPrediction || isFinal);
 
   const [editMode, setEditMode]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -497,12 +545,31 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
   const exactDrawMatch = bullseye && match.final_home_score === match.final_away_score;
   const correctOutcome = predOutcome && actualOutcome && predOutcome === actualOutcome;
 
+  const participationPts = config?.participation_points ?? 10;
+  const bullseyePts = config?.bullseye_points ?? 30;
+  const outcomePts = config?.outcome_points ?? 15;
+  const drawStripePts = config?.draw_stripe_points ?? 10;
+
+  let finalPointsEarned = null;
+  if (isFinal && hasPrediction) {
+    if (bullseye && exactDrawMatch) finalPointsEarned = bullseyePts + drawStripePts;
+    else if (bullseye) finalPointsEarned = bullseyePts;
+    else if (correctOutcome) finalPointsEarned = outcomePts;
+    else finalPointsEarned = 0;
+  }
+
+  const hypotheticalMaxGuessPts = participationPts + bullseyePts;
+  const finalCelebrate =
+    Boolean(isFinal && hasPrediction && (bullseye || correctOutcome));
+
   useEffect(() => {
     if (bullseye) spawnConfetti();
   }, [bullseye]);
 
-  const homeFlag = getFlag(match.home_team, match.home_flag);
-  const awayFlag = getFlag(match.away_team, match.away_flag);
+  const homeParts = extractTrailingBracketAside(match.home_team || '?');
+  const awayParts = extractTrailingBracketAside(match.away_team || '?');
+  const homeFlag = getFlag(homeParts.clean, match.home_flag);
+  const awayFlag = getFlag(awayParts.clean, match.away_flag);
 
   const kickoffTime = match.kickoff_utc ? fmtTime(match.kickoff_utc) : '';
   const lockTime    = match.lock_deadline_utc ? fmtTime(match.lock_deadline_utc) : '';
@@ -516,41 +583,55 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
 
   const predLabel = predOutcome === 'home' ? homeFlag : predOutcome === 'away' ? awayFlag : predOutcome === 'draw' ? 'X' : null;
 
-  const statusBadge = isOpen
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}><span>●</span> פתוח</span>
+  const statusBadge = isPending
+    ? null
+    : outsideGuessWindow
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full text-right" style={{ background: 'rgba(167,139,250,0.18)', color: '#ddd6fe', border: '1px solid rgba(167,139,250,0.45)' }}>⏸ מחוץ לחלון הניחוש</span>
+    : canGuess
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: 'rgba(53,210,111,0.15)', color: 'var(--green)', border: '1px solid rgba(53,210,111,0.3)' }}><span>●</span> פתוח</span>
     : isLive
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>⚽ חי</span>
-    : isLocked
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 בקרוב</span>
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>⚽ חי</span>
+    : preKickLocked
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 text-right leading-tight max-w-[11rem]" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>🔒 נעול לפני הפתיחה</span>
     : isFinal
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(157,133,133,0.15)', color: 'var(--text-sec)', border: '1px solid rgba(157,133,133,0.3)' }}>✓ סיום</span>
-    : !isPending
-    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(156,163,175,0.15)', color: '#9ca3af', border: '1px solid rgba(156,163,175,0.3)' }}>⏳ בקרוב</span>
-    : null;
+    ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: 'rgba(157,133,133,0.15)', color: 'var(--text-sec)', border: '1px solid rgba(157,133,133,0.3)' }}>✓ הסתיים</span>
+    : <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 text-right leading-tight max-w-[10rem]" style={{ background: 'rgba(156,163,175,0.15)', color: '#9ca3af', border: '1px solid rgba(156,163,175,0.3)' }}>מתוזמן</span>;
+
+  const openerHint =
+    predictionWindowOpensHint ||
+    (preKickLocked && lockTime ? `לא ניתן לפתוח ניחוש חדש — נעילה בשעה ${lockTime}` : null);
+
+  function handleHeaderActivate() {
+    if (isPending || !canExpandCard) return;
+    onToggle?.();
+  }
 
   const outerCardStyle = isActive
     ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' }
-    : isBroadcastVenue
-      ? {
-          border: '1px solid rgba(244,193,93,0.42)',
-          boxShadow: '0 0 22px rgba(244,193,93,0.14), inset 0 1px 0 rgba(255,255,255,0.06)',
-        }
-      : {};
+    : finalCelebrate
+      ? {}
+      : isBroadcastVenue
+        ? {
+            border: '1px solid rgba(244,193,93,0.42)',
+            boxShadow: '0 0 22px rgba(244,193,93,0.14), inset 0 1px 0 rgba(255,255,255,0.06)',
+          }
+        : {};
 
   return (
     <div
       data-match-id={match.id}
-      className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''}`}
+      className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''} ${isLive && !isPending ? 'hm-match-live-glow' : ''} ${finalCelebrate && !isActive ? 'hm-match-final-celebrate' : ''} ${isActive ? 'hm-match-active-focus' : ''}`}
       style={outerCardStyle}
     >
       <button
-        className="w-full text-right p-4"
-        onClick={!isPending ? onToggle : undefined}
+        type="button"
+        className={`w-full text-right p-4 ${!isPending && canExpandCard ? 'cursor-pointer active:opacity-95' : 'cursor-default'}`}
+        onClick={handleHeaderActivate}
         disabled={isPending}
       >
-        <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-          {statusBadge || <span />}
-          <div className="flex flex-row-reverse items-center gap-1.5 flex-wrap justify-end min-w-0">
+        <div className="flex flex-row-reverse items-start justify-between mb-2 gap-2">
+          <div className="shrink-0 flex flex-col gap-1.5 items-end max-w-[48%]">
+            {statusBadge}
             {isBroadcastVenue && (
               <span
                 className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
@@ -564,59 +645,155 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                 📺 משודר אצלנו
               </span>
             )}
-            <span className="text-[11px] text-right whitespace-pre-wrap leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+          </div>
+          <div className="min-w-0 flex-1 text-right">
+            <span className="text-[11px] leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
               {[match.stage, dayDate].filter(Boolean).join(' — ')}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="font-black text-base leading-tight" style={{ color: 'var(--text)' }}>
-            {match.home_team || '?'} <span className="text-xl">{homeFlag}</span>
-          </span>
-          <span className="text-xs font-normal px-1" style={{ color: 'var(--text-sec)' }}>vs</span>
-          <span className="font-black text-base leading-tight" style={{ color: 'var(--text)' }}>
-            <span className="text-xl">{awayFlag}</span> {match.away_team || '?'}
-          </span>
+        {openerHint ? (
+          <p className="text-[10px] leading-snug mb-3 text-right break-words px-0.5" style={{ color: 'var(--text-sec)' }}>
+            {openerHint}
+          </p>
+        ) : null}
+
+        <div className="flex flex-col gap-2 mb-3" dir="rtl">
+          <div className="flex flex-row-reverse items-start gap-2">
+            <span className="text-xl shrink-0 leading-none pt-0.5">{homeFlag}</span>
+            <div className="min-w-0 flex-1 text-right">
+              <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
+                {homeParts.clean}
+              </div>
+              {homeParts.aside ? (
+                <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                  {homeParts.aside}
+                </div>
+              ) : null}
+            </div>
+          </div>
+          <div className="text-center text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>vs</div>
+          <div className="flex flex-row-reverse items-start gap-2">
+            <span className="text-xl shrink-0 leading-none pt-0.5">{awayFlag}</span>
+            <div className="min-w-0 flex-1 text-right">
+              <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
+                {awayParts.clean}
+              </div>
+              {awayParts.aside ? (
+                <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                  {awayParts.aside}
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {kickoffTime && (
-          <div className="text-center text-[11px] mb-2" style={{ color: 'var(--text-sec)' }}>
-            {kickoffTime} שעון ישראל
-            {lockTime && lockTime !== kickoffTime ? ` • נועל ב-${lockTime}` : ''}
+          <div className="text-center text-[11px] mb-2 space-y-1" style={{ color: 'var(--text-sec)' }}>
+            <div>
+              <span className="font-medium text-white/85">פתיחת משחק:</span>{' '}
+              {kickoffTime} שעון ישראל
+              {dayDate ? ` · ${dayDate}` : ''}
+            </div>
+            {lockTime && lockTime !== kickoffTime ? (
+              <div>
+                <span className="font-medium text-white/85">סגירת ניחוש:</span>{' '}
+                {lockTime}
+              </div>
+            ) : null}
             {isLive && match.live_home_score != null && (
-              <span className="font-black text-blue-400 mr-2">
-                {' '}{match.live_home_score} : {match.live_away_score}
+              <span className="font-black text-blue-400 block">
+                {match.live_home_score} : {match.live_away_score}
               </span>
             )}
             {isFinal && (
-              <span className="font-black mr-2" style={{ color: 'var(--text)' }}>
-                {' '}{match.final_home_score} : {match.final_away_score}
+              <span className="font-black block text-sm" style={{ color: 'var(--text)' }}>
+                תוצאה סופית: {match.final_home_score} : {match.final_away_score}
               </span>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
-              {isActive ? '▲' : '▼'}
-              {hasPrediction ? ` ${prediction.home_score}:${prediction.away_score}` : ''}
-            </span>
-            {predLabel && (
-              <span className="text-[11px] font-black px-2 py-0.5 rounded-md" style={{ background: 'var(--red)', color: 'var(--text)' }}>
-                {predLabel}
-              </span>
+        {isFinal && !isPending && match.final_home_score != null && match.final_away_score != null && (
+          <div
+            className="rounded-xl px-3 py-3 mb-2 border text-right space-y-2"
+            dir="rtl"
+            style={{ background: 'rgba(255,255,255,0.045)', borderColor: 'rgba(255,255,255,0.1)' }}
+          >
+            <div className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>
+              ניחוש ששלחת
+            </div>
+            {hasPrediction ? (
+              <>
+                <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: 'var(--text)' }}>
+                  {prediction.home_score} : {prediction.away_score}
+                </div>
+                {finalCelebrate && finalPointsEarned != null ? (
+                  <div className="text-xs font-black" style={{ color: 'var(--gold)' }}>
+                    זכית ב־+{finalPointsEarned} נ׳ בסיום משחק זה
+                  </div>
+                ) : null}
+                {isFinal && hasPrediction && !finalCelebrate ? (
+                  <div className="text-xs leading-relaxed pt-1" style={{ color: 'var(--text-sec)' }}>
+                    ניחשת {prediction.home_score}:{prediction.away_score} · בסיום {match.final_home_score}:{match.final_away_score}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <p className="text-xs leading-snug m-0" style={{ color: 'var(--text-sec)' }}>
+                  לא הגשת ניחוש לסיום משחק זה · אילו השתתפת והיית פוגע בתוצאה המדויקת, הניקוד היה יכול להגיע לעד&nbsp;
+                  {hypotheticalMaxGuessPts}&nbsp;נ׳ (&lrm;+
+                  {participationPts}&rlm; הגשה + &lrm;+
+                  {bullseyePts}&rlm;
+                  תוצאה מדויקת&rlm;)
+                </p>
+                <p className="text-[11px] leading-snug m-0 mt-1 font-medium" style={{ color: '#fecaca' }}>
+                  אל תישאר בחוץ בפעם הבאה — תפוס את המשחקים הפתוחים.
+                </p>
+                {onOpenGames ? (
+                  <button
+                    type="button"
+                    className="hm-btn-primary w-full py-3 rounded-xl text-xs font-black mt-1"
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
+                      onOpenGames();
+                    }}
+                  >
+                    למשחקים שכרגע פתוחים לניחוש
+                  </button>
+                ) : null}
+              </>
             )}
           </div>
-          <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>הבחירה שלך</span>
-        </div>
+        )}
+
+        {canExpandCard ? (
+          <div className="flex items-center justify-between pt-1 border-t border-white/5 flex-row-reverse">
+            <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
+              {isFinal ? (hasPrediction ? 'פתח לפרט ניקוד והודעות' : 'פתח להסבר והמלצה') : hasPrediction ? 'הבחירה שלך' : 'הקש לניחוש'}
+            </span>
+            <div className="flex items-center gap-2 flex-row-reverse">
+              {predLabel && hasPrediction ? (
+                <span className="text-[11px] font-black px-2 py-0.5 rounded-md" style={{ background: 'var(--red)', color: 'var(--text)' }}>
+                  {predLabel}
+                </span>
+              ) : null}
+              <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-sec)' }}>
+                {isActive ? '▲' : '▼'}
+                {hasPrediction ? ` · ${prediction.home_score}:${prediction.away_score}` : ''}
+              </span>
+            </div>
+          </div>
+        ) : null}
       </button>
 
-      <div style={{ display: 'grid', gridTemplateRows: isActive ? '1fr' : '0fr', transition: 'grid-template-rows 0.32s cubic-bezier(.4,0,.2,1)' }}>
+      <div style={{ display: 'grid', gridTemplateRows: isActive && canExpandCard ? '1fr' : '0fr', transition: 'grid-template-rows 0.32s cubic-bezier(.4,0,.2,1)' }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="px-4 pb-4 space-y-3">
-            {isOpen && (!hasPrediction || editMode) && (
+            {canGuess && (!hasPrediction || editMode) && (
               <PredictionEditor
                 match={match}
                 prediction={prediction}
@@ -633,7 +810,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
               />
             )}
 
-            {isOpen && hasPrediction && !editMode && (
+            {canGuess && hasPrediction && !editMode && (
               <div className="space-y-2">
                 {showPointsFlash && (
                   <div className="rounded-xl px-4 py-2 text-center text-sm font-black"
@@ -641,10 +818,16 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                     🎉 +{config?.participation_points ?? 10} נ׳ נוספו!
                   </div>
                 )}
-                <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div className="flex items-center justify-between">
+                <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between">
+                    <div className="flex items-center gap-2 flex-row-reverse shrink-0">
+                      <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
+                      <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
+                        {predLabel}
+                      </span>
+                    </div>
                     {confirmDelete ? (
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-row-reverse flex-wrap items-center gap-3 justify-end">
                         <button
                           onClick={() => setConfirmDelete(false)}
                           className="text-xs"
@@ -662,7 +845,7 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                         >{deleting ? 'מוחק...' : 'אשר הסרה ✕'}</button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-row-reverse flex-wrap items-center gap-3 justify-end">
                         <button
                           onClick={() => setEditMode(true)}
                           className="text-xs underline"
@@ -675,15 +858,9 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                         >הסר ניחוש</button>
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
-                      <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
-                        {predLabel}
-                      </span>
-                    </div>
                   </div>
                   {prediction.home_score != null && (
-                    <div className="text-center text-xs mt-2" style={{ color: 'var(--text-sec)' }}>
+                    <div className="text-center text-xs pt-1" style={{ color: 'var(--text-sec)' }}>
                       תוצאה מדויקת: {prediction.home_score} : {prediction.away_score}
                     </div>
                   )}
@@ -698,52 +875,61 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
                       try {
                         await onBooking?.(match.id);
                       } catch {
-                        /* recordTableBooking may fail if session expired */
                       }
                       window.open(resolvedBookingUrl, '_blank', 'noopener,noreferrer');
                     }}
-                    className="flex items-center justify-between px-4 py-3 rounded-xl"
+                    className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem]"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
-                    <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
-                    <div className="text-right">
-                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🗓️ הזמן מקום</div>
-                      <div className="text-xs" style={{ color: 'var(--green)' }}>
-                        יתווספו לניקוד המאושר אחרי קוד ביקור יומי בסניף · ביקור אחד משחרר הזמנה אחת בסדר
+                    <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
+                      <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">🗓️</span>
+                      <div className="min-w-0 flex-1 space-y-2 px-0.5">
+                        <div className="text-sm font-bold leading-tight break-words" style={{ color: 'var(--text)' }}>הזמן מקום</div>
+                        <div className="text-xs leading-relaxed break-words px-1" style={{ color: 'var(--green)' }}>
+                          יתווספו לניקוד המאושר אחרי קוד ביקור יומי בסניף · ביקור אחד משחרר הזמנה אחת בסדר
+                        </div>
                       </div>
                     </div>
+                    <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך להזמנה ←</span>
                   </a>
-                ) : config?.delivery_url ? (
+                ) : (
                   <a
-                    href={config.delivery_url}
+                    href={config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-4 py-3 rounded-xl"
+                    className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem]"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
-                    <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">הזמן ←</span>
-                    <div className="text-right">
-                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>🛵 הזמן משלוח!</div>
-                      <div className="text-xs" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points ?? 20} נ׳</div>
+                    <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
+                      <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">🛵</span>
+                      <div className="min-w-0 flex-1 space-y-1 px-0.5">
+                        <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>הזמן משלוח</div>
+                        <div className="text-xs leading-relaxed px-1" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points ?? 20} נ׳</div>
+                      </div>
                     </div>
+                    <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך למשלוח ←</span>
                   </a>
                 ) : onVenueCode ? (
                   <button
+                    type="button"
                     onClick={onVenueCode}
-                    className="flex items-center justify-between w-full px-4 py-3 rounded-xl"
+                    className="flex flex-col gap-3 w-full px-4 py-3 rounded-xl min-h-[4.75rem]"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
-                    <span className="hm-btn-primary text-xs font-bold px-3 py-2 rounded-lg">צבור ←</span>
-                    <div className="text-right">
-                      <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>📍 הגעת לסניף?</div>
-                      <div className="text-xs" style={{ color: 'var(--green)' }}>הזן קוד וצבור נקודות</div>
+                    <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
+                      <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">📍</span>
+                      <div className="min-w-0 flex-1 space-y-1 px-0.5">
+                        <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>הגעת לסניף?</div>
+                        <div className="text-xs leading-relaxed px-1" style={{ color: 'var(--green)' }}>הזן קוד וצבור נקודות</div>
+                      </div>
                     </div>
+                    <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">הזן קוד ←</span>
                   </button>
                 ) : null}
               </div>
             )}
 
-            {!isOpen && hasPrediction && (
+            {!canGuess && hasPrediction && (
               <div className="text-center py-2">
                 <div className="text-xs mb-1" style={{ color: 'var(--text-sec)' }}>הניחוש שלך</div>
                 <div className="text-3xl font-black tabular-nums" style={{ color: 'var(--text)' }}>
@@ -766,8 +952,18 @@ function MatchCard({ match, prediction, config, windowLocked, onPredict, onDelet
               </div>
             )}
 
-            {!isOpen && !hasPrediction && (
-              <p className="text-center text-xs py-2" style={{ color: 'var(--text-sec)' }}>לא שלחת ניחוש למשחק זה</p>
+            {!canGuess && !hasPrediction && (
+              <p className="text-center text-xs py-3 px-2 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+                {outsideGuessWindow
+                  ? 'משחק זה מחוץ לחלון ההגשה של הקמפיין כרגע — כשיכנס טווח הימים או משחקי התור שלך הוא יפתח עם שאר ההגדרות.'
+                  : preKickLocked
+                    ? 'נעילה לפני שעת הפתיחה — לא ניתן להגיע ניחוש חדש.'
+                    : isLive || isFinal
+                      ? 'המשחק כבר בשידור או הסתיים — לא ניתן להגיע ניחוש מהממשק המשחק בעמוד הבית זה למשחק הזה.'
+                      : !isPending
+                        ? 'לא הגשת ניחוש למשחק זה'
+                        : 'ממתינים למילוי שמות הקבוצות'}
+              </p>
             )}
 
           </div>
@@ -825,7 +1021,7 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
 }
 
 function FloatingDock({ config, onScrollToGames, onBranchBooking }) {
-  const deliveryUrl = (config?.delivery_url || 'https://humongous.co.il/delivery');
+  const deliveryUrl = config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL;
   const outcome = config?.outcome_points ?? 15;
   const bullseye = config?.bullseye_points ?? 30;
   const drawStripe = config?.draw_stripe_points ?? 10;
@@ -889,8 +1085,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const config = useConfig();
   const effectiveConfig = config ? {
     ...config,
-    booking_url: config.booking_url || 'https://humongous.co.il/book',
-    delivery_url: config.delivery_url || 'https://humongous.co.il/delivery',
+    booking_url: config.booking_url || DEFAULT_BOOKING_URL,
+    delivery_url: config.delivery_url || DEFAULT_DELIVERY_ORDER_URL,
   } : config;
   const [matches, setMatches]         = useState([]);
   const [predictions, setPredictions] = useState({});
@@ -949,7 +1145,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
   );
 
-  const { lockedMatchIds, openMatchCount } = useMemo(() => {
+  const { lockedMatchIds, openMatchCount, guessOpensHintById } = useMemo(() => {
     const pwm = effectiveConfig?.prediction_window_mode === 'days' ? 'days' : 'games';
     const windowGames =
       typeof effectiveConfig?.prediction_window_games === 'number' && effectiveConfig.prediction_window_games >= 1
@@ -961,26 +1157,49 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         : 3;
 
     const ids = new Set();
+    const hintById = {};
+
+    const sortedKick = [...matches].sort(
+      (a, b) => new Date(a.kickoff_utc || 0).getTime() - new Date(b.kickoff_utc || 0).getTime(),
+    );
+
+    const openAmongSorted = sortedKick.filter((m) => m.status === 'open');
+    const openSlotById = new Map();
+    let oi = 0;
+    for (const m of openAmongSorted) {
+      oi += 1;
+      openSlotById.set(String(m.id), oi);
+    }
+
     if (pwm === 'days') {
       const maxTs = Date.now() + windowDays * 86400000;
       for (const m of matches) {
         if (m.status !== 'open') continue;
-        if (new Date(m.kickoff_utc).getTime() > maxTs) ids.add(m.id);
+        const kickMs = new Date(m.kickoff_utc || 0).getTime();
+        if (kickMs > maxTs) {
+          ids.add(m.id);
+          const opensMs = kickMs - windowDays * 86400000;
+          const opensIso = new Date(opensMs).toISOString();
+          hintById[m.id] = `הניחוש ייפתח מ־${fmtDayDate(opensIso)} · ${fmtTime(opensIso)} שעון ישראל (חלון ${windowDays} ימים מהיום אל הפתיחה)`;
+        }
       }
     } else {
-      const sorted = [...matches].sort(
-        (a, b) => new Date(a.kickoff_utc).getTime() - new Date(b.kickoff_utc).getTime(),
-      );
-      let openCount = 0;
-      for (const m of sorted) {
+      for (const m of sortedKick) {
         if (m.status !== 'open') continue;
-        openCount++;
-        if (openCount > windowGames) ids.add(m.id);
+        const slot = openSlotById.get(String(m.id)) ?? 999;
+        if (slot > windowGames) {
+          ids.add(m.id);
+          const ahead = slot - windowGames;
+          hintById[m.id] =
+            ahead === 1
+              ? `ייפתח לניחוש אחרי שמשחק אחד שמוקדם ממך בטור ייסגר (${windowGames} משחקים בחלון)`
+              : `ייפתח לניחוש אחר שייסגרו עוד ${ahead} משחקים שמוקדמים ממך בטור (${windowGames} משחקים בחלון)`;
+        }
       }
     }
 
     const omc = matches.filter(m => m.status === 'open' && !ids.has(m.id)).length;
-    return { lockedMatchIds: ids, openMatchCount: omc };
+    return { lockedMatchIds: ids, openMatchCount: omc, guessOpensHintById: hintById };
   }, [
     matches,
     effectiveConfig?.prediction_window_mode,
@@ -989,7 +1208,20 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   ]);
 
   const allFiltered = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
-  const visibleMatches = allFiltered;
+  const visibleMatches = useMemo(() => [...allFiltered].sort(compareDisplayMatchOrder), [allFiltered]);
+
+  useEffect(() => {
+    setActiveCard((prev) => {
+      if (prev == null) return prev;
+      const row = matches.find((m) => String(m.id) === String(prev));
+      if (!row) return null;
+      const pend = !row.home_team || !row.away_team || row.home_team.startsWith('?') || row.away_team.startsWith('?');
+      const canGuessNow = row.status === 'open' && !pend && !lockedMatchIds.has(row.id);
+      const hasPred = predictions[row.id];
+      if (canGuessNow || hasPred || row.status === 'final') return prev;
+      return null;
+    });
+  }, [matches, predictions, lockedMatchIds]);
 
   function handleScroll() {
     if (!heroRef.current) return;
@@ -1124,20 +1356,30 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           {!loading && !error && visibleMatches.length === 0 && (
             <p className="text-center text-sm mt-8" style={{ color: 'var(--text-sec)' }}>אין משחקים להצגה</p>
           )}
-          {visibleMatches.map(match => (
-            <MatchCard
-              key={match.id}
-              match={{ ...match, stage: stageHe(match.stage) }}
-              prediction={predictions[match.id] || null}
-              config={effectiveConfig}
-              windowLocked={lockedMatchIds.has(match.id)}
-              onPredict={handlePredict}
-              onDelete={handleDeletePrediction}
-              onBooking={handleBooking}
-              onVenueCode={onVenueCode}
-              isActive={activeCard === match.id}
-              onToggle={() => setActiveCard(prev => (prev === match.id ? null : match.id))}
-            />
+          {visibleMatches.map((match, idx) => (
+            <Fragment key={match.id}>
+              {match.status === 'live' && (idx === 0 || visibleMatches[idx - 1]?.status !== 'live') ? (
+                <p
+                  className="px-1 mb-2 text-right text-xs font-black"
+                  style={{ color: '#bae6fd', textShadow: '0 0 12px rgba(56,189,248,0.35)' }}
+                >
+                  ⚽ עכשיו בשידור חי
+                </p>
+              ) : null}
+              <MatchCard
+                match={{ ...match, stage: stageHe(match.stage) }}
+                prediction={predictions[match.id] || null}
+                config={effectiveConfig}
+                windowLocked={lockedMatchIds.has(match.id)}
+                predictionWindowOpensHint={guessOpensHintById[match.id]}
+                onPredict={handlePredict}
+                onDelete={handleDeletePrediction}
+                onBooking={handleBooking}
+                onVenueCode={onVenueCode}
+                isActive={activeCard === match.id}
+                onToggle={() => setActiveCard((prev) => (prev === match.id ? null : match.id))}
+              />
+            </Fragment>
           ))}
         </div>
       </div>

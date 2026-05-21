@@ -118,3 +118,51 @@ body {
 .tier-silver { background: rgba(192,192,192,0.2); color: #c0c0c0;       border: 1px solid rgba(192,192,192,0.4); }
 .tier-gold   { background: rgba(244,193,93,0.2);  color: var(--gold);   border: 1px solid var(--gold-dim); }
 .tier-legend { background: rgba(214,58,54,0.2);   color: var(--red);    border: 1px solid var(--border); }
+
+@keyframes hm-live-outer-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.45),
+      0 0 28px rgba(34, 211, 238, 0.35),
+      0 0 56px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(34, 211, 238, 0.7),
+      0 0 40px rgba(34, 211, 238, 0.5),
+      0 0 72px rgba(59, 130, 246, 0.32);
+  }
+}
+
+.hm-match-live-glow:not(.hm-match-active-focus) {
+  animation: hm-live-outer-glow 2.6s ease-in-out infinite;
+}
+
+.hm-match-broadcast-glow {
+  outline: none;
+}
+
+@keyframes hm-final-celebrate-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(250, 204, 21, 0.5),
+      0 0 28px rgba(244, 193, 93, 0.35),
+      0 0 52px rgba(214, 58, 54, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    border-color: rgba(251, 191, 36, 0.75);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(252, 211, 77, 0.65),
+      0 0 40px rgba(244, 193, 93, 0.55),
+      0 0 72px rgba(214, 58, 54, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(253, 224, 71, 0.95);
+  }
+}
+
+.hm-match-final-celebrate:not(.hm-match-active-focus) {
+  animation: hm-final-celebrate-pulse 2.15s ease-in-out infinite;
+  border-style: solid;
+  border-width: 2px;
+}
