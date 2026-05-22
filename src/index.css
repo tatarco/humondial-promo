@@ -89,6 +89,38 @@ body {
 }
 .hm-btn-secondary:hover { background: rgba(244,193,93,0.08); }
 
+.hm-achievements-expand-grid {
+  display: grid;
+  width: 100%;
+  transition: grid-template-rows 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.hm-ach-fade-swap {
+  transition: opacity 0.24s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes hm-ach-row-in {
+    from { transform: translateY(0.45rem); }
+    to { transform: translateY(0); }
+  }
+  .hm-ach-row-in {
+    animation: hm-ach-row-in 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-achievements-expand-grid {
+    transition: none;
+  }
+  .hm-ach-fade-swap {
+    transition: none;
+  }
+  .hm-ach-row-in {
+    animation: none;
+  }
+}
+
 .score-btn {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);

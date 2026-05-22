@@ -258,82 +258,97 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           <div className="flex items-center justify-between mb-2">
             <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-sec)' }}>הישגים 🏅</div>
             <button
+              type="button"
+              aria-expanded={achievementsExpanded}
               onClick={() => setAchievementsExpanded(e => !e)}
-              className="text-[10px] px-2 py-0.5 rounded-full"
+              className="text-[10px] px-2 py-0.5 rounded-full transition-colors duration-200"
               style={{ color: 'var(--text-sec)', border: '1px solid var(--border)' }}
             >
               {achievementsExpanded ? 'פחות ▲' : 'הצג הכל ▼'}
             </button>
           </div>
-          <div className="hm-card p-3">
-            {!achievementsExpanded ? (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {stripItems.length === 0 && (
-                  <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים עדיין</div>
-                )}
-                {stripItems.map(b => {
-                  const done = isAchUnlocked(b);
-                  return (
-                  <div
-                    key={b.id}
-                    className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
-                    style={{
-                      background: done ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${done ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                      opacity: done ? 1 : 0.38,
-                      minWidth: 60,
-                    }}
-                  >
-                    <span className="text-xl leading-none">{b.badge}</span>
-                    <span
-                      className="text-[10px] font-bold text-center leading-tight"
-                      style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}
-                    >
-                      {b.label_he}
-                    </span>
-                  </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {achievementsOrdered.length === 0 && (
-                  <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים מוגדרים עדיין</div>
-                )}
-                {achievementsOrdered.map(b => {
-                  const done = isAchUnlocked(b);
-                  return (
-                  <div
-                    key={b.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                    style={{
-                      background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                      opacity: done ? 1 : 0.45,
-                    }}
-                  >
-                    <span className="text-2xl leading-none flex-shrink-0">{b.badge}</span>
-                    <div className="flex-1 min-w-0 text-right">
-                      <div className="text-sm font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
-                        {b.label_he}
+          <div className="hm-card overflow-hidden p-3">
+            <div
+              className="hm-achievements-expand-grid"
+              style={{ gridTemplateRows: achievementsExpanded ? '0fr 1fr' : '1fr 0fr' }}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div
+                  className={`hm-ach-fade-swap flex gap-2 overflow-x-auto pb-1 scrollbar-none ${achievementsExpanded ? 'pointer-events-none' : ''}`}
+                  style={{ opacity: achievementsExpanded ? 0 : 1 }}
+                >
+                  {stripItems.length === 0 && (
+                    <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים עדיין</div>
+                  )}
+                  {stripItems.map(b => {
+                    const done = isAchUnlocked(b);
+                    return (
+                      <div
+                        key={b.id}
+                        className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
+                        style={{
+                          background: done ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${done ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                          opacity: done ? 1 : 0.38,
+                          minWidth: 60,
+                        }}
+                      >
+                        <span className="text-xl leading-none">{b.badge}</span>
+                        <span
+                          className="text-[10px] font-bold text-center leading-tight"
+                          style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}
+                        >
+                          {b.label_he}
+                        </span>
                       </div>
-                      {b.description_he && (
-                        <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
-                          {b.description_he}
-                        </div>
-                      )}
-                      {done && b.bonus_points > 0 && (
-                        <div className="text-[10px] mt-1 font-bold" style={{ color: 'var(--gold)' }}>+{b.bonus_points} נ׳ בונוס</div>
-                      )}
-                    </div>
-                    {done && (
-                      <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
-                    )}
-                  </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            )}
+              <div className="min-h-0 overflow-hidden">
+                <div
+                  className={`hm-ach-fade-swap space-y-2 ${achievementsExpanded ? '' : 'pointer-events-none'}`}
+                  style={{ opacity: achievementsExpanded ? 1 : 0 }}
+                >
+                  {achievementsOrdered.length === 0 && (
+                    <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים מוגדרים עדיין</div>
+                  )}
+                  {achievementsOrdered.map((b, i) => {
+                    const done = isAchUnlocked(b);
+                    return (
+                      <div
+                        key={b.id}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl ${achievementsExpanded ? 'hm-ach-row-in' : ''}`}
+                        style={{
+                          background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                          opacity: done ? 1 : 0.45,
+                          animationDelay: achievementsExpanded ? `${Math.min(i, 12) * 42}ms` : undefined,
+                        }}
+                      >
+                        <span className="text-2xl leading-none flex-shrink-0">{b.badge}</span>
+                        <div className="flex-1 min-w-0 text-right">
+                          <div className="text-sm font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
+                            {b.label_he}
+                          </div>
+                          {b.description_he && (
+                            <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
+                              {b.description_he}
+                            </div>
+                          )}
+                          {done && b.bonus_points > 0 && (
+                            <div className="text-[10px] mt-1 font-bold" style={{ color: 'var(--gold)' }}>+{b.bonus_points} נ׳ בונוס</div>
+                          )}
+                        </div>
+                        {done && (
+                          <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
