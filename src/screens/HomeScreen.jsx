@@ -179,7 +179,6 @@ function HeroCard({
   config,
   onPersonalArea,
   onPersonalAreaTier,
-  scrolled,
   openMatchCount,
   onScrollToGames,
   onBranchBooking,
@@ -197,7 +196,7 @@ function HeroCard({
   let nextLabel = nextTierPtsOnly?.label_he;
   let commercialUi = !!(tierDetail?.show_commercial_requirements_ui && tierDetail?.requirements_for_next?.length);
 
-  if (commercialUi && tierDetail.next_tier) {
+  if (commercialUi && tierDetail?.next_tier) {
     nextLabel = tierDetail.next_tier.label_he;
     const reqs = tierDetail.requirements_for_next.filter((x) => x.required > 0);
     const fracs = reqs.length
@@ -209,25 +208,6 @@ function HeroCard({
   const tierKey   = tier?.key || tier?.id || 'bronze';
   const tierMedal = tierKey === 'legend' ? '🏅' : tierKey === 'gold' ? '🥇' : tierKey === 'silver' ? '🥈' : '🥉';
   const delivPts  = config?.delivery_points ?? 20;
-
-  if (scrolled) {
-    return (
-      <div
-        className="hm-card mx-3 mb-2 flex items-center justify-between px-4 py-2"
-        style={{ border: '1px solid rgba(244,193,93,0.4)', minHeight: 44 }}
-      >
-        <div className="flex items-center gap-1">
-          <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--text)' }}>{totalPoints ?? '—'}</span>
-          {totalPoints != null && <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>נ׳</span>}
-        </div>
-        {tier && (
-          <button onClick={onPersonalAreaTier} className={`text-xs font-bold px-3 py-1 rounded-full ${tierCss(tierKey)}`}>
-            {tier.label_he}
-          </button>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div
@@ -1441,7 +1421,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               tierDetail={tierDetailLb}
               onPersonalArea={onPersonalArea}
               onPersonalAreaTier={onPersonalAreaTier}
-              scrolled={false}
               openMatchCount={openMatchCount}
               onScrollToGames={handleGuessNow}
               onBranchBooking={onBranchBooking}
@@ -1494,20 +1473,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     </div>
     {scrolled && (
       <div className="fixed top-0 left-0 right-0 z-50 shadow-md" dir="rtl" style={{ background: 'var(--hm-bg, #100505)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <HeroCard
-          totalPoints={totalPoints}
-          pendingBookingPoints={pendingBookingPoints}
-          config={config}
-          tierFromServer={tierFromLb}
-          tierDetail={tierDetailLb}
-          onPersonalArea={onPersonalArea}
-          onPersonalAreaTier={onPersonalAreaTier}
-          scrolled={true}
-          openMatchCount={openMatchCount}
-          onScrollToGames={handleGuessNow}
-          onBranchBooking={onBranchBooking}
-          deliveryUrl={effectiveConfig?.delivery_url}
-        />
         <div className="px-4 pt-2 pb-1">
           <h2 className="m-0 text-right text-sm font-black tracking-wide" style={{ color: 'var(--text)' }}>המשחקים</h2>
         </div>
