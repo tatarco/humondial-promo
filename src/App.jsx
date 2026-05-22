@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getToken, setToken, clearToken, isLoggedIn } from './lib/session.js';
 import { callFn } from './lib/api.js';
 import { loadConfig } from './lib/config.js';
+import { authenticatedRouteFromHash } from './lib/hashRoute.js';
+import { resolveBookingBranchesForCampaign } from './lib/bookingBranches.js';
 import { ConfigProvider } from './contexts/ConfigContext.jsx';
 import SplashScreen from './screens/SplashScreen.jsx';
-import PhoneScreen  from './screens/PhoneScreen.jsx';
-import OtpScreen    from './screens/OtpScreen.jsx';
-import LegalScreen  from './screens/LegalScreen.jsx';
+import PhoneScreen from './screens/PhoneScreen.jsx';
+import OtpScreen from './screens/OtpScreen.jsx';
+import LegalScreen from './screens/LegalScreen.jsx';
 import HomeScreen from './screens/HomeScreen.jsx';
 import PersonalAreaScreen from './screens/PersonalAreaScreen.jsx';
 import VenueCodeScreen from './screens/VenueCodeScreen.jsx';
@@ -16,49 +18,57 @@ import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
 import LedgerScreen from './screens/LedgerScreen.jsx';
 
 const SCREEN = {
-  SPLASH:  'splash',
+  SPLASH: 'splash',
   LOADING: 'loading',
   CONFIG_INVALID: 'config_invalid',
-  PHONE:   'phone',
-  OTP:     'otp',
-  LEGAL:   'legal',
-  SHELL:         'shell',
+  SESSION_RETRY: 'session_retry',
+  PHONE: 'phone',
+  OTP: 'otp',
+  LEGAL: 'legal',
+  SHELL: 'shell',
   PERSONAL_AREA: 'personal_area',
-  VENUE_CODE:    'venue_code',
-  MY_QR:         'my_qr',
-  LEADERBOARD:      'leaderboard',
-  BRANCH_BOOKING:   'branch_booking',
-  LEDGER:           'ledger',
+  VENUE_CODE: 'venue_code',
+  MY_QR: 'my_qr',
+  LEADERBOARD: 'leaderboard',
+  BRANCH_BOOKING: 'branch_booking',
+  LEDGER: 'ledger',
 };
+
+const UUID_CTX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 async function fetchSession(campaignId) {
   if (!isLoggedIn()) return { nextScreen: SCREEN.PHONE, playerId: null };
   try {
     const payload = { token: getToken() };
     if (campaignId) payload.campaign_id = campaignId;
-    const { valid, playerId, termsAccepted } = await callFn('promoValidateSession', payload);
-    if (!valid)         return { nextScreen: SCREEN.PHONE, playerId: null };
+    const body = await callFn('promoValidateSession', payload);
+    const { valid, playerId, termsAccepted } = body;
+    if (!valid) return { nextScreen: SCREEN.PHONE, playerId: null };
     if (!termsAccepted) return { nextScreen: SCREEN.LEGAL, playerId };
     return { nextScreen: SCREEN.SHELL, playerId };
-  } catch {
-    return { nextScreen: SCREEN.PHONE, playerId: null };
+  } catch (e) {
+    return {
+      nextScreen: SCREEN.SESSION_RETRY,
+      playerId: null,
+      error: e instanceof Error ? e.message : String(e ?? ''),
+    };
   }
 }
 
 export default function App() {
-  const [screen,     setScreen]      = useState(SCREEN.SPLASH);
-  const [phone,      setPhone]       = useState('');
-  const [token,      setTokenState]  = useState('');
-  const [player,     setPlayer]      = useState(null);
-  const [isNewUser,  setIsNewUser]   = useState(false);
-  const [config, setConfig]           = useState(null);
+  const [screen, setScreen] = useState(SCREEN.SPLASH);
+  const [phone, setPhone] = useState('');
+  const [token, setTokenState] = useState('');
+  const [player, setPlayer] = useState(null);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [config, setConfig] = useState(null);
   const [configBrokenReason, setConfigBrokenReason] = useState('');
+  const [sessionRetryReason, setSessionRetryReason] = useState('');
   const [pendingVenueCode, setPendingVenueCode] = useState('');
-  const [pendingCid, setPendingCid]   = useState('');
-  const [bookingContext, setBookingContext]       = useState(null);
+  const [pendingCid, setPendingCid] = useState('');
+  const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
-
-  const UUID_CTX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
   function openBranchBooking(ctx) {
     if (
@@ -77,12 +87,50 @@ export default function App() {
     setScreen(SCREEN.BRANCH_BOOKING);
   }
 
+  function applyAuthenticatedHashRoute(vcProvided) {
+    if (vcProvided) return;
+    const route = authenticatedRouteFromHash();
+    switch (route.key) {
+      case 'leaderboard':
+        setBookingContext(null);
+        setScreen(SCREEN.LEADERBOARD);
+        break;
+      case 'personal_area':
+        setBookingContext(null);
+        setScreen(SCREEN.PERSONAL_AREA);
+        break;
+      case 'ledger':
+        setBookingContext(null);
+        setScreen(SCREEN.LEDGER);
+        break;
+      case 'venue_code':
+        setVenueCodeEntryContext('neutral');
+        setBookingContext(null);
+        setScreen(SCREEN.VENUE_CODE);
+        break;
+      case 'my_qr':
+        setBookingContext(null);
+        setScreen(SCREEN.MY_QR);
+        break;
+      case 'branch_booking':
+        setBookingContext(route.bookingContext);
+        setScreen(SCREEN.BRANCH_BOOKING);
+        break;
+      default:
+        setBookingContext(null);
+        setScreen(SCREEN.SHELL);
+    }
+  }
+
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
     const vc = urlParams.get('venue_code');
     const cid = urlParams.get('cid');
-    if (vc) { setPendingVenueCode(vc); setPendingCid(cid || ''); }
-    history.replaceState(null, '', window.location.pathname);
+    if (vc) {
+      setPendingVenueCode(vc);
+      setPendingCid(cid || '');
+    }
+    history.replaceState(null, '', `${window.location.pathname}${window.location.hash || ''}`);
     setScreen(SCREEN.LOADING);
     let cfg = null;
     try {
@@ -91,25 +139,142 @@ export default function App() {
       setConfig(cfg);
     } catch (e) {
       setConfig(null);
-      const msg = e instanceof Error ? e.message : String(e || 'campaign_config_invalid');
+      const msg =
+        e instanceof Error ? e.message : String(e || 'campaign_config_invalid');
       setConfigBrokenReason(msg || 'campaign_config_invalid');
       setScreen(SCREEN.CONFIG_INVALID);
       return;
     }
-    const sessionResult = await fetchSession(cfg.id).catch(() => ({ nextScreen: SCREEN.PHONE, playerId: null }));
+
+    let sessionResult;
+    try {
+      sessionResult = await fetchSession(cfg.id);
+    } catch {
+      sessionResult = {
+        nextScreen: SCREEN.SESSION_RETRY,
+        playerId: null,
+        error: 'לא נודע.',
+      };
+    }
+
+    if (sessionResult.nextScreen === SCREEN.SESSION_RETRY) {
+      setSessionRetryReason(sessionResult.error || '');
+      setScreen(SCREEN.SESSION_RETRY);
+      return;
+    }
+
     if (sessionResult.nextScreen === SCREEN.LEGAL) {
       setTokenState(getToken());
       setPlayer(sessionResult.playerId);
     } else if (sessionResult.nextScreen === SCREEN.SHELL) {
       setPlayer(sessionResult.playerId);
     }
+
     if (vc && sessionResult.nextScreen === SCREEN.SHELL) {
       setVenueCodeEntryContext('neutral');
       setScreen(SCREEN.VENUE_CODE);
+    } else if (sessionResult.nextScreen === SCREEN.SHELL) {
+      applyAuthenticatedHashRoute(false);
     } else {
       setScreen(sessionResult.nextScreen);
     }
   }
+
+  async function retryValidateSessionOnly() {
+    if (!config?.id) return;
+    setScreen(SCREEN.LOADING);
+    setSessionRetryReason('');
+    const sessionResult = await fetchSession(config.id).catch(() => ({
+      nextScreen: SCREEN.SESSION_RETRY,
+      playerId: null,
+      error: 'כללית.',
+    }));
+
+    if (sessionResult.nextScreen === SCREEN.SESSION_RETRY) {
+      setSessionRetryReason(sessionResult.error || '');
+      setScreen(SCREEN.SESSION_RETRY);
+      return;
+    }
+
+    if (sessionResult.nextScreen === SCREEN.LEGAL) {
+      setTokenState(getToken());
+      setPlayer(sessionResult.playerId);
+      setScreen(SCREEN.LEGAL);
+      return;
+    }
+
+    if (sessionResult.nextScreen === SCREEN.PHONE) {
+      setScreen(SCREEN.PHONE);
+      return;
+    }
+
+    setPlayer(sessionResult.playerId ?? null);
+    applyAuthenticatedHashRoute(false);
+  }
+
+  useEffect(() => {
+    if (
+      screen === SCREEN.SPLASH ||
+      screen === SCREEN.LOADING ||
+      screen === SCREEN.CONFIG_INVALID ||
+      screen === SCREEN.SESSION_RETRY
+    )
+      return;
+
+    let pathSeg = '/home';
+    switch (screen) {
+      case SCREEN.PHONE:
+        pathSeg = '/phone';
+        break;
+      case SCREEN.OTP:
+        pathSeg = '/otp';
+        break;
+      case SCREEN.LEGAL:
+        pathSeg = '/legal';
+        break;
+      case SCREEN.PERSONAL_AREA:
+        pathSeg = '/me';
+        break;
+      case SCREEN.LEDGER:
+        pathSeg = '/ledger';
+        break;
+      case SCREEN.VENUE_CODE:
+        pathSeg = '/venue-code';
+        break;
+      case SCREEN.MY_QR:
+        pathSeg = '/qr';
+        break;
+      case SCREEN.LEADERBOARD:
+        pathSeg = '/leaderboard';
+        break;
+      case SCREEN.BRANCH_BOOKING:
+        pathSeg = '/booking';
+        break;
+      default:
+        pathSeg = '/home';
+    }
+
+    let q = '';
+    if (
+      screen === SCREEN.BRANCH_BOOKING &&
+      bookingContext?.matchId &&
+      UUID_CTX.test(String(bookingContext.matchId))
+    ) {
+      q =
+        '?matchId=' +
+        encodeURIComponent(String(bookingContext.matchId).trim());
+      if (bookingContext.matchKickoffUtc != null && typeof bookingContext.matchKickoffUtc === 'string') {
+        q +=
+          '&matchKickoffUtc=' +
+          encodeURIComponent(bookingContext.matchKickoffUtc);
+      }
+    }
+
+    const want = `#${pathSeg}${q}`;
+    if (window.location.hash !== want) {
+      window.history.replaceState(null, '', want);
+    }
+  }, [screen, bookingContext]);
 
   function handlePhoneSuccess(normalizedPhone, newUser) {
     setPhone(normalizedPhone);
@@ -132,12 +297,15 @@ export default function App() {
     setPlayer(null);
     setPhone('');
     setTokenState('');
+    setBookingContext(null);
     setScreen(SCREEN.PHONE);
   }
 
   function handlePersonalArea() {
     setScreen(SCREEN.PERSONAL_AREA);
   }
+
+  const bookingBranchesResolved = resolveBookingBranchesForCampaign(config);
 
   const inner = (() => {
     if (screen === SCREEN.SPLASH) {
@@ -149,6 +317,46 @@ export default function App() {
           <div className="text-hm-red text-2xl font-black tracking-tight animate-pulse">
             HUMON<span className="text-hm-white">DIAL</span>
           </div>
+        </div>
+      );
+    }
+    if (screen === SCREEN.SESSION_RETRY) {
+      return (
+        <div
+          className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center gap-4 px-6 text-center"
+          dir="rtl"
+        >
+          <div className="text-lg font-black text-hm-white">
+            בעיית חיבור בהתחברות
+          </div>
+          <p className="text-sm text-hm-muted max-w-md">
+            לא הצלחנו לוודא את החשבון מול השרת. האינטרנט אולי התנתק — זה לא
+            בהכרח «ניתוק מהקמפיין».
+          </p>
+          {sessionRetryReason ? (
+            <p className="text-xs text-white/35 max-w-full break-all" dir="ltr">
+              {sessionRetryReason}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className="hm-btn-primary px-8 py-2.5 text-sm font-bold"
+            onClick={() => retryValidateSessionOnly()}
+          >
+            נסה שוב
+          </button>
+          <button
+            type="button"
+            className="text-xs text-white/55 underline px-4"
+            onClick={() => {
+              clearToken();
+              setSessionRetryReason('');
+              setBookingContext(null);
+              setScreen(SCREEN.PHONE);
+            }}
+          >
+            התחילו מסך התחברות מחדש
+          </button>
         </div>
       );
     }
@@ -170,7 +378,10 @@ export default function App() {
         <LegalScreen
           token={token}
           onSuccess={handleLegalSuccess}
-          onBack={() => { setTokenState(''); setScreen(SCREEN.PHONE); }}
+          onBack={() => {
+            setTokenState('');
+            setScreen(SCREEN.PHONE);
+          }}
         />
       );
     }
@@ -201,7 +412,11 @@ export default function App() {
           campaignId={config?.id || pendingCid}
           prefillCode={pendingVenueCode}
           entryContext={venueCodeEntryContext}
-          onBack={() => { setPendingVenueCode(''); setVenueCodeEntryContext('neutral'); setScreen(SCREEN.SHELL); }}
+          onBack={() => {
+            setPendingVenueCode('');
+            setVenueCodeEntryContext('neutral');
+            setScreen(SCREEN.SHELL);
+          }}
         />
       );
     }
@@ -219,7 +434,7 @@ export default function App() {
         <LeaderboardScreen
           token={getToken()}
           campaignId={config?.id}
-          onBack={() => setScreen(SCREEN.SHELL)}
+          onNavigateHome={() => setScreen(SCREEN.SHELL)}
           onBranchBooking={openBranchBooking}
         />
       );
@@ -230,38 +445,57 @@ export default function App() {
           token={getToken()}
           campaignId={config?.id}
           tableBookingPoints={config?.table_booking_points}
+          branches={bookingBranchesResolved}
           bookingContext={bookingContext}
-          onBack={() => { setBookingContext(null); setScreen(SCREEN.SHELL); }}
+          onBack={() => {
+            setBookingContext(null);
+            setScreen(SCREEN.SHELL);
+          }}
         />
       );
     }
-    return <HomeScreen
-      playerId={player}
-      onLogout={handleLogout}
-      onPersonalArea={handlePersonalArea}
-      onVenueCode={(ctx = 'neutral') => {
-        setVenueCodeEntryContext(
-          ctx === 'delivery' ? 'delivery' : ctx === 'venue' ? 'venue' : 'neutral',
-        );
-        setPendingVenueCode('');
-        setScreen(SCREEN.VENUE_CODE);
-      }}
-      onMyQR={() => setScreen(SCREEN.MY_QR)}
-      onBranchBooking={openBranchBooking}
-    />;
+    return (
+      <HomeScreen
+        playerId={player}
+        onLogout={handleLogout}
+        onPersonalArea={handlePersonalArea}
+        onVenueCode={(ctx = 'neutral') => {
+          setVenueCodeEntryContext(
+            ctx === 'delivery' ? 'delivery' : ctx === 'venue' ? 'venue' : 'neutral',
+          );
+          setPendingVenueCode('');
+          setScreen(SCREEN.VENUE_CODE);
+        }}
+        onMyQR={() => setScreen(SCREEN.MY_QR)}
+        onBranchBooking={openBranchBooking}
+      />
+    );
   })();
 
   if (screen === SCREEN.CONFIG_INVALID) {
     return (
-      <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center gap-4 px-6 text-center" dir="rtl">
-        <div className="text-lg font-black" style={{ color: 'var(--text, #fff)' }}>לא ניתן לטעון את הגדרות הקמפיין</div>
-        <div className="text-sm max-w-md break-words" style={{ color: 'var(--text-sec, rgba(246,239,237,0.65))' }}>{configBrokenReason}</div>
-        <button type="button" className="hm-btn-primary px-8 py-2.5 text-sm font-bold" onClick={() => window.location.reload()}>
+      <div
+        className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center gap-4 px-6 text-center"
+        dir="rtl"
+      >
+        <div className="text-lg font-black" style={{ color: 'var(--text, #fff)' }}>
+          לא ניתן לטעון את הגדרות הקמפיין
+        </div>
+        <div className="text-sm max-w-md break-words" style={{ color: 'var(--text-sec, rgba(246,239,237,0.65))' }}>
+          {configBrokenReason}
+        </div>
+        <button
+          type="button"
+          className="hm-btn-primary px-8 py-2.5 text-sm font-bold"
+          onClick={() => window.location.reload()}
+        >
           נסה שוב
         </button>
       </div>
     );
   }
 
-  return <ConfigProvider config={config}>{inner}</ConfigProvider>;
+  return (
+    <ConfigProvider config={config}>{inner}</ConfigProvider>
+  );
 }

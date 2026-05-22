@@ -1,17 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
 import { tierPerkDisplayRows } from '../lib/tierPerks.js';
-
-const TIER_CSS = {
-  bronze: 'tier-bronze',
-  silver: 'tier-silver',
-  gold:   'tier-gold',
-  legend: 'tier-legend',
-};
-
-function tierCss(key) {
-  return TIER_CSS[key] || 'tier-bronze';
-}
+import { tierClassFromServerTier } from '../lib/tierStyle.js';
 
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
   const [data, setData]                     = useState(null);
@@ -149,7 +139,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                 </div>
               )}
               {myTier && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierClassFromServerTier(myTier)}`}>
                   {myTier.label_he}
                 </span>
               )}
@@ -338,7 +328,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                   return (
                     <div
                       key={String(t.id || tk || idx)}
-                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-shrink-0 ${done ? tierCss(tk) : ''}`}
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-shrink-0 ${done ? tierClassFromServerTier(t) : ''}`}
                       style={{
                         background: done ? undefined : 'rgba(255,255,255,0.03)',
                         border: done ? undefined : '1px solid rgba(255,255,255,0.07)',
@@ -395,7 +385,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                     >
                       <div className="flex flex-row-reverse items-start gap-2">
                         <div className="flex-1 min-w-0 space-y-1">
-                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierCss(tk) : ''}`}>
+                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierClassFromServerTier(t) : ''}`}>
                             {t.label_he || tk}
                           </span>
                           {benefits.length > 0 ? (

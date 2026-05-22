@@ -4,16 +4,6 @@ import { callFn } from '../lib/api.js';
 const RESERVATION_BASE =
   'https://tabitisrael.co.il/%D7%94%D7%96%D7%9E%D7%A0%D7%AA-%D7%9E%D7%A7%D7%95%D7%9D/create-reservation?step=search&locale=he-IL&source=website&type=future_reservation&orgId=';
 
-const BRANCHES = [
-  { name: 'קריות', orgId: '6911cae874d1ffc13623c168' },
-  { name: 'תל חנן', orgId: '59256f1016c2e4220080a088' },
-  { name: 'כפר יונה', orgId: '62528de3bc0d3754454176cb' },
-  { name: 'כפר סבא', orgId: '579487ca92f8401e0000da20' },
-  { name: 'באר שבע', orgId: '5dd66c7a775398f3a69022b8' },
-  { name: 'יהוד', orgId: '6707d900ee6c51b72796fbf1' },
-  { name: 'גבעת ברנר', orgId: '579e766f2063921e00fb4551' },
-];
-
 function unwrap(payload) {
   return payload?.data ?? payload;
 }
@@ -30,6 +20,7 @@ export default function BranchBookingScreen({
   token,
   campaignId,
   tableBookingPoints,
+  branches = [],
   bookingContext,
   onBack,
 }) {
@@ -162,28 +153,37 @@ export default function BranchBookingScreen({
         <p className="px-4 mb-3 text-xs text-right" style={{ color: 'var(--green)' }}>{branchTip}</p>
       )}
 
-      <div className="px-4 grid grid-cols-2 gap-3">
-        {BRANCHES.map((branch) => (
-          <button
-            key={branch.orgId}
-            type="button"
-            disabled={!!busy}
-            onClick={(e) => branchReserve(branch, e)}
-            className="hm-card flex flex-col items-center justify-center gap-2 py-5 text-center border-0 cursor-pointer appearance-none disabled:opacity-55"
-          >
-            <div className="text-2xl">🍔</div>
+      {branches.length === 0 ? (
+        <p className="px-4 text-sm text-center leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+          אין רשימת סניפים זמינה מהשרת בהגדרות הקמפיין. צרף מזהי ארגון בטאבּיט בשדה הקמפיין בביזפלואו או בקש מהמפעיל לעדכן — עד אז ההזמנה דרך הטופס הבא לא תוצג.
+        </p>
+      ) : (
+        <div className="px-4 grid grid-cols-2 gap-3">
+          {branches.map((branch) => (
+            <button
+              key={branch.orgId}
+              type="button"
+              disabled={!!busy}
+              onClick={(e) => branchReserve(branch, e)}
+              className="hm-card flex flex-col items-center justify-center gap-2 py-5 text-center border-0 cursor-pointer appearance-none disabled:opacity-55"
+            >
+              <div className="text-2xl">🍔</div>
             <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>
               {branch.name}
             </div>
-            <div
-              className="text-xs px-2 py-1 rounded-full font-bold"
-              style={{ background: 'var(--red)', color: '#fff' }}
-            >
-              {busy === branch.orgId ? 'שומר...' : 'הזמן ←'}
+            <div dir="ltr" className="text-[10px] font-mono opacity-75 break-all px-1" style={{ color: 'var(--text-sec)' }} title={branch.orgId}>
+              {branch.orgId}
             </div>
-          </button>
-        ))}
-      </div>
+              <div
+                className="text-xs px-2 py-1 rounded-full font-bold"
+                style={{ background: 'var(--red)', color: '#fff' }}
+              >
+                {busy === branch.orgId ? 'שומר...' : 'הזמן ←'}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="mx-4 mt-8 hm-card p-4 space-y-3">
         <p className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>אחרי שקבעת תור — רישום נקודות</p>

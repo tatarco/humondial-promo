@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, Fra
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
+import { mapPromoError } from '../lib/promoErrors.js';
 
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
@@ -93,9 +94,6 @@ function compareDisplayMatchOrder(a, b) {
   if (ra !== rb) return ra - rb;
   return new Date(a?.kickoff_utc || 0).getTime() - new Date(b?.kickoff_utc || 0).getTime();
 }
-
-const TIER_CSS = { bronze: 'tier-bronze', silver: 'tier-silver', gold: 'tier-gold', legend: 'tier-legend' };
-function tierCss(key) { return TIER_CSS[key] || 'tier-bronze'; }
 
 function spawnConfetti() {
   const COLORS = ['#D63A36', '#F4C15D', '#35D26F', '#ffffff', '#ff9500', '#a78bfa'];
@@ -267,7 +265,7 @@ function HeroCard({
             </span>
           ) : nextT && ptsToNextPlain > 0 && tp !== null ? (
             <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
-              עוד {ptsToNextPlain} נקודות ואתה עולה ל{nextT.label_he}
+              עוד {ptsToNextPlain} נקודות מאושרות ל{nextT.label_he}
             </span>
           ) : null}
         </div>
@@ -292,13 +290,15 @@ function HeroCard({
 
       {/* Today's Snapshot */}
       <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <p className="text-xs font-bold mb-2 text-right" style={{ color: 'var(--gold)' }}>Today's Snapshot</p>
+        <p className="text-xs font-bold mb-2 text-right" style={{ color: 'var(--gold)' }}>מבט מהיר להיום</p>
         <div className="space-y-1.5 text-sm text-right" style={{ color: 'var(--text)' }}>
           {openMatchCount > 0 && <p>⚽ {openMatchCount} משחקים פתוחים לניחוש</p>}
           {config.table_booking_points > 0 && (
             <p>🔥 אחרי הזמנת שולחן: +{config.table_booking_points} נק׳ <span className="opacity-90">ממתינות</span> עד קוד ביקור יומי בסניף</p>
           )}
-          <p>🍔 צפייה ביומנגס = {delivPts}+ נקודות</p>
+          {typeof delivPts === 'number' && delivPts > 0 ? (
+            <p>🛵 הזמנת משלוח מאושר בקוד: עד +{delivPts} נ׳ למאזן המאושר</p>
+          ) : null}
         </div>
       </div>
 
@@ -386,8 +386,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
       await onPredict(match.id, homeScore, awayScore);
       onSaved?.();
     } catch (e) {
-      if (e?.data?.error === 'prediction_locked') setErr('המשחק כבר התחיל');
-      else setErr(e.message || 'שגיאה');
+      setErr(mapPromoError(e));
     } finally {
       setSubmitting(false);
     }
@@ -395,7 +394,10 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
 
   const homeName = match.home_team || '?';
   const awayName = match.away_team || '?';
-  const totalBonus = config.participation_points + config.bullseye_points + config.draw_stripe_points;
+  const participationPts = typeof config.participation_points === 'number' ? config.participation_points : 0;
+  const bullseyePts = typeof config.bullseye_points === 'number' ? config.bullseye_points : 0;
+  const outcomePtsCfg = typeof config.outcome_points === 'number' ? config.outcome_points : 0;
+  const drawStripePtsCfg = typeof config.draw_stripe_points === 'number' ? config.draw_stripe_points : 0;
 
   return (
     <div className="space-y-4">
@@ -445,9 +447,15 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
           />
           <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{awayName}</span>
         </div>
-        <p className="text-center text-[11px] mt-3" style={{ color: 'var(--text-sec)' }}>
-          עד +{totalBonus} נק׳ צבירה מהמשחק (הצטרפות + התאמה למצב הניקוד בפועל)
-        </p>
+        <div className="text-center text-[11px] mt-3 space-y-1.5 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+          <p className="m-0">
+            בשמירה: +{participationPts} נ׳ הצטרפות מהמשחק · הזיכוי בפועל כפוף לכללי הקמפיין ולהכרה במערכת.
+          </p>
+          <p className="m-0">
+            אחרי תוצאה סופית: עד +{bullseyePts} נ׳ לפגיעה מדוייקת בניצחון/הפרש; עד +{bullseyePts + drawStripePtsCfg}
+            נ׳ לפגיעה מדוייקת כשמתאים למצב תיקו בשכבה; עד +{outcomePtsCfg} נ׳ לבחירת מנצח או תיקו נכונים בלי התאמת ספרות.
+          </p>
+        </div>
       </div>
 
       {err && <p className="text-red-400 text-xs text-center">{err}</p>}
@@ -995,24 +1003,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     </div>
                     <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך להזמנה ←</span>
                   </button>
-                ) : (
-                  <a
-                    href={config.delivery_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem]"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
-                  >
-                    <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
-                      <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">🛵</span>
-                      <div className="min-w-0 flex-1 space-y-1 px-0.5">
-                        <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>הזמן משלוח</div>
-                        <div className="text-xs leading-relaxed px-1" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points} נ׳</div>
-                      </div>
-                    </div>
-                    <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך למשלוח ←</span>
-                  </a>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -1035,6 +1026,11 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 )}
                 {isFinal && !bullseye && !correctOutcome && (
                   <div className="mt-2 text-xs" style={{ color: 'var(--text-sec)' }}>✗ ניחוש שגוי</div>
+                )}
+                {isFinal && hasPrediction && (
+                  <p className="text-[10px] mt-3 leading-snug text-center px-1" style={{ color: 'var(--text-sec)' }}>
+                    נקודות ההצטרפות מהמשחק בדרך‑כלל התווספו כבר בשמירת הניחוש. השורות למעלה מתייחסות לבונוס אחרי תוצאה סופית (מדוייק או תוצאה נכונה) בלבד, לפי כללי הקמפיין.
+                  </p>
                 )}
               </div>
             )}

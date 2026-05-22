@@ -1,17 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
-
-const TIER_CSS = {
-  bronze: 'tier-bronze',
-  silver: 'tier-silver',
-  gold:   'tier-gold',
-  legend: 'tier-legend',
-};
-
-function tierCss(key) {
-  return TIER_CSS[key] || 'tier-bronze';
-}
+import { tierClassFromServerTier } from '../lib/tierStyle.js';
 
 function getTierForPoints(tiers, pts) {
   const sorted = [...tiers].sort((a, b) => b.min_points - a.min_points);
@@ -49,7 +39,7 @@ function WhatIfCard({ icon, label, value, onChange, pts }) {
   );
 }
 
-export default function LeaderboardScreen({ token, campaignId, onBack, onBranchBooking }) {
+export default function LeaderboardScreen({ token, campaignId, onNavigateHome, onBranchBooking }) {
   const globalCfg = useConfig();
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(true);
@@ -119,11 +109,12 @@ export default function LeaderboardScreen({ token, campaignId, onBack, onBranchB
       <header className="flex items-center justify-between px-4 py-3">
         <div className="text-base font-black" style={{ color: 'var(--text)' }}>לוח האלופים</div>
         <button
-          onClick={onBack}
+          type="button"
+          onClick={onNavigateHome}
           className="text-xs px-3 py-1.5 rounded-full border"
           style={{ color: 'var(--text-sec)', borderColor: 'var(--border)' }}
         >
-          ← חזרה
+          חזרה לדף הבית ←
         </button>
       </header>
 
@@ -146,7 +137,7 @@ export default function LeaderboardScreen({ token, campaignId, onBack, onBranchB
                 {entry.nickname}
               </div>
               {entryTier && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tierCss(entryTier.id)}`}>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tierClassFromServerTier(entryTier)}`}>
                   {entryTier.label_he}
                 </span>
               )}
@@ -174,7 +165,7 @@ export default function LeaderboardScreen({ token, campaignId, onBack, onBranchB
           <div className="flex-1">
             <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>{me.nickname ?? 'אתה'}</div>
             {myTier && (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tierCss(myTier.id)}`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tierClassFromServerTier(myTier)}`}>
                 {myTier.label_he}
               </span>
             )}
@@ -214,12 +205,15 @@ export default function LeaderboardScreen({ token, campaignId, onBack, onBranchB
             </p>
           ) : (
             <>
+              <p className="text-[10px] text-right leading-snug px-0.5" style={{ color: 'var(--text-sec)' }}>
+                הדגמה בלבד · המספרים בשורת הסליידרים (0–10) משמשים למחשבון מהיר; בפועל התקדמות נקבעת לפי מה שכבר הרווחת בקמפיין ולכללים בשטח.
+              </p>
               <WhatIfCard icon="⚽" label="אנחש נכון עוד" value={predCount} onChange={setPredCount} pts={predCount * predDelta} />
               <WhatIfCard icon="🍽️" label="אזמין שולחן עוד" value={tableCount} onChange={setTableCount} pts={tableCount * tableDelta} />
               <WhatIfCard icon="🛵" label="אזמין משלוח עוד" value={delivCount} onChange={setDelivCount} pts={delivCount * delivDelta} />
             </>
           )}
-          <button onClick={onBack} className="hm-btn-primary w-full py-3 text-sm">⚽ לניחושים ←</button>
+          <button type="button" onClick={onNavigateHome} className="hm-btn-primary w-full py-3 text-sm">חזרה לדף הבית ←</button>
           <button
             type="button"
             onClick={() => onBranchBooking?.()}
@@ -227,9 +221,13 @@ export default function LeaderboardScreen({ token, campaignId, onBack, onBranchB
           >
             🍽️ הזמן שולחן ←
           </button>
-          <a href={globalCfg.delivery_url} target="_blank" rel="noopener noreferrer"
-              className="hm-btn-secondary flex items-center justify-center w-full py-3 text-sm">
-              🛵 הזמן משלוח ↗
+          <a
+            href={globalCfg.delivery_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hm-btn-secondary flex items-center justify-center w-full py-3 text-sm"
+          >
+            🛵 הזמן משלוח ↗
           </a>
         </div>
       )}
@@ -260,7 +258,7 @@ export default function LeaderboardScreen({ token, campaignId, onBack, onBranchB
               <div className="flex-1">
                 <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{entry.nickname}</div>
                 {entryTier && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${tierCss(entryTier.id)}`}>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${tierClassFromServerTier(entryTier)}`}>
                     {entryTier.label_he}
                   </span>
                 )}
