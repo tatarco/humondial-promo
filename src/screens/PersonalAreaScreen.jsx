@@ -13,24 +13,6 @@ function tierCss(key) {
   return TIER_CSS[key] || 'tier-bronze';
 }
 
-function TopThreeSummary({ rows }) {
-  const list = [...rows].sort((a, b) => a.rank - b.rank);
-  if (!list.length) return null;
-  return (
-    <div dir="rtl" className="px-3 pt-3 pb-1 space-y-2">
-      {list.map(r => (
-        <div key={r.rank} className="flex flex-row-reverse items-center justify-between gap-2 text-[11px]" style={{ color: 'var(--text)' }}>
-          <span className="tabular-nums font-black shrink-0" style={{ color: 'var(--text-sec)' }}>{r.total_points} נ׳</span>
-          <span className="font-bold truncate min-w-0 text-right">{r.nickname}</span>
-          <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--gold)', border: '1px solid rgba(244,193,93,0.25)' }}>
-            {r.rank}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
   const [data, setData]                     = useState(null);
   const [loading, setLoading]               = useState(true);
@@ -69,8 +51,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
     );
   }
 
-  const { top50 = [], me = {}, trajectory = {}, tiers: dataTiers = [] } = data || {};
-  const top3    = top50.filter(r => r.rank <= 3);
+  const { me = {}, trajectory = {}, tiers: dataTiers = [] } = data || {};
   const myPts   = me.total_points ?? 0;
   const pendingBk = me.pending_table_booking_points ?? 0;
   const myTier  = me.tier || null;
@@ -455,25 +436,21 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           </div>
         </div>
 
-        {/* Block 4 — Top 3 + דירוג מלא */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>3 המובילים</div>
-          <div className="hm-card overflow-hidden">
-            <TopThreeSummary rows={top3} />
-            <div className="border-t px-3 py-3" style={{ borderColor: 'var(--border)' }}>
-              <button
-                type="button"
-                onClick={onLeaderboard}
-                className="w-full flex flex-row-reverse items-center justify-between gap-3 px-4 py-3 rounded-2xl font-bold text-sm text-white"
-                style={{ background: 'var(--red)' }}
-              >
-                <span style={{ opacity: 0.5 }} aria-hidden>←</span>
-                <div className="text-right min-w-0">
-                  <div className="text-[10px] mb-0.5 font-bold" style={{ opacity: 0.82 }}>דירוג מלא · 50 הראשונים</div>
-                  <div>🏆 לוח האלופים</div>
-                </div>
-              </button>
-            </div>
+          <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>דירוג</div>
+          <div className="hm-card overflow-hidden p-3">
+            <button
+              type="button"
+              onClick={onLeaderboard}
+              className="w-full flex flex-row-reverse items-center justify-between gap-3 px-4 py-3 rounded-2xl font-bold text-sm text-white"
+              style={{ background: 'var(--red)' }}
+            >
+              <span style={{ opacity: 0.5 }} aria-hidden>←</span>
+              <div className="text-right min-w-0">
+                <div className="text-[10px] mb-0.5 font-bold" style={{ opacity: 0.82 }}>דירוג מלא · 50 הראשונים</div>
+                <div>🏆 לוח האלופים</div>
+              </div>
+            </button>
           </div>
         </div>
 

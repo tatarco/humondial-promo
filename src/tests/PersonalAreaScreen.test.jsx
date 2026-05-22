@@ -90,12 +90,12 @@ describe('PersonalAreaScreen', () => {
     expect(screen.getAllByText('Bronze').length).toBe(1);
   });
 
-  it('shows top three nicknames compact list', async () => {
+  it('omits mini top-three list but keeps leaderboard CTA', async () => {
     callFn.mockResolvedValue(MOCK_DATA);
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
-    await waitFor(() => expect(screen.getByText('רון')).toBeTruthy());
-    expect(screen.getByText('דוד')).toBeTruthy();
-    expect(screen.getByText('יוסי')).toBeTruthy();
+    await waitFor(() => expect(screen.getByText(/לוח האלופים/)).toBeTruthy());
+    expect(screen.queryByText(/3 המובילים/)).toBeNull();
+    expect(screen.queryByText(/^רון$/)).toBeNull();
   });
 
   it('has leaderboard and ledger nav buttons', async () => {
