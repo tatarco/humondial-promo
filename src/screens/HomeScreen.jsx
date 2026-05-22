@@ -1175,6 +1175,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const scrollContainerRef            = useRef(null);
   const heroRef                       = useRef(null);
   const gamesRef                      = useRef(null);
+  const [showScrollTopFab, setShowScrollTopFab]   = useState(false);
 
   const token = getToken();
   const campaignId = config?.id;
@@ -1327,8 +1328,18 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   }, [matches, predictions, lockedMatchIds]);
 
   function handleScroll() {
-    if (!heroRef.current) return;
-    setScrolled(heroRef.current.getBoundingClientRect().bottom <= 0);
+    const sc = scrollContainerRef.current;
+    if (heroRef.current) {
+      setScrolled(heroRef.current.getBoundingClientRect().bottom <= 0);
+    }
+    if (sc) {
+      setShowScrollTopFab(sc.scrollTop > 320);
+    }
+  }
+
+  function scrollHomeToTop() {
+    setActiveCard(null);
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleGuessNow() {
@@ -1467,6 +1478,25 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           ))}
         </div>
       </div>
+
+      {showScrollTopFab ? (
+        <button
+          type="button"
+          aria-label="חזרה לראש העמוד"
+          className="fixed z-[46] shadow-lg backdrop-blur-sm flex items-center gap-1 px-3 py-2 rounded-full border text-xs font-black transition-opacity active:scale-95 rtl:flex-row-reverse"
+          style={{
+            bottom: 'max(1.25rem, env(safe-area-inset-bottom, 0px))',
+            insetInlineEnd: 'max(12px, env(safe-area-inset-right, 0px))',
+            background: 'rgba(214,58,54,0.94)',
+            color: '#fff',
+            borderColor: 'rgba(255,255,255,0.22)',
+          }}
+          onClick={scrollHomeToTop}
+        >
+          <span aria-hidden className="text-base leading-none">↑</span>
+          <span className="whitespace-nowrap">לראש</span>
+        </button>
+      ) : null}
 
     </div>
     {scrolled && (
