@@ -1479,28 +1479,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         </div>
       </div>
 
-      {showScrollTopFab ? (
-        <button
-          type="button"
-          aria-label="חזרה לראש העמוד"
-          className="fixed z-[46] shadow-lg backdrop-blur-sm flex items-center gap-1 px-3 py-2 rounded-full border text-xs font-black transition-opacity active:scale-95 rtl:flex-row-reverse"
-          style={{
-            bottom: 'max(1.25rem, env(safe-area-inset-bottom, 0px))',
-            insetInlineEnd: 'max(12px, env(safe-area-inset-right, 0px))',
-            background: 'rgba(214,58,54,0.94)',
-            color: '#fff',
-            borderColor: 'rgba(255,255,255,0.22)',
-          }}
-          onClick={scrollHomeToTop}
-        >
-          <span aria-hidden className="text-base leading-none">↑</span>
-          <span className="whitespace-nowrap">לראש</span>
-        </button>
-      ) : null}
-
     </div>
     {scrolled && (
-      <div className="fixed top-0 left-0 right-0 z-50" dir="rtl" style={{ background: 'var(--hm-bg, #100505)' }}>
+      <div className="fixed top-0 left-0 right-0 z-50 shadow-md" dir="rtl" style={{ background: 'var(--hm-bg, #100505)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <HeroCard
           totalPoints={totalPoints}
           pendingBookingPoints={pendingBookingPoints}
@@ -1515,14 +1496,31 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           onBranchBooking={onBranchBooking}
           deliveryUrl={effectiveConfig?.delivery_url}
         />
-        <div className="grid grid-cols-3 gap-2 px-3 mb-1">
-          <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={true} />
-          <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={true} />
-          <QuickActionTile icon="📍" label="הגעתי לסניף" onClick={openVenueAtBranch} scrolled={true} />
+        <div className="px-4 pt-2 pb-1">
+          <h2 className="m-0 text-right text-sm font-black tracking-wide" style={{ color: 'var(--text)' }}>המשחקים</h2>
         </div>
         <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
       </div>
     )}
+    {showScrollTopFab ? (
+      <button
+        type="button"
+        aria-label="חזרה לראש העמוד"
+        className="pointer-events-auto fixed z-[60] flex items-center gap-1 rounded-full border px-4 py-2.5 text-xs font-black shadow-xl backdrop-blur-sm transition-opacity active:scale-95 rtl:flex-row-reverse"
+        style={{
+          bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+          right: 'calc(1rem + env(safe-area-inset-right, 0px))',
+          background: 'rgba(214,58,54,0.96)',
+          color: '#fff',
+          borderColor: 'rgba(255,255,255,0.25)',
+          maxWidth: 'calc(100vw - 2rem)',
+        }}
+        onClick={scrollHomeToTop}
+      >
+        <span aria-hidden className="text-base leading-none">↑</span>
+        <span className="whitespace-nowrap">לראש</span>
+      </button>
+    ) : null}
     </>
   );
 }
