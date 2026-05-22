@@ -1505,7 +1505,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     {showScrollTopFab ? (
       <button
         type="button"
-        aria-label="חזרה לראש העמוד"
+        aria-label="חזרה להתחלה"
         className="pointer-events-auto fixed z-[60] flex items-center gap-1 rounded-full border px-4 py-2.5 text-xs font-black shadow-xl backdrop-blur-sm transition-opacity active:scale-95 rtl:flex-row-reverse"
         style={{
           bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
@@ -1518,7 +1518,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         onClick={scrollHomeToTop}
       >
         <span aria-hidden className="text-base leading-none">↑</span>
-        <span className="whitespace-nowrap">לראש</span>
+        <span className="whitespace-nowrap">להתחלה</span>
       </button>
     ) : null}
     </>
