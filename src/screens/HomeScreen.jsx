@@ -3,8 +3,6 @@ import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 
-import { DEFAULT_BOOKING_URL, DEFAULT_DELIVERY_ORDER_URL } from '../lib/campaignUrls.js';
-
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
 }
@@ -99,18 +97,6 @@ function compareDisplayMatchOrder(a, b) {
 const TIER_CSS = { bronze: 'tier-bronze', silver: 'tier-silver', gold: 'tier-gold', legend: 'tier-legend' };
 function tierCss(key) { return TIER_CSS[key] || 'tier-bronze'; }
 
-function getTier(config, points) {
-  if (!config?.tiers) return null;
-  const sorted = [...config.tiers].sort((a, b) => b.min_points - a.min_points);
-  return sorted.find(t => points >= t.min_points) || sorted[sorted.length - 1];
-}
-
-function getNextTier(config, points) {
-  if (!config?.tiers) return null;
-  const sorted = [...config.tiers].sort((a, b) => a.min_points - b.min_points);
-  return sorted.find(t => t.min_points > points) || null;
-}
-
 function spawnConfetti() {
   const COLORS = ['#D63A36', '#F4C15D', '#35D26F', '#ffffff', '#ff9500', '#a78bfa'];
   for (let i = 0; i < 30; i++) {
@@ -128,47 +114,17 @@ function spawnConfetti() {
   }
 }
 
-function BenefitsSheet({ tiers, myTier, onClose }) {
-  const sorted = [...tiers].sort((a, b) => b.min_points - a.min_points);
-  const myPts = myTier?.min_points ?? 0;
+function HeroCardSkeleton() {
   return (
-    <div className="fixed inset-0 z-40 flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
-      <div
-        className="w-full rounded-t-3xl p-6 pb-8"
-        style={{ background: 'rgba(18,4,4,0.98)', border: '1px solid var(--border)', maxHeight: '75vh', overflowY: 'auto' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="text-center text-base font-black mb-4" style={{ color: 'var(--text)' }}>הטבות לפי דרגה</div>
-        {sorted.map(tier => {
-          const isCurrent  = tier.id === myTier?.id;
-          const isAchieved = tier.min_points <= myPts && !isCurrent;
-          const tierKey    = tier.key || tier.id;
-          return (
-            <div
-              key={tier.id}
-              className={`rounded-2xl p-4 mb-3 ${isCurrent ? 'border-2' : 'border'}`}
-              style={{
-                borderColor: isCurrent ? 'var(--red)' : 'var(--border)',
-                background:  isCurrent ? 'rgba(214,58,54,0.12)' : 'transparent',
-                opacity:     isAchieved || isCurrent ? 1 : 0.38,
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierCss(tierKey)}`}>
-                  {tier.label_he}
-                </span>
-                {isAchieved && <span className="text-xs font-bold" style={{ color: 'var(--green)' }}>✓ נצבר</span>}
-                {isCurrent  && <span className="text-xs font-bold" style={{ color: 'var(--red)' }}>◉ הדרגה שלך</span>}
-              </div>
-              <ul className="space-y-1">
-                {(tier.benefits || []).map((b, i) => (
-                  <li key={i} className="text-xs" style={{ color: 'var(--text-sec)' }}>• {b}</li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
+    <div
+      className="hm-card mb-3 mx-3 overflow-hidden animate-pulse px-5 py-8"
+      style={{ border: '1px solid rgba(244,193,93,0.25)' }}
+    >
+      <div className="h-7 rounded mb-6 mr-auto w-4/5" style={{ background: 'rgba(255,255,255,0.08)' }} />
+      <div className="h-14 rounded mb-3 mr-auto w-3/5" style={{ background: 'rgba(255,255,255,0.1)' }} />
+      <div className="h-3 rounded-full mb-4 w-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
+      <div className="h-16 rounded-xl w-full mb-6" style={{ background: 'rgba(255,255,255,0.05)' }} />
+      <div className="h-11 rounded-2xl w-full" style={{ background: 'rgba(214,58,54,0.25)' }} />
     </div>
   );
 }
@@ -182,32 +138,40 @@ function HeroCard({
   openMatchCount,
   onScrollToGames,
   onBranchBooking,
-  deliveryUrl,
   tierFromServer,
   tierDetail,
 }) {
-  const tierFromPts = getTier(config, totalPoints ?? 0);
-  const tier = tierFromServer ?? tierFromPts;
+  const tp = typeof totalPoints === 'number' ? totalPoints : null;
 
-  const nextTierPtsOnly = totalPoints != null ? getNextTier(config, totalPoints) : null;
-  const ptsToNextPlain = nextTierPtsOnly ? nextTierPtsOnly.min_points - (totalPoints ?? 0) : 0;
+  const commercialUi = !!(tierDetail?.show_commercial_requirements_ui && tierDetail?.requirements_for_next?.length);
 
-  let pct = tier && nextTierPtsOnly ? Math.min(100, Math.round(((totalPoints ?? 0) / nextTierPtsOnly.min_points) * 100)) : (tier ? 100 : 0);
-  let nextLabel = nextTierPtsOnly?.label_he;
-  let commercialUi = !!(tierDetail?.show_commercial_requirements_ui && tierDetail?.requirements_for_next?.length);
+  const nextT = tierDetail?.next_tier;
+  const effT = tierDetail?.effective_tier;
+  const bandMin = typeof effT?.min_points === 'number' ? effT.min_points : (typeof tierFromServer?.min_points === 'number' ? tierFromServer.min_points : 0);
+  const bandMaxRaw = typeof nextT?.min_points === 'number' ? nextT.min_points : bandMin;
 
-  if (commercialUi && tierDetail?.next_tier) {
-    nextLabel = tierDetail.next_tier.label_he;
+  let pct = 100;
+  if (commercialUi && tierDetail?.requirements_for_next?.length) {
     const reqs = tierDetail.requirements_for_next.filter((x) => x.required > 0);
-    const fracs = reqs.length
-      ? reqs.map(r => Math.min(1, r.required > 0 ? r.current / r.required : 1))
-      : [pct / 100];
-    pct = Math.round((fracs.reduce((a, b) => a + b, 0) / Math.max(fracs.length, 1)) * 100);
+    if (reqs.length) {
+      const fracs = reqs.map(r => Math.min(1, r.required > 0 ? r.current / r.required : 1));
+      pct = Math.round((fracs.reduce((a, b) => a + b, 0) / fracs.length) * 100);
+    }
+  } else if (nextT && tp != null && bandMaxRaw > bandMin) {
+    pct = Math.min(100, Math.max(0, Math.round(((tp - bandMin) / (bandMaxRaw - bandMin)) * 100)));
+  } else if (!nextT) {
+    pct = 100;
+  } else {
+    pct = 0;
   }
 
-  const tierKey   = tier?.key || tier?.id || 'bronze';
-  const tierMedal = tierKey === 'legend' ? '🏅' : tierKey === 'gold' ? '🥇' : tierKey === 'silver' ? '🥈' : '🥉';
-  const delivPts  = config?.delivery_points ?? 20;
+  const nextLabel = nextT?.label_he;
+
+  const ptsToNextPlain = nextT && tp != null ? nextT.min_points - tp : 0;
+
+  const tierKeyRaw = tierFromServer?.key || tierFromServer?.id || '';
+  const tierMedal = tierKeyRaw === 'legend' ? '🏅' : tierKeyRaw === 'gold' ? '🥇' : tierKeyRaw === 'silver' ? '🥈' : tierKeyRaw === 'bronze' ? '🥉' : '🎖️';
+  const delivPts = config.delivery_points;
 
   return (
     <div
@@ -228,15 +192,17 @@ function HeroCard({
       <div className="px-5 pb-3 text-right">
         <div className="flex items-baseline gap-2 justify-end">
           <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
-            {totalPoints ?? '—'}
+            {tp === null ? '…' : tp}
           </span>
           <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
         </div>
-        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
-          <span className="font-bold" style={{ color: 'var(--text)' }}>{totalPoints ?? 0}</span>
-          {' '}נקודות מאושרות — אלה נספרות בדירוג ובדרגה. אתה מתחמם.
-        </p>
-        {(pendingBookingPoints ?? 0) > 0 && (
+        {tp !== null && (
+          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+            <span className="font-bold" style={{ color: 'var(--text)' }}>{tp}</span>
+            {' '}נקודות מאושרות — אלה נספרות בדירוג ובדרגה.
+          </p>
+        )}
+        {typeof pendingBookingPoints === 'number' && pendingBookingPoints > 0 && (
           <div
             className="mt-2 rounded-xl px-3 py-2.5 text-right space-y-1"
             style={{ background: 'rgba(244,193,93,0.08)', border: '1px solid rgba(244,193,93,0.35)' }}
@@ -257,8 +223,8 @@ function HeroCard({
       <div className="px-5 pb-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xl leading-none">{tierMedal}</span>
-          <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
-            השלב שלי: {tier?.label_he || 'ברונזה'} ↗
+            <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
+            השלב שלי: {tierFromServer?.label_he ?? '—'} ↗
           </button>
         </div>
         {(() => {
@@ -299,9 +265,9 @@ function HeroCard({
             <span className="text-xs text-right max-w-[70%]" style={{ color: 'var(--text-sec)' }}>
               מתקדמים ל{nextLabel} לפי הכללים (נקודות + מסעדה / משלוח כשמוגדרים)
             </span>
-          ) : nextTierPtsOnly ? (
+          ) : nextT && ptsToNextPlain > 0 && tp !== null ? (
             <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
-              עוד {ptsToNextPlain} נקודות ואתה עולה ל{nextTierPtsOnly.label_he}
+              עוד {ptsToNextPlain} נקודות ואתה עולה ל{nextT.label_he}
             </span>
           ) : null}
         </div>
@@ -329,7 +295,7 @@ function HeroCard({
         <p className="text-xs font-bold mb-2 text-right" style={{ color: 'var(--gold)' }}>Today's Snapshot</p>
         <div className="space-y-1.5 text-sm text-right" style={{ color: 'var(--text)' }}>
           {openMatchCount > 0 && <p>⚽ {openMatchCount} משחקים פתוחים לניחוש</p>}
-          {(config?.table_booking_points ?? 0) > 0 && (
+          {config.table_booking_points > 0 && (
             <p>🔥 אחרי הזמנת שולחן: +{config.table_booking_points} נק׳ <span className="opacity-90">ממתינות</span> עד קוד ביקור יומי בסניף</p>
           )}
           <p>🍔 צפייה ביומנגס = {delivPts}+ נקודות</p>
@@ -346,7 +312,7 @@ function HeroCard({
             📅 שמור לי שולחן
           </button>
           <a
-            href={deliveryUrl}
+            href={config.delivery_url}
             target="_blank"
             rel="noopener noreferrer"
             className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1 text-center"
@@ -429,9 +395,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
 
   const homeName = match.home_team || '?';
   const awayName = match.away_team || '?';
-  const totalBonus = (config?.participation_points ?? 10)
-    + (config?.bullseye_points ?? 30)
-    + (config?.draw_stripe_points ?? 10);
+  const totalBonus = config.participation_points + config.bullseye_points + config.draw_stripe_points;
 
   return (
     <div className="space-y-4">
@@ -543,10 +507,10 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const exactDrawMatch = bullseye && match.final_home_score === match.final_away_score;
   const correctOutcome = predOutcome && actualOutcome && predOutcome === actualOutcome;
 
-  const participationPts = config?.participation_points ?? 10;
-  const bullseyePts = config?.bullseye_points ?? 30;
-  const outcomePts = config?.outcome_points ?? 15;
-  const drawStripePts = config?.draw_stripe_points ?? 10;
+  const participationPts = config.participation_points;
+  const bullseyePts = config.bullseye_points;
+  const outcomePts = config.outcome_points;
+  const drawStripePts = config.draw_stripe_points;
 
   let finalPointsEarned = null;
   if (isFinal && hasPrediction) {
@@ -959,7 +923,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 {showPointsFlash && (
                   <div className="rounded-xl px-4 py-2 text-center text-sm font-black"
                        style={{ background: 'rgba(244,193,93,0.15)', border: '1px solid rgba(244,193,93,0.35)', color: 'var(--gold)' }}>
-                    🎉 +{config?.participation_points ?? 10} נ׳ נוספו!
+                    🎉 +{config.participation_points} נ׳ נוספו!
                   </div>
                 )}
                 <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1033,7 +997,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   </button>
                 ) : (
                   <a
-                    href={config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL}
+                    href={config.delivery_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem]"
@@ -1043,7 +1007,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                       <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">🛵</span>
                       <div className="min-w-0 flex-1 space-y-1 px-0.5">
                         <div className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>הזמן משלוח</div>
-                        <div className="text-xs leading-relaxed px-1" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points ?? 20} נ׳</div>
+                        <div className="text-xs leading-relaxed px-1" style={{ color: 'var(--green)' }}>וקבל +{config.delivery_points} נ׳</div>
                       </div>
                     </div>
                     <span className="hm-btn-primary block w-full text-center py-3 rounded-xl text-sm font-black">המשך למשלוח ←</span>
@@ -1060,14 +1024,14 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 </div>
                 {isFinal && bullseye && exactDrawMatch && (
                   <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>
-                    🤝 תיקו מדויק (+{config?.bullseye_points ?? 30} תוצאה מדויקת +{config?.draw_stripe_points ?? 10} שכבת תיקו)
+                    🤝 תיקו מדויק (+{config.bullseye_points} תוצאה מדויקת +{config.draw_stripe_points} שכבת תיקו)
                   </div>
                 )}
                 {isFinal && bullseye && !exactDrawMatch && (
-                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>🎯 ניחוש מדויק! +{config?.bullseye_points ?? 30}</div>
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>🎯 ניחוש מדויק! +{config.bullseye_points}</div>
                 )}
                 {isFinal && !bullseye && correctOutcome && (
-                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--green)' }}>✓ ניחוש נכון! +{config?.outcome_points ?? 15}</div>
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--green)' }}>✓ ניחוש נכון! +{config.outcome_points}</div>
                 )}
                 {isFinal && !bullseye && !correctOutcome && (
                   <div className="mt-2 text-xs" style={{ color: 'var(--text-sec)' }}>✗ ניחוש שגוי</div>
@@ -1147,11 +1111,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const openVenueDelivery = () => onVenueCode?.('delivery');
   const openVenueAtBranch = () => onVenueCode?.('venue');
   const config = useConfig();
-  const effectiveConfig = config ? {
-    ...config,
-    booking_url: config.booking_url || DEFAULT_BOOKING_URL,
-    delivery_url: config.delivery_url || DEFAULT_DELIVERY_ORDER_URL,
-  } : config;
   const [matches, setMatches]         = useState([]);
   const [predictions, setPredictions] = useState({});
   const [activeCard, setActiveCard]   = useState(null);
@@ -1171,6 +1130,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
   const token = getToken();
   const campaignId = config?.id;
+  const showHeroSkeleton = loading && !!(campaignId && token);
 
   useLayoutEffect(() => {
     if (!campaignId) return;
@@ -1242,15 +1202,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   );
 
   const { lockedMatchIds, openMatchCount, guessOpensHintById } = useMemo(() => {
-    const pwm = effectiveConfig?.prediction_window_mode === 'days' ? 'days' : 'games';
-    const windowGames =
-      typeof effectiveConfig?.prediction_window_games === 'number' && effectiveConfig.prediction_window_games >= 1
-        ? effectiveConfig.prediction_window_games
-        : 5;
-    const windowDays =
-      typeof effectiveConfig?.prediction_window_days === 'number' && effectiveConfig.prediction_window_days >= 1
-        ? effectiveConfig.prediction_window_days
-        : 3;
+    const pwm = config.prediction_window_mode === 'days' ? 'days' : 'games';
+    const windowGames = config.prediction_window_games;
+    const windowDays = config.prediction_window_days;
 
     const ids = new Set();
     const hintById = {};
@@ -1298,9 +1252,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     return { lockedMatchIds: ids, openMatchCount: omc, guessOpensHintById: hintById };
   }, [
     matches,
-    effectiveConfig?.prediction_window_mode,
-    effectiveConfig?.prediction_window_games,
-    effectiveConfig?.prediction_window_days,
+    config.prediction_window_mode,
+    config.prediction_window_games,
+    config.prediction_window_days,
   ]);
 
   const allFiltered = activeStage ? matches.filter(m => m.stage === activeStage) : matches;
@@ -1368,7 +1322,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     const result = await callFn('upsertPromoPrediction', {
       token, campaign_id: campaignId, match_id: matchId, home_score: home, away_score: away,
     });
-    const unlocked = result?.data?.achievements_unlocked ?? result?.achievements_unlocked ?? [];
+    const unlocked = (result?.data ?? result)?.achievements_unlocked ?? [];
     if (unlocked.length) setPendingAchievements(prev => [...prev, ...unlocked]);
     await load();
   }
@@ -1413,19 +1367,22 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           </header>
 
           <div ref={heroRef}>
-            <HeroCard
-              totalPoints={totalPoints}
-              pendingBookingPoints={pendingBookingPoints}
-              config={config}
-              tierFromServer={tierFromLb}
-              tierDetail={tierDetailLb}
-              onPersonalArea={onPersonalArea}
-              onPersonalAreaTier={onPersonalAreaTier}
-              openMatchCount={openMatchCount}
-              onScrollToGames={handleGuessNow}
-              onBranchBooking={onBranchBooking}
-              deliveryUrl={effectiveConfig?.delivery_url}
-            />
+            {showHeroSkeleton ? (
+              <HeroCardSkeleton />
+            ) : (
+              <HeroCard
+                totalPoints={totalPoints}
+                pendingBookingPoints={pendingBookingPoints}
+                config={config}
+                tierFromServer={tierFromLb}
+                tierDetail={tierDetailLb}
+                onPersonalArea={onPersonalArea}
+                onPersonalAreaTier={onPersonalAreaTier}
+                openMatchCount={openMatchCount}
+                onScrollToGames={handleGuessNow}
+                onBranchBooking={onBranchBooking}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-2 px-3 mb-1">
@@ -1456,7 +1413,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               <MatchCard
                 match={{ ...match, stage: stageHe(match.stage) }}
                 prediction={predictions[match.id] || null}
-                config={effectiveConfig}
+                config={config}
                 windowLocked={lockedMatchIds.has(match.id)}
                 predictionWindowOpensHint={guessOpensHintById[match.id]}
                 onPredict={handlePredict}

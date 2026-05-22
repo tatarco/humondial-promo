@@ -1,0 +1,18 @@
+export const PLAYER_CAMPAIGN_MINIMAL_FIXTURE = {
+  id: '00000000-0000-4000-a000-000000000099',
+  tiers: [{ id: 'bronze', key: 'bronze', label_he: 'בדיקה', min_points: 0, perks: [] }],
+  booking_url: 'https://example.com/booking',
+  delivery_url: 'https://example.com/delivery',
+  table_booking_points: 15,
+  visit_points: 10,
+  delivery_points: 20,
+  join_points: 50,
+  participation_points: 10,
+  bullseye_points: 30,
+  outcome_points: 15,
+  draw_stripe_points: 10,
+  prediction_window_mode: 'games',
+  prediction_window_games: 5,
+  prediction_window_days: 3,
+  require_commercial_for_tiers: false,
+};

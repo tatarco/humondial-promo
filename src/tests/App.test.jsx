@@ -8,19 +8,26 @@ vi.mock('../lib/session.js', () => ({
   setToken: vi.fn(),
   clearToken: vi.fn(),
 }));
-vi.mock('../lib/config.js', () => ({
-  loadConfig: vi.fn(),
-  getConfig: vi.fn(),
-  DISPLAY_TIMEZONE: 'Asia/Jerusalem',
-}));
+
+import { PLAYER_CAMPAIGN_MINIMAL_FIXTURE } from '../fixtures/playerCampaignMinimal.fixture.js';
+
+vi.mock('../lib/config.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    loadConfig: vi.fn(),
+  };
+});
 
 import App from '../App.jsx';
-import { loadConfig } from '../lib/config.js';
+import { loadConfig, resetConfigCache } from '../lib/config.js';
 import { isLoggedIn } from '../lib/session.js';
 
 describe('App config loading', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetConfigCache();
+    loadConfig.mockResolvedValue(PLAYER_CAMPAIGN_MINIMAL_FIXTURE);
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
@@ -29,7 +36,6 @@ describe('App config loading', () => {
   });
 
   it('loads config during LOADING state and passes to ConfigProvider', async () => {
-    loadConfig.mockResolvedValue({ participation_points: 10, tiers: [], achievement_templates: [], show_leaderboard: true });
     isLoggedIn.mockReturnValue(false);
 
     render(<App />);
@@ -44,7 +50,6 @@ describe('App config loading', () => {
   });
 
   it('shows PhoneScreen when session is invalid and config loaded', async () => {
-    loadConfig.mockResolvedValue({ participation_points: 10, tiers: [], achievement_templates: [], show_leaderboard: true });
     isLoggedIn.mockReturnValue(false);
 
     render(<App />);

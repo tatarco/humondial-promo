@@ -89,35 +89,82 @@ body {
 }
 .hm-btn-secondary:hover { background: rgba(244,193,93,0.08); }
 
-.hm-achievements-expand-grid {
-  display: grid;
-  width: 100%;
-  transition: grid-template-rows 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+.hm-ach-detail-shell {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.42s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-.hm-ach-fade-swap {
-  transition: opacity 0.24s ease;
+.hm-ach-detail-shell.hm-ach-detail-open {
+  max-height: min(3200px, 200vh);
+}
+
+.hm-ach-row-item {
+  transform: translateY(10px);
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
+  transition-delay: 0ms;
+}
+
+.hm-ach-detail-shell:not(.hm-ach-detail-open) .hm-ach-row-item {
+  transform: translateY(10px);
+  transition: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes hm-ach-row-in {
-    from { transform: translateY(0.45rem); }
-    to { transform: translateY(0); }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item {
+    transform: translateY(0);
   }
-  .hm-ach-row-in {
-    animation: hm-ach-row-in 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(1) {
+    transition-delay: 0.02s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(2) {
+    transition-delay: 0.07s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(3) {
+    transition-delay: 0.12s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(4) {
+    transition-delay: 0.17s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(5) {
+    transition-delay: 0.22s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(6) {
+    transition-delay: 0.27s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(7) {
+    transition-delay: 0.32s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(8) {
+    transition-delay: 0.37s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(9) {
+    transition-delay: 0.42s;
+  }
+  .hm-ach-detail-shell.hm-ach-detail-open .hm-ach-row-item:nth-child(n + 10) {
+    transition-delay: 0.47s;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hm-achievements-expand-grid {
+  .hm-ach-detail-shell {
     transition: none;
+    max-height: none;
   }
-  .hm-ach-fade-swap {
-    transition: none;
+
+  .hm-ach-detail-shell:not(.hm-ach-detail-open) {
+    display: none;
   }
-  .hm-ach-row-in {
-    animation: none;
+
+  .hm-ach-detail-shell.hm-ach-detail-open {
+    display: block;
+    max-height: none;
+  }
+
+  .hm-ach-row-item {
+    transform: none;
+    transition: none !important;
   }
 }
 

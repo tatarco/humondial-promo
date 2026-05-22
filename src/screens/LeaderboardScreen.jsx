@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
-import { DEFAULT_DELIVERY_ORDER_URL } from '../lib/campaignUrls.js';
+import { useConfig } from '../contexts/ConfigContext.jsx';
 
 const TIER_CSS = {
   bronze: 'tier-bronze',
@@ -49,7 +49,8 @@ function WhatIfCard({ icon, label, value, onChange, pts }) {
   );
 }
 
-export default function LeaderboardScreen({ token, campaignId, config, onBack, onBranchBooking }) {
+export default function LeaderboardScreen({ token, campaignId, onBack, onBranchBooking }) {
+  const globalCfg = useConfig();
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
@@ -92,15 +93,19 @@ export default function LeaderboardScreen({ token, campaignId, config, onBack, o
   }
 
   const { top50 = [], me = {}, trajectory = {}, whatif = {}, tiers: dataTiers = [] } = data || {};
-  const tiers   = dataTiers.length ? dataTiers : (config?.tiers ?? []);
+  const tiers   = dataTiers;
   const top3    = top50.filter(r => r.rank <= 3);
   const rest    = top50.filter(r => r.rank > 3);
   const myPts   = me.total_points ?? 0;
   const myTier  = me.tier || null;
 
-  const predDelta  = whatif.prediction_pts ?? config?.outcome_points ?? 30;
-  const tableDelta = whatif.table_pts ?? config?.table_booking_points ?? 15;
-  const delivDelta = whatif.delivery_pts ?? config?.delivery_points ?? 20;
+  const predDelta =
+    typeof whatif.prediction_pts === 'number' && Number.isFinite(whatif.prediction_pts) ? whatif.prediction_pts : null;
+  const tableDelta =
+    typeof whatif.table_pts === 'number' && Number.isFinite(whatif.table_pts) ? whatif.table_pts : null;
+  const delivDelta =
+    typeof whatif.delivery_pts === 'number' && Number.isFinite(whatif.delivery_pts) ? whatif.delivery_pts : null;
+  const whatIfReady = predDelta != null && tableDelta != null && delivDelta != null;
 
   const PODIUM_ORDER = [2, 1, 3];
   const PODIUM_META = {
@@ -203,9 +208,17 @@ export default function LeaderboardScreen({ token, campaignId, config, onBack, o
 
       {showChallenges && (
         <div className="mx-4 mb-3 space-y-2">
-          <WhatIfCard icon="⚽" label="אנחש נכון עוד" value={predCount} onChange={setPredCount} pts={predCount * predDelta} />
-          <WhatIfCard icon="🍽️" label="אזמין שולחן עוד" value={tableCount} onChange={setTableCount} pts={tableCount * tableDelta} />
-          <WhatIfCard icon="🛵" label="אזמין משלוח עוד" value={delivCount} onChange={setDelivCount} pts={delivCount * delivDelta} />
+          {!whatIfReady ? (
+            <p className="text-xs text-center py-4" style={{ color: 'var(--text-sec)' }}>
+              מה־אם חסרים נתוני קמפיין — טען שוב מהשרת או החזר מסך.
+            </p>
+          ) : (
+            <>
+              <WhatIfCard icon="⚽" label="אנחש נכון עוד" value={predCount} onChange={setPredCount} pts={predCount * predDelta} />
+              <WhatIfCard icon="🍽️" label="אזמין שולחן עוד" value={tableCount} onChange={setTableCount} pts={tableCount * tableDelta} />
+              <WhatIfCard icon="🛵" label="אזמין משלוח עוד" value={delivCount} onChange={setDelivCount} pts={delivCount * delivDelta} />
+            </>
+          )}
           <button onClick={onBack} className="hm-btn-primary w-full py-3 text-sm">⚽ לניחושים ←</button>
           <button
             type="button"
@@ -214,7 +227,7 @@ export default function LeaderboardScreen({ token, campaignId, config, onBack, o
           >
             🍽️ הזמן שולחן ←
           </button>
-          <a href={config?.delivery_url || DEFAULT_DELIVERY_ORDER_URL} target="_blank" rel="noopener noreferrer"
+          <a href={globalCfg.delivery_url} target="_blank" rel="noopener noreferrer"
               className="hm-btn-secondary flex items-center justify-center w-full py-3 text-sm">
               🛵 הזמן משלוח ↗
           </a>

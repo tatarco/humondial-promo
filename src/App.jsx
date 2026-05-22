@@ -18,6 +18,7 @@ import LedgerScreen from './screens/LedgerScreen.jsx';
 const SCREEN = {
   SPLASH:  'splash',
   LOADING: 'loading',
+  CONFIG_INVALID: 'config_invalid',
   PHONE:   'phone',
   OTP:     'otp',
   LEGAL:   'legal',
@@ -51,6 +52,7 @@ export default function App() {
   const [player,     setPlayer]      = useState(null);
   const [isNewUser,  setIsNewUser]   = useState(false);
   const [config, setConfig]           = useState(null);
+  const [configBrokenReason, setConfigBrokenReason] = useState('');
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [pendingCid, setPendingCid]   = useState('');
   const [bookingContext, setBookingContext]       = useState(null);
@@ -82,9 +84,19 @@ export default function App() {
     if (vc) { setPendingVenueCode(vc); setPendingCid(cid || ''); }
     history.replaceState(null, '', window.location.pathname);
     setScreen(SCREEN.LOADING);
-    const cfg = await loadConfig().catch(() => null);
-    setConfig(cfg);
-    const sessionResult = await fetchSession(cfg?.id).catch(() => ({ nextScreen: SCREEN.PHONE, playerId: null }));
+    let cfg = null;
+    try {
+      cfg = await loadConfig();
+      setConfigBrokenReason('');
+      setConfig(cfg);
+    } catch (e) {
+      setConfig(null);
+      const msg = e instanceof Error ? e.message : String(e || 'campaign_config_invalid');
+      setConfigBrokenReason(msg || 'campaign_config_invalid');
+      setScreen(SCREEN.CONFIG_INVALID);
+      return;
+    }
+    const sessionResult = await fetchSession(cfg.id).catch(() => ({ nextScreen: SCREEN.PHONE, playerId: null }));
     if (sessionResult.nextScreen === SCREEN.LEGAL) {
       setTokenState(getToken());
       setPlayer(sessionResult.playerId);
@@ -127,7 +139,7 @@ export default function App() {
     setScreen(SCREEN.PERSONAL_AREA);
   }
 
-  const body = (() => {
+  const inner = (() => {
     if (screen === SCREEN.SPLASH) {
       return <SplashScreen onDone={handleSplashDone} />;
     }
@@ -207,7 +219,6 @@ export default function App() {
         <LeaderboardScreen
           token={getToken()}
           campaignId={config?.id}
-          config={config}
           onBack={() => setScreen(SCREEN.SHELL)}
           onBranchBooking={openBranchBooking}
         />
@@ -240,5 +251,17 @@ export default function App() {
     />;
   })();
 
-  return <ConfigProvider config={config}>{body}</ConfigProvider>;
+  if (screen === SCREEN.CONFIG_INVALID) {
+    return (
+      <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center gap-4 px-6 text-center" dir="rtl">
+        <div className="text-lg font-black" style={{ color: 'var(--text, #fff)' }}>לא ניתן לטעון את הגדרות הקמפיין</div>
+        <div className="text-sm max-w-md break-words" style={{ color: 'var(--text-sec, rgba(246,239,237,0.65))' }}>{configBrokenReason}</div>
+        <button type="button" className="hm-btn-primary px-8 py-2.5 text-sm font-bold" onClick={() => window.location.reload()}>
+          נסה שוב
+        </button>
+      </div>
+    );
+  }
+
+  return <ConfigProvider config={config}>{inner}</ConfigProvider>;
 }

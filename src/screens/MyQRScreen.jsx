@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
+import { tierPerkDisplayRows } from '../lib/tierPerks.js';
 
 const TIER_COLORS = {
   bronze: 'bg-amber-900/40 border-amber-600 text-amber-300',
@@ -42,7 +43,7 @@ export default function MyQRScreen({ token, campaignId, onBack }) {
     callFn('getLeaderboard', { campaign_id: campaignId, token })
       .then(r => {
         const d = r?.data ?? r;
-        setPlayerPoints(d?.player?.points ?? 0);
+        setPlayerPoints(d?.me?.total_points ?? 0);
       })
       .catch(() => {});
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
@@ -97,11 +98,11 @@ export default function MyQRScreen({ token, campaignId, onBack }) {
                 key={tier.id}
                 className={`rounded-xl p-4 border ${isActive ? 'border-2' : 'border opacity-70'} ${colorClass}`}
               >
-                <div className="font-bold text-base text-right mb-2">{tier.name}</div>
+                <div className="font-bold text-base text-right mb-2">{tier.label_he ?? tier.label ?? tier.name}</div>
                 <ul className="flex flex-col gap-1">
-                  {(tier.benefits ?? []).map((b, i) => (
-                    <li key={i} className="text-sm text-right flex items-start gap-2 justify-end">
-                      <span>{b}</span>
+                  {tierPerkDisplayRows(tier).map(row => (
+                    <li key={row.key} className="text-sm text-right flex items-start gap-2 justify-end">
+                      <span>{row.text}</span>
                       <span className="mt-0.5">•</span>
                     </li>
                   ))}

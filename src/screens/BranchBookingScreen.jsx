@@ -18,6 +18,14 @@ function unwrap(payload) {
   return payload?.data ?? payload;
 }
 
+function pendingPointsFrom(bookingCfg, body) {
+  if (typeof body?.points_pending === 'number' && Number.isFinite(body.points_pending)) {
+    return body.points_pending;
+  }
+  if (typeof bookingCfg === 'number' && Number.isFinite(bookingCfg)) return bookingCfg;
+  return null;
+}
+
 export default function BranchBookingScreen({
   token,
   campaignId,
@@ -48,13 +56,15 @@ export default function BranchBookingScreen({
     const body = unwrap(raw);
     const duplicate = Boolean(body.duplicate);
     const ach = Array.isArray(body.achievements_unlocked) ? body.achievements_unlocked : [];
-    const pts = tableBookingPoints ?? body.points_pending ?? 15;
+    const pts = pendingPointsFrom(tableBookingPoints, body);
     let tip =
       duplicate
         ? matchId
           ? 'כבר רשום לכרטיס הזה — ממשיכים לטאבּיט להזמנה.'
           : 'כבר יש סטטוס ממתין בזיכוי כללי — ממשיכים לטאבּיט להזמנה.'
-        : `נשמרו +${pts} נק׳ ממתין. נפתח טאבּיט להזמנה — אחר כך הקוד היומי בסניף משחרר למאושר.`;
+        : pts != null
+          ? `נשמרו +${pts} נק׳ ממתין. נפתח טאבּיט להזמנה — אחר כך הקוד היומי בסניף משחרר למאושר.`
+          : 'נשמרו נקודות ממתין. נפתח טאבּיט להזמנה — אחר כך הקוד היומי בסניף משחרר למאושר.';
     if (!duplicate && ach.length) {
       const extras = ach
         .map(a => `${a.badge ?? ''} ${a.label_he ?? ''}`.trim())
@@ -96,12 +106,16 @@ export default function BranchBookingScreen({
       }
       const raw = await callFn('recordTableBooking', payload);
       const body = unwrap(raw);
-      const pts = tableBookingPoints ?? body.points_pending ?? 15;
+      const pts = pendingPointsFrom(tableBookingPoints, body);
       const duplicate = Boolean(body.duplicate);
       setMsg(
         duplicate
-          ? `כבר יש רישום למצב זה (${pts} נ׳ במתנה במערכת). אם טרם הזמנת — בחר סניף למעלה.`
-          : `נרשמו +${pts} נק׳ במצב ממתין להזמנת שולחן. השלב הבא: ביקור בסניף והזנת קוד הביקור היומי; עד אז הנקודות לא נכללות בדירוג או בדרגה.`,
+          ? pts != null
+            ? `כבר יש רישום למצב זה (${pts} נ׳ במתנה במערכת). אם טרם הזמנת — בחר סניף למעלה.`
+            : 'כבר יש רישום למצב זה. אם טרם הזמנת — בחר סניף למעלה.'
+          : pts != null
+            ? `נרשמו +${pts} נק׳ במצב ממתין להזמנת שולחן. השלב הבא: ביקור בסניף והזנת קוד הביקור היומי; עד אז הנקודות לא נכללות בדירוג או בדרגה.`
+            : 'נרשמו נקודות ממתין להזמנת שולחן. השלב הבא: ביקור בסניף והזנת קוד הביקור היומי; עד אז הנקודות לא נכללות בדירוג או בדרגה.',
       );
     } catch {
       setMsg('לא הצלחנו לשמור — נסה שוב');

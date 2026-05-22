@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
+import { tierPerkDisplayRows } from '../lib/tierPerks.js';
 
 const TIER_CSS = {
   bronze: 'tier-bronze',
@@ -12,41 +13,20 @@ function tierCss(key) {
   return TIER_CSS[key] || 'tier-bronze';
 }
 
-function MiniPodium({ top3 }) {
-  const ORDER = [2, 1, 3];
-  const META = {
-    1: { cls: 'w-10 h-10 text-base', standH: 54, standBg: 'rgba(244,193,93,0.18)', crown: true },
-    2: { cls: 'w-8 h-8 text-sm',     standH: 40, standBg: 'rgba(255,255,255,0.07)', crown: false },
-    3: { cls: 'w-8 h-8 text-sm',     standH: 30, standBg: 'rgba(255,255,255,0.05)', crown: false },
-  };
+function TopThreeSummary({ rows }) {
+  const list = [...rows].sort((a, b) => a.rank - b.rank);
+  if (!list.length) return null;
   return (
-    <div className="flex items-end justify-center gap-3 py-3">
-      {ORDER.map(rank => {
-        const p = top3.find(r => r.rank === rank);
-        if (!p) return <div key={rank} className="w-14" />;
-        const m = META[rank];
-        return (
-          <div key={rank} className="flex flex-col items-center gap-1">
-            {m.crown && <div className="text-sm">👑</div>}
-            <div
-              className={`${m.cls} rounded-full flex items-center justify-center font-black`}
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text)' }}
-            >
-              {(p.nickname || '?')[0].toUpperCase()}
-            </div>
-            <div className="text-[10px] font-bold text-center max-w-[56px] truncate" style={{ color: 'var(--text)' }}>
-              {p.nickname}
-            </div>
-            <div className="text-[10px]" style={{ color: 'var(--text-sec)' }}>{p.total_points} נ׳</div>
-            <div
-              className="w-12 rounded-t-md flex items-center justify-center text-xs font-black"
-              style={{ height: m.standH, background: m.standBg, color: 'rgba(255,255,255,0.3)' }}
-            >
-              {rank}
-            </div>
-          </div>
-        );
-      })}
+    <div dir="rtl" className="px-3 pt-3 pb-1 space-y-2">
+      {list.map(r => (
+        <div key={r.rank} className="flex flex-row-reverse items-center justify-between gap-2 text-[11px]" style={{ color: 'var(--text)' }}>
+          <span className="tabular-nums font-black shrink-0" style={{ color: 'var(--text-sec)' }}>{r.total_points} נ׳</span>
+          <span className="font-bold truncate min-w-0 text-right">{r.nickname}</span>
+          <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--gold)', border: '1px solid rgba(244,193,93,0.25)' }}>
+            {r.rank}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -56,6 +36,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState('');
   const [achievementsExpanded, setAchievementsExpanded] = useState(false);
+  const [tiersExpanded, setTiersExpanded]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,17 +87,28 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const achievementsOrdered = [...unlockedAchievements, ...lockedAchievements];
   const stripItems = [...unlockedAchievements.slice(0, 2), ...lockedAchievements.slice(0, 3)];
 
+  const tiersAscAll = [...dataTiers].sort((a, b) => (a.min_points ?? 0) - (b.min_points ?? 0));
+  const tierStripItems = tiersAscAll.slice(0, 7);
+  const earnedTierIndex = myTier && tiersAscAll.length
+    ? (() => {
+        const byId = tiersAscAll.findIndex(t => t.id === myTier.id);
+        if (byId >= 0) return byId;
+        const k = myTier?.key || myTier?.id || tierKey;
+        return tiersAscAll.findIndex(t => (t.key || t.id) === k);
+      })()
+    : -1;
+  const isTierEarned = (tierIdx) => earnedTierIndex >= 0 && tierIdx <= earnedTierIndex;
+
   const td            = me.tier_detail ?? null;
+  const venueVisitCnt = td?.counts?.venue_visits ?? 0;
+  const deliveryCnt   = td?.counts?.deliveries ?? 0;
   const commercialUi  = !!(td?.show_commercial_requirements_ui && td.requirements_for_next?.length);
 
   const currentTier = dataTiers.find(t => t.key === tierKey || t.id === tierKey) || dataTiers.find(t => t.id === myTier?.id) || { min_points: 0 };
 
-  const nextTierLegacy =
-    [...dataTiers].sort((a, b) => (a.min_points ?? 0) - (b.min_points ?? 0)).find((t) => (t.min_points ?? 0) > myPts) || null;
-
   const nextTierTarget = td?.next_tier
     ? { label_he: td.next_tier.label_he, min_points: td.next_tier.min_points }
-    : nextTierLegacy;
+    : null;
 
   const bandMin       = currentTier.min_points ?? 0;
   const bandMaxPts    = nextTierTarget?.min_points ?? bandMin;
@@ -189,9 +181,9 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                   <div className="hm-progress-fill h-1.5" style={{ width: `${progPct}%` }} />
                 </div>
 
-                {!commercialUi && nextTierLegacy && (
+                {!commercialUi && nextTierTarget && (
                   <div className="text-[10px] mt-1" style={{ color: 'var(--text-sec)' }}>
-                    {Math.max(0, (nextTierLegacy.min_points ?? 0) - myPts)} נקודות מאושרות עד {nextTierLegacy.label_he || 'הדרגה הבאה'}
+                    {Math.max(0, (nextTierTarget.min_points ?? 0) - myPts)} נקודות מאושרות עד {nextTierTarget.label_he || 'הדרגה הבאה'}
                   </div>
                 )}
 
@@ -268,95 +260,206 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             </button>
           </div>
           <div className="hm-card overflow-hidden p-3">
-            <div
-              className="hm-achievements-expand-grid"
-              style={{ gridTemplateRows: achievementsExpanded ? '0fr 1fr' : '1fr 0fr' }}
-            >
-              <div className="min-h-0 overflow-hidden">
-                <div
-                  className={`hm-ach-fade-swap flex gap-2 overflow-x-auto pb-1 scrollbar-none ${achievementsExpanded ? 'pointer-events-none' : ''}`}
-                  style={{ opacity: achievementsExpanded ? 0 : 1 }}
-                >
-                  {stripItems.length === 0 && (
-                    <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים עדיין</div>
-                  )}
-                  {stripItems.map(b => {
-                    const done = isAchUnlocked(b);
-                    return (
-                      <div
-                        key={b.id}
-                        className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
-                        style={{
-                          background: done ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${done ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                          opacity: done ? 1 : 0.38,
-                          minWidth: 60,
-                        }}
+            {!achievementsExpanded && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {stripItems.length === 0 && (
+                  <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים עדיין</div>
+                )}
+                {stripItems.map(b => {
+                  const done = isAchUnlocked(b);
+                  return (
+                    <div
+                      key={b.id}
+                      className="flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl flex-shrink-0"
+                      style={{
+                        background: done ? 'rgba(244,193,93,0.1)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${done ? 'rgba(244,193,93,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                        opacity: done ? 1 : 0.38,
+                        minWidth: 60,
+                      }}
+                    >
+                      <span className="text-xl leading-none">{b.badge}</span>
+                      <span
+                        className="text-[10px] font-bold text-center leading-tight"
+                        style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}
                       >
-                        <span className="text-xl leading-none">{b.badge}</span>
-                        <span
-                          className="text-[10px] font-bold text-center leading-tight"
-                          style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}
-                        >
-                          {b.label_he}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+                        {b.label_he}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="min-h-0 overflow-hidden">
-                <div
-                  className={`hm-ach-fade-swap space-y-2 ${achievementsExpanded ? '' : 'pointer-events-none'}`}
-                  style={{ opacity: achievementsExpanded ? 1 : 0 }}
-                >
-                  {achievementsOrdered.length === 0 && (
-                    <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים מוגדרים עדיין</div>
-                  )}
-                  {achievementsOrdered.map((b, i) => {
-                    const done = isAchUnlocked(b);
-                    return (
-                      <div
-                        key={b.id}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl ${achievementsExpanded ? 'hm-ach-row-in' : ''}`}
-                        style={{
-                          background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                          opacity: done ? 1 : 0.45,
-                          animationDelay: achievementsExpanded ? `${Math.min(i, 12) * 42}ms` : undefined,
-                        }}
-                      >
-                        <span className="text-2xl leading-none flex-shrink-0">{b.badge}</span>
-                        <div className="flex-1 min-w-0 text-right">
-                          <div className="text-sm font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
-                            {b.label_he}
-                          </div>
-                          {b.description_he && (
-                            <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
-                              {b.description_he}
-                            </div>
-                          )}
-                          {done && b.bonus_points > 0 && (
-                            <div className="text-[10px] mt-1 font-bold" style={{ color: 'var(--gold)' }}>+{b.bonus_points} נ׳ בונוס</div>
-                          )}
+            )}
+            <div className={`hm-ach-detail-shell ${achievementsExpanded ? 'hm-ach-detail-open' : ''}`}>
+              <div className="space-y-2">
+                {achievementsOrdered.length === 0 && (
+                  <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>אין הישגים מוגדרים עדיין</div>
+                )}
+                {achievementsOrdered.map((b, i) => {
+                  const done = isAchUnlocked(b);
+                  return (
+                    <div
+                      key={b.id}
+                      className="hm-ach-row-item flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                      style={{
+                        background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                        opacity: done ? 1 : 0.45,
+                      }}
+                    >
+                      <span className="text-2xl leading-none flex-shrink-0">{b.badge}</span>
+                      <div className="flex-1 min-w-0 text-right">
+                        <div className="text-sm font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
+                          {b.label_he}
                         </div>
-                        {done && (
-                          <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
+                        {b.description_he && (
+                          <div className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--text-sec)' }}>
+                            {b.description_he}
+                          </div>
+                        )}
+                        {done && b.bonus_points > 0 && (
+                          <div className="text-[10px] mt-1 font-bold" style={{ color: 'var(--gold)' }}>+{b.bonus_points} נ׳ בונוס</div>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
+                      {done && (
+                        <span className="text-base flex-shrink-0" style={{ color: 'var(--gold)' }}>✓</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Block 4 — Mini podium + דירוג מלא */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-sec)' }}>דרגות · הטבות 🏆</div>
+            <button
+              type="button"
+              aria-expanded={tiersExpanded}
+              onClick={() => setTiersExpanded(e => !e)}
+              className="text-[10px] px-2 py-0.5 rounded-full transition-colors duration-200"
+              style={{ color: 'var(--text-sec)', border: '1px solid var(--border)' }}
+            >
+              {tiersExpanded ? 'פחות ▲' : 'פתח פירוט ▼'}
+            </button>
+          </div>
+          <div className="hm-card overflow-hidden p-3">
+            {!tiersExpanded && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {tierStripItems.length === 0 && (
+                  <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>לא הוגדרו דרגות בקמפיין זה</div>
+                )}
+                {tierStripItems.map((t, idx) => {
+                  const tk = t.key || t.id || '';
+                  const done = isTierEarned(idx);
+                  return (
+                    <div
+                      key={String(t.id || tk || idx)}
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-shrink-0 ${done ? tierCss(tk) : ''}`}
+                      style={{
+                        background: done ? undefined : 'rgba(255,255,255,0.03)',
+                        border: done ? undefined : '1px solid rgba(255,255,255,0.07)',
+                        opacity: done ? 1 : 0.4,
+                        minWidth: 60,
+                      }}
+                    >
+                      <span className="text-xl leading-none">{done ? '✓' : '○'}</span>
+                      <span
+                        className="text-[10px] font-bold text-center leading-tight"
+                        style={{ color: done ? 'inherit' : 'var(--text-sec)' }}
+                      >
+                        {t.label_he || tk || 'דרגה'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className={`hm-ach-detail-shell ${tiersExpanded ? 'hm-ach-detail-open' : ''}`}>
+              <div className="space-y-2 pt-2">
+                {tiersAscAll.length === 0 && (
+                  <div className="text-[10px] py-3 text-center" style={{ color: 'var(--text-sec)' }}>לא הוגדרו דרגות בקמפיין זה</div>
+                )}
+                {tiersAscAll.map((t, i) => {
+                  const tk = t.key || t.id || '';
+                  const done = isTierEarned(i);
+                  const benefits = tierPerkDisplayRows(t);
+                  const reqs = [];
+                  if (typeof t.min_points === 'number') {
+                    reqs.push({ key: `pts:${tk}`, label: `מינימום ${t.min_points} נקודות מאושרות לדרגה`, done: typeof myPts === 'number' && myPts >= t.min_points });
+                  }
+                  const mv = typeof t.min_verified_visits === 'number' ? Math.max(0, Math.floor(t.min_verified_visits)) : 0;
+                  const md = typeof t.min_deliveries === 'number' ? Math.max(0, Math.floor(t.min_deliveries)) : 0;
+                  if (mv > 0) reqs.push({
+                    key: `vis:${tk}`,
+                    label: `מינימום ${mv} ביקורים מאומתים בסניף (קוד ביקור יומי)`,
+                    done: venueVisitCnt >= mv,
+                  });
+                  if (md > 0) reqs.push({
+                    key: `del:${tk}`,
+                    label: `מינימום ${md} משלוחים מאומתים בקוד`,
+                    done: deliveryCnt >= md,
+                  });
+                  return (
+                    <div
+                      key={String(t.id || tk)}
+                      className="hm-ach-row-item px-3 py-2.5 rounded-xl space-y-2 text-right"
+                      style={{
+                        background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                        opacity: done ? 1 : 0.45,
+                      }}
+                    >
+                      <div className="flex flex-row-reverse items-start gap-2">
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierCss(tk) : ''}`}>
+                            {t.label_he || tk}
+                          </span>
+                          {benefits.length > 0 ? (
+                            <div className="mt-2 space-y-1.5 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                              <div className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--gold)', opacity: 0.92 }}>הטבות בדרגה</div>
+                              {benefits.map(b => (
+                                <div key={b.key} className="text-[11px] leading-snug pr-2" style={{ color: 'var(--text)' }}>
+                                  {b.text.trim()}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] mt-1.5" style={{ color: 'var(--text-sec)' }}>לא הוזנו הטבות מפורטות לדרגה זו בהגדרות הקמפיין</div>
+                          )}
+                          {reqs.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              <div className="text-[9px] font-bold uppercase tracking-wide text-right" style={{ color: 'var(--text-sec)' }}>תנאי סף מהקונפיגורציה</div>
+                              {reqs.map(r => (
+                                <div key={r.key} className="flex flex-row-reverse items-start gap-2 text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
+                                  <span className="shrink-0 font-black" style={{ color: r.done ? '#4ade80' : 'rgba(246,239,237,0.35)' }}>
+                                    {r.done ? '✓' : '·'}
+                                  </span>
+                                  <span className="text-right">{r.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-xl flex-shrink-0" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
+                          {done ? '★' : '☆'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Block 4 — Top 3 + דירוג מלא */}
         <div>
           <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-sec)' }}>3 המובילים</div>
           <div className="hm-card overflow-hidden">
-            <MiniPodium top3={top3} />
+            <TopThreeSummary rows={top3} />
             <div className="border-t px-3 py-3" style={{ borderColor: 'var(--border)' }}>
               <button
                 type="button"

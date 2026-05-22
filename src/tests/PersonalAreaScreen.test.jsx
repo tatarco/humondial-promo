@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('../lib/api.js', () => ({ callFn: vi.fn() }));
@@ -18,13 +18,35 @@ const MOCK_DATA = {
     total_points: 240,
     rank: 4,
     tier: { id: 'silver', key: 'silver', label_he: 'Silver', min_points: 100 },
+    tier_detail: {
+      progression_mode: 'points_only',
+      show_commercial_requirements_ui: false,
+      counts: { venue_visits: 3, deliveries: 1 },
+      points_only_tier: { id: 'silver', label_he: 'Silver', min_points: 100 },
+      effective_tier: { id: 'silver', label_he: 'Silver', min_points: 100 },
+      next_tier: { id: 'gold', label_he: 'Gold', min_points: 300, min_verified_visits: 0, min_deliveries: 0 },
+      requirements_for_next: [],
+      summary_lines_he: [],
+    },
     ledger_counts: { prediction_participation: 9, delivery: 2, venue_visit: 1, table_booking: 0 },
   },
   trajectory: { projected_points: 420, days_remaining: 61, end_date: '2026-07-19' },
   tiers: [
-    { id: 'bronze', key: 'bronze', label_he: 'Bronze', min_points: 0 },
-    { id: 'silver', key: 'silver', label_he: 'Silver', min_points: 100 },
-    { id: 'gold',   key: 'gold',   label_he: 'Gold',   min_points: 300 },
+    {
+      id: 'bronze',
+      key: 'bronze',
+      label_he: 'Bronze',
+      min_points: 0,
+      perks: [{ id: 'p-b', emoji: '🍺', label_he: 'הטבה לדוגמה', per_day: true }],
+    },
+    { id: 'silver', key: 'silver', label_he: 'Silver', min_points: 100, perks: [] },
+    {
+      id: 'gold',
+      key: 'gold',
+      label_he: 'Gold',
+      min_points: 300,
+      perks: [{ id: 'p-g', emoji: '🎟️', label_he: 'מתנה פרימיום', per_day: false }],
+    },
   ],
   whatif: {},
 };
@@ -42,8 +64,8 @@ describe('PersonalAreaScreen', () => {
   it('shows tier label and progress text', async () => {
     callFn.mockResolvedValue(MOCK_DATA);
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
-    await waitFor(() => expect(screen.getByText('Silver')).toBeTruthy());
-    expect(screen.getByText(/Gold/)).toBeTruthy();
+    await waitFor(() => expect(screen.getAllByText('Silver').length).toBeGreaterThanOrEqual(1));
+    expect(screen.getAllByText(/Gold/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows trajectory projection', async () => {
@@ -58,7 +80,17 @@ describe('PersonalAreaScreen', () => {
     await waitFor(() => expect(screen.getByText(/^הישגים/)).toBeTruthy());
   });
 
-  it('shows top-3 leader nicknames in podium', async () => {
+  it('shows tiers strip and expands to show backend perks text', async () => {
+    callFn.mockResolvedValue(MOCK_DATA);
+    render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
+    await waitFor(() => expect(screen.getByText(/דרגות/)).toBeTruthy());
+    expect(screen.getAllByText('Bronze').length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(screen.getByText(/פתח פירוט/));
+    await waitFor(() => expect(screen.getByText(/הטבה לדוגמה/)).toBeTruthy());
+    expect(screen.getAllByText('Bronze').length).toBe(1);
+  });
+
+  it('shows top three nicknames compact list', async () => {
     callFn.mockResolvedValue(MOCK_DATA);
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
     await waitFor(() => expect(screen.getByText('רון')).toBeTruthy());
