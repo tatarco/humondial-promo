@@ -700,7 +700,19 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     {match.live_away_score}
                   </div>
                 ) : (
-                  <div className="text-xs font-black text-sky-300/90 px-2 text-center leading-tight">בשידור</div>
+                  <div
+                    dir="ltr"
+                    className="font-black tabular-nums tracking-tight leading-none text-sky-300/85"
+                    style={{
+                      fontSize: 'clamp(1.75rem, 8vw, 2.5rem)',
+                      textShadow: '0 0 24px rgba(56,189,248,0.42)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    0
+                    <span className="mx-1.5 opacity-50">:</span>
+                    0
+                  </div>
                 )}
                 {hasPrediction ? (
                   <div
