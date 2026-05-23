@@ -630,33 +630,81 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
     onToggle?.();
   }
 
-  const outerCardStyle = isActive
-    ? { border: '1px solid rgba(214,58,54,0.45)', boxShadow: '0 0 24px rgba(214,58,54,0.1)' }
-    : finalCelebrate
-      ? {}
-      : isBroadcastVenue
-        ? {
-            border: '1px solid rgba(244,193,93,0.42)',
-            boxShadow: '0 0 22px rgba(244,193,93,0.14), inset 0 1px 0 rgba(255,255,255,0.06)',
-          }
-        : {};
+  const broadcastRimAccent =
+    isBroadcastVenue && !finalCelebrate && !isActive;
+
+  const finalSummaryPanel =
+    isFinal && !isPending && match.final_home_score != null && match.final_away_score != null ? (
+          <div
+            className="rounded-xl px-3 py-3 mb-2 border text-right space-y-2"
+            dir="rtl"
+            style={{ background: 'rgba(255,255,255,0.045)', borderColor: 'rgba(255,255,255,0.1)' }}
+          >
+            <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>
+              ניחוש ששלחת
+            </div>
+            {hasPrediction ? (
+              <>
+                <div className="text-2xl font-bold tabular-nums leading-tight" style={{ color: 'var(--text)' }}>
+                  {prediction.home_score} : {prediction.away_score}
+                </div>
+                {finalCelebrate && finalPointsEarned != null ? (
+                  <div className="text-xs font-bold" style={{ color: 'var(--gold)' }}>
+                    זכית ב־+{finalPointsEarned} נ׳ בסיום משחק זה
+                  </div>
+                ) : null}
+                {isFinal && hasPrediction && !finalCelebrate ? (
+                  <div className="text-xs leading-relaxed pt-1" style={{ color: 'var(--text-sec)' }}>
+                    ניחשת {prediction.home_score}:{prediction.away_score} · בסיום {match.final_home_score}:{match.final_away_score}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <p className="text-xs leading-snug m-0" style={{ color: 'var(--text-sec)' }}>
+                  לא הגשת ניחוש לסיום משחק זה · אילו השתתפת והיית פוגע בתוצאה המדויקת, הניקוד היה יכול להגיע לעד&nbsp;
+                  {hypotheticalMaxGuessPts}&nbsp;נ׳ (&lrm;+
+                  {participationPts}&rlm; הגשה + &lrm;+
+                  {bullseyePts}&rlm;
+                  תוצאה מדויקת&rlm;)
+                </p>
+                <p className="text-[11px] leading-snug m-0 mt-1 font-medium" style={{ color: '#fecaca' }}>
+                  אל תישאר בחוץ בפעם הבאה — תפוס את המשחקים הפתוחים.
+                </p>
+                {onOpenGames ? (
+                  <button
+                    type="button"
+                    className="hm-btn-primary w-full py-3 rounded-xl text-xs font-bold mt-1"
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
+                      onOpenGames();
+                    }}
+                  >
+                    למשחקים שכרגע פתוחים לניחוש
+                  </button>
+                ) : null}
+              </>
+            )}
+          </div>
+    ) : null;
 
   return (
     <div
       data-match-id={match.id}
-      className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''} ${isLive && !isPending ? 'hm-match-live-glow' : ''} ${finalCelebrate && !isActive ? 'hm-match-final-celebrate' : ''} ${match.marquee_highlight ? 'hm-match-marquee' : ''} ${isActive ? 'hm-match-active-focus' : ''}`}
-      style={outerCardStyle}
+      className={`hm-match-card mb-2 ${isPending ? 'opacity-50' : ''} ${isLive && !isPending ? 'hm-match-live-glow' : ''} ${finalCelebrate && !isActive ? 'hm-match-final-celebrate' : ''} ${match.marquee_highlight ? 'hm-match-marquee' : ''} ${isActive ? 'hm-match-active-focus' : ''} ${broadcastRimAccent ? 'hm-match-broadcast-accent' : ''}`}
     >
+      <div className="hm-match-card-inner">
       <button
         type="button"
-        className={`w-full text-right p-4 ${!isPending && canExpandCard ? 'cursor-pointer active:opacity-95' : 'cursor-default'}`}
+        className={`w-full text-right p-0 ${!isPending && canExpandCard ? 'cursor-pointer active:opacity-95' : 'cursor-default'}`}
         onClick={handleHeaderActivate}
         disabled={isPending}
       >
         {showLiveBroadcastLayout ? (
           <>
             <div
-              className="relative pt-3 pr-3 pl-3 pb-3 mb-3 -mx-4 -mt-4"
+              className="relative w-full hm-match-live-header-rounded pt-3 px-4 pb-3 mb-3"
               style={{
                 background: 'linear-gradient(270deg, rgba(96,165,250,0.14), rgba(96,165,250,0.02))',
                 borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -731,8 +779,8 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 ) : null}
               </div>
             </div>
-            <div className="text-right space-y-0.5 mb-2">
-              <div className="text-[11px] font-black leading-snug break-words" style={{ color: 'var(--text)' }}>
+            <div className="text-right space-y-0.5 mb-2 px-4">
+              <div className="text-[11px] font-semibold leading-snug break-words text-white/92 antialiased">
                 {phasePrimary || '—'}
               </div>
               {phaseSecondary ? (
@@ -742,16 +790,16 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               ) : null}
             </div>
             {openerHint ? (
-              <p className="text-[10px] leading-snug mb-2 text-right break-words px-0.5" style={{ color: 'var(--text-sec)' }}>
+              <p className="text-[10px] leading-snug mb-3 text-right break-words px-4" style={{ color: 'var(--text-sec)' }}>
                 {openerHint}
               </p>
             ) : null}
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1" dir="rtl">
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1 px-4" dir="rtl">
               <div className="min-w-0 text-center px-px">
                 <div className="flex justify-center mb-1.5">
                   <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="grid" />
                 </div>
-                <div className="font-black text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
+                <div className="hm-match-team-name text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
                   {homeParts.clean}
                 </div>
                 {homeParts.aside ? (
@@ -762,8 +810,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               </div>
               <div
                 aria-hidden
-                className="self-center px-2 pt-6 text-[9px] font-black uppercase tracking-wide"
-                style={{ color: 'rgba(255,255,255,0.28)' }}
+                className="self-center px-2 pt-6 text-[10px] font-medium uppercase tracking-wider text-white/32"
               >
                 vs
               </div>
@@ -771,7 +818,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 <div className="flex justify-center mb-1.5">
                   <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="grid" />
                 </div>
-                <div className="font-black text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
+                <div className="hm-match-team-name text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
                   {awayParts.clean}
                 </div>
                 {awayParts.aside ? (
@@ -781,9 +828,12 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 ) : null}
               </div>
             </div>
+            {finalSummaryPanel ? (
+              <div className="px-4 pb-2 pt-1">{finalSummaryPanel}</div>
+            ) : null}
           </>
         ) : (
-          <>
+          <div className="hm-match-burgundy px-4 pt-4 pb-2">
             <div className="flex flex-row-reverse items-start justify-between mb-2 gap-2">
               <div className="shrink-0 flex flex-col gap-1.5 items-end max-w-[48%]">
                 {statusBadge}
@@ -802,7 +852,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 )}
               </div>
               <div className="min-w-0 flex-1 text-right space-y-0.5">
-                <div className="text-[11px] font-black leading-snug break-words" style={{ color: 'var(--text)' }}>
+                <div className="text-[11px] font-bold leading-snug break-words text-white/92 antialiased">
                   {phasePrimary || '—'}
                 </div>
                 {phaseSecondary ? (
@@ -825,27 +875,27 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="inline" />
                 </div>
                 <div className="min-w-0 flex-1 text-right">
-                  <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
+                  <div className="hm-match-team-name break-words" style={{ color: 'var(--text)' }}>
                     {homeParts.clean}
                   </div>
                   {homeParts.aside ? (
-                    <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                    <div className="text-[10px] mt-1.5 leading-snug break-words font-medium" style={{ color: 'var(--text-sec)' }}>
                       {homeParts.aside}
                     </div>
                   ) : null}
                 </div>
               </div>
-              <div className="text-center text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>vs</div>
+              <div className="text-center text-[11px] font-medium tracking-wide text-white/32">vs</div>
               <div className="flex flex-row-reverse items-start gap-2">
                 <div className="shrink-0 pt-0.5 leading-none flex items-start justify-center w-8">
                   <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="inline" />
                 </div>
                 <div className="min-w-0 flex-1 text-right">
-                  <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
+                  <div className="hm-match-team-name break-words" style={{ color: 'var(--text)' }}>
                     {awayParts.clean}
                   </div>
                   {awayParts.aside ? (
-                    <div className="text-[10px] mt-1 leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                    <div className="text-[10px] mt-1.5 leading-snug break-words font-medium" style={{ color: 'var(--text-sec)' }}>
                       {awayParts.aside}
                     </div>
                   ) : null}
@@ -854,16 +904,17 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
             </div>
 
             {kickoffTime && (
-              <div className="text-center text-[11px] mb-2 space-y-1" style={{ color: 'var(--text-sec)' }}>
+              <div className="text-center text-[11px] mb-2 space-y-1.5 text-white/70 antialiased tabular-nums">
                 <div>
-                  <span className="font-medium text-white/85">פתיחת משחק:</span>{' '}
-                  {kickoffTime} שעון ישראל
+                  <span className="font-semibold text-white/88">פתיחת משחק:</span>{' '}
+                  <span>{kickoffTime}</span>
+                  {' '}שעון ישראל
                   {dayDate ? ` · ${dayDate}` : ''}
                 </div>
                 {lockTime && lockTime !== kickoffTime ? (
                   <div>
-                    <span className="font-medium text-white/85">סגירת ניחוש:</span>{' '}
-                    {lockTime}
+                    <span className="font-semibold text-white/88">סגירת ניחוש:</span>{' '}
+                    <span className="text-white/92">{lockTime}</span>
                   </div>
                 ) : null}
                 {isLive && match.live_home_score != null && (
@@ -882,73 +933,19 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   </div>
                 )}
                 {isFinal && (
-                  <span className="font-black block text-sm" style={{ color: 'var(--text)' }}>
+                  <span className="font-bold block text-sm tabular-nums" style={{ color: 'var(--text)' }}>
                     תוצאה סופית: {match.final_home_score} : {match.final_away_score}
                   </span>
                 )}
               </div>
             )}
-          </>
-        )}
-
-        {isFinal && !isPending && match.final_home_score != null && match.final_away_score != null && (
-          <div
-            className="rounded-xl px-3 py-3 mb-2 border text-right space-y-2"
-            dir="rtl"
-            style={{ background: 'rgba(255,255,255,0.045)', borderColor: 'rgba(255,255,255,0.1)' }}
-          >
-            <div className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>
-              ניחוש ששלחת
-            </div>
-            {hasPrediction ? (
-              <>
-                <div className="text-2xl font-black tabular-nums leading-tight" style={{ color: 'var(--text)' }}>
-                  {prediction.home_score} : {prediction.away_score}
-                </div>
-                {finalCelebrate && finalPointsEarned != null ? (
-                  <div className="text-xs font-black" style={{ color: 'var(--gold)' }}>
-                    זכית ב־+{finalPointsEarned} נ׳ בסיום משחק זה
-                  </div>
-                ) : null}
-                {isFinal && hasPrediction && !finalCelebrate ? (
-                  <div className="text-xs leading-relaxed pt-1" style={{ color: 'var(--text-sec)' }}>
-                    ניחשת {prediction.home_score}:{prediction.away_score} · בסיום {match.final_home_score}:{match.final_away_score}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <>
-                <p className="text-xs leading-snug m-0" style={{ color: 'var(--text-sec)' }}>
-                  לא הגשת ניחוש לסיום משחק זה · אילו השתתפת והיית פוגע בתוצאה המדויקת, הניקוד היה יכול להגיע לעד&nbsp;
-                  {hypotheticalMaxGuessPts}&nbsp;נ׳ (&lrm;+
-                  {participationPts}&rlm; הגשה + &lrm;+
-                  {bullseyePts}&rlm;
-                  תוצאה מדויקת&rlm;)
-                </p>
-                <p className="text-[11px] leading-snug m-0 mt-1 font-medium" style={{ color: '#fecaca' }}>
-                  אל תישאר בחוץ בפעם הבאה — תפוס את המשחקים הפתוחים.
-                </p>
-                {onOpenGames ? (
-                  <button
-                    type="button"
-                    className="hm-btn-primary w-full py-3 rounded-xl text-xs font-black mt-1"
-                    onClick={(ev) => {
-                      ev.preventDefault();
-                      ev.stopPropagation();
-                      onOpenGames();
-                    }}
-                  >
-                    למשחקים שכרגע פתוחים לניחוש
-                  </button>
-                ) : null}
-              </>
-            )}
+          {finalSummaryPanel}
           </div>
         )}
 
         {canExpandCard ? (
-          <div className="flex items-center justify-between pt-1 border-t border-white/5 flex-row-reverse">
-            <span className="text-[11px]" style={{ color: 'var(--text-sec)' }}>
+          <div className="hm-match-grass flex items-center justify-between py-3 px-4 flex-row-reverse">
+            <span className="text-[11px] font-medium opacity-95" style={{ color: 'var(--text-sec)' }}>
               {isFinal
                 ? (hasPrediction ? 'פתח לפרט ניקוד והודעות' : 'פתח להסבר והמלצה')
                 : isLive && hasPrediction
@@ -961,7 +958,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
             </span>
             <div className="flex items-center gap-2 flex-row-reverse">
               {predLabel && hasPrediction ? (
-                <span className="text-[11px] font-black px-2 py-0.5 rounded-md" style={{ background: 'var(--red)', color: 'var(--text)' }}>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'var(--red)', color: 'var(--text)' }}>
                   {predLabel}
                 </span>
               ) : null}
@@ -1119,6 +1116,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
 
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
