@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
 
+import { afterEach } from 'vitest';
+
+import { resetListMatchesWarmForTests } from '../lib/warmListMatches.js';
+
 const mem = new Map();
 globalThis.localStorage = {
   getItem: (key) => (mem.has(String(key)) ? mem.get(String(key)) : null),
@@ -17,3 +21,8 @@ globalThis.localStorage = {
     return mem.size;
   },
 };
+
+afterEach(() => {
+  resetListMatchesWarmForTests();
+});
+

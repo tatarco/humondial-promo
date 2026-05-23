@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, Fra
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { PROMO_CAMPAIGN_ID } from '../lib/config.js';
+import { takeListMatchesWarm } from '../lib/warmListMatches.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { mapPromoError } from '../lib/promoErrors.js';
 import TierIcon from '../components/TierIcon.jsx';
@@ -1213,8 +1214,13 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     setError('');
     const wantLb = !!(campaignId && token);
     try {
+      const warm = takeListMatchesWarm();
+      const matchesReq =
+        warm != null
+          ? warm.catch(() => callFn('listMatches', {}))
+          : callFn('listMatches', {});
       const [matchesRes, predsRes, lbRes] = await Promise.all([
-        callFn('listMatches', {}),
+        matchesReq,
         campaignId && token
           ? callFn('listMyPredictions', { token, campaign_id: campaignId })
           : Promise.resolve({ predictions: [] }),

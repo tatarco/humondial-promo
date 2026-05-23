@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getToken, setToken, clearToken, isLoggedIn } from './lib/session.js';
 import { callFn } from './lib/api.js';
 import { loadConfig, PROMO_CAMPAIGN_ID } from './lib/config.js';
 import { authenticatedRouteFromHash } from './lib/hashRoute.js';
 import { resolveBookingBranchesForCampaign } from './lib/bookingBranches.js';
+import { startListMatchesWarm } from './lib/warmListMatches.js';
 import { ConfigProvider } from './contexts/ConfigContext.jsx';
 import SplashScreen from './screens/SplashScreen.jsx';
 import PhoneScreen from './screens/PhoneScreen.jsx';
@@ -69,6 +70,14 @@ export default function App() {
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
+  const splashBootRef = useRef(null);
+
+  useEffect(() => {
+    if (screen !== SCREEN.SPLASH) return;
+    if (splashBootRef.current) return;
+    splashBootRef.current = Promise.allSettled([loadConfig(), fetchSession()]);
+    startListMatchesWarm();
+  }, [screen]);
 
   function openBranchBooking(ctx) {
     if (
@@ -130,12 +139,17 @@ export default function App() {
     }
     history.replaceState(null, '', `${window.location.pathname}${window.location.hash || ''}`);
     setScreen(SCREEN.LOADING);
-    let cfg = null;
-    try {
-      cfg = await loadConfig();
-      setConfigBrokenReason('');
-      setConfig(cfg);
-    } catch (e) {
+    const settledPromise =
+      splashBootRef.current ??
+      Promise.allSettled([loadConfig(), fetchSession()]);
+    splashBootRef.current = null;
+    const settled = await settledPromise;
+
+    const cfgOutcome = settled[0];
+    const sessOutcome = settled[1];
+
+    if (cfgOutcome.status === 'rejected') {
+      const e = cfgOutcome.reason;
       setConfig(null);
       const msg =
         e instanceof Error ? e.message : String(e || 'campaign_config_invalid');
@@ -144,16 +158,21 @@ export default function App() {
       return;
     }
 
-    let sessionResult;
-    try {
-      sessionResult = await fetchSession();
-    } catch {
-      sessionResult = {
-        nextScreen: SCREEN.SESSION_RETRY,
-        playerId: null,
-        error: 'לא נודע.',
-      };
-    }
+    const cfg = cfgOutcome.value;
+    setConfigBrokenReason('');
+    setConfig(cfg);
+
+    let sessionResult =
+      sessOutcome.status === 'fulfilled'
+        ? sessOutcome.value
+        : {
+            nextScreen: SCREEN.SESSION_RETRY,
+            playerId: null,
+            error:
+              sessOutcome.reason instanceof Error
+                ? sessOutcome.reason.message
+                : String(sessOutcome.reason ?? ''),
+          };
 
     if (sessionResult.nextScreen === SCREEN.SESSION_RETRY) {
       setSessionRetryReason(sessionResult.error || '');

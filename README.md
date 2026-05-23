@@ -10,6 +10,8 @@ Humondial runs as **one** operator-facing promo. Players never pick among campai
 
 Booking CTAs register **pending** ledger lines. Those points are **not** included in leaderboard or tier until the player visits Humongous and enters the **daily venue code** on “הגעת לסניף?”.
 
+While the splash video plays, **`loadConfig`**, **`promoValidateSession`**, and **`listMatches`** are kicked off concurrently so startup work overlaps the clip instead of starting only after it ends.
+
 The app surfaces this consistently on the home hero, match cards with booking, branch booking screen, personal area, and ledger — approved total vs pending booking stash, plus the concrete next step (venue code).
 
 For backend keys and idempotency (`general` vs per `match_id`), see **`docs/HUMONDIAL-BOOKING-VISIT-SPEC.md`** in the `bizflow-erp` repo.
