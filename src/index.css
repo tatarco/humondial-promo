@@ -293,6 +293,52 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.hm-match-pitch-face {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 7rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hm-match-pitch-face::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  bottom: 8%;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  z-index: 1;
+  pointer-events: none;
+  background: rgba(244, 193, 93, 0.55);
+  box-shadow: 0 0 12px rgba(244, 193, 93, 0.35);
+}
+
+.hm-match-pitch-half {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.hm-match-pitch-half--home {
+  background: linear-gradient(180deg, rgba(53, 210, 111, 0.12) 0%, transparent 60%);
+}
+
+.hm-match-pitch-half--away {
+  background: linear-gradient(180deg, rgba(214, 58, 54, 0.1) 0%, transparent 60%);
+}
+
 @keyframes hm-live-outer-glow-rim {
   0%,
   100% {

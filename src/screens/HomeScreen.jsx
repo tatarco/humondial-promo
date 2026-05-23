@@ -630,6 +630,37 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const broadcastRimAccent =
     isBroadcastVenue && !finalCelebrate && !isActive;
 
+  const matchPitchTeams = (
+    <div className="hm-match-pitch-face mb-1" dir="rtl">
+      <div className="hm-match-pitch-half hm-match-pitch-half--home">
+        <div className="flex justify-center">
+          <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="grid" />
+        </div>
+        <div className="hm-match-team-name text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
+          {homeParts.clean}
+        </div>
+        {homeParts.aside ? (
+          <div className="text-[9px] mt-0.5 leading-snug break-words mx-auto max-w-[7.75rem]" style={{ color: 'var(--text-sec)' }}>
+            {homeParts.aside}
+          </div>
+        ) : null}
+      </div>
+      <div className="hm-match-pitch-half hm-match-pitch-half--away">
+        <div className="flex justify-center">
+          <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="grid" />
+        </div>
+        <div className="hm-match-team-name text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
+          {awayParts.clean}
+        </div>
+        {awayParts.aside ? (
+          <div className="text-[9px] mt-0.5 leading-snug break-words mx-auto max-w-[7.75rem]" style={{ color: 'var(--text-sec)' }}>
+            {awayParts.aside}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+
   const finalSummaryPanel =
     isFinal && !isPending && match.final_home_score != null && match.final_away_score != null ? (
           <div
@@ -786,40 +817,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 {openerHint}
               </p>
             ) : null}
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1" dir="rtl">
-              <div className="min-w-0 text-center px-px">
-                <div className="flex justify-center mb-1.5">
-                  <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="grid" />
-                </div>
-                <div className="hm-match-team-name text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
-                  {homeParts.clean}
-                </div>
-                {homeParts.aside ? (
-                  <div className="text-[9px] mt-1 leading-snug break-words mx-auto max-w-[7.75rem]" style={{ color: 'var(--text-sec)' }}>
-                    {homeParts.aside}
-                  </div>
-                ) : null}
-              </div>
-              <div
-                aria-hidden
-                className="self-center px-2 pt-6 text-[10px] font-medium uppercase tracking-wider text-white/32"
-              >
-                vs
-              </div>
-              <div className="min-w-0 text-center px-px">
-                <div className="flex justify-center mb-1.5">
-                  <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="grid" />
-                </div>
-                <div className="hm-match-team-name text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
-                  {awayParts.clean}
-                </div>
-                {awayParts.aside ? (
-                  <div className="text-[9px] mt-1 leading-snug break-words mx-auto max-w-[7.75rem]" style={{ color: 'var(--text-sec)' }}>
-                    {awayParts.aside}
-                  </div>
-                ) : null}
-              </div>
-            </div>
+            {matchPitchTeams}
             {finalSummaryPanel ? (
               <div className="pb-2 pt-1">{finalSummaryPanel}</div>
             ) : null}
@@ -862,39 +860,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               </p>
             ) : null}
 
-            <div className="flex flex-col gap-2 mb-3" dir="rtl">
-              <div className="flex flex-row-reverse items-start gap-2">
-                <div className="shrink-0 pt-0.5 leading-none flex items-start justify-center w-8">
-                  <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="inline" />
-                </div>
-                <div className="min-w-0 flex-1 text-right">
-                  <div className="hm-match-team-name break-words" style={{ color: 'var(--text)' }}>
-                    {homeParts.clean}
-                  </div>
-                  {homeParts.aside ? (
-                    <div className="text-[10px] mt-1.5 leading-snug break-words font-medium" style={{ color: 'var(--text-sec)' }}>
-                      {homeParts.aside}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-              <div className="text-center text-[11px] font-medium tracking-wide text-white/32">vs</div>
-              <div className="flex flex-row-reverse items-start gap-2">
-                <div className="shrink-0 pt-0.5 leading-none flex items-start justify-center w-8">
-                  <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="inline" />
-                </div>
-                <div className="min-w-0 flex-1 text-right">
-                  <div className="hm-match-team-name break-words" style={{ color: 'var(--text)' }}>
-                    {awayParts.clean}
-                  </div>
-                  {awayParts.aside ? (
-                    <div className="text-[10px] mt-1.5 leading-snug break-words font-medium" style={{ color: 'var(--text-sec)' }}>
-                      {awayParts.aside}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            {matchPitchTeams}
 
             {kickoffTime && (
               <div className="text-center text-[11px] mb-2 space-y-1.5 text-white/70 antialiased tabular-nums">
