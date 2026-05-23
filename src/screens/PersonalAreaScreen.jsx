@@ -328,12 +328,11 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                       style={{
                         background: done ? undefined : 'rgba(255,255,255,0.03)',
                         border: done ? undefined : '1px solid rgba(255,255,255,0.07)',
-                        opacity: done ? 1 : 0.4,
                         minWidth: 60,
                       }}
                     >
                       <span className="flex flex-col items-center gap-0.5 leading-none">
-                        <TierIcon tierLike={t} sizePx={done ? 28 : 22} className={done ? '' : 'opacity-50'} />
+                        <TierIcon tierLike={t} sizePx={done ? 28 : 22} />
                         <span className="text-[10px]">{done ? '✓' : '○'}</span>
                       </span>
                       <span
@@ -379,7 +378,6 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                       style={{
                         background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
                         border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                        opacity: done ? 1 : 0.45,
                       }}
                     >
                       <div className="flex flex-row-reverse items-start gap-2">

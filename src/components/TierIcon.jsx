@@ -26,7 +26,7 @@ export default function TierIcon({ tierLike, sizePx = 40, className = '', alt })
   const shellSz = `${sizePx}px`;
   return (
     <span
-      className="hm-tier-hero-shell inline-flex items-center justify-center shrink-0 overflow-hidden"
+      className={`hm-tier-hero-shell inline-flex items-center justify-center shrink-0 overflow-hidden ${className}`.trim()}
       style={{ width: shellSz, height: shellSz }}
     >
       <img
@@ -34,7 +34,7 @@ export default function TierIcon({ tierLike, sizePx = 40, className = '', alt })
         width={sizePx}
         height={sizePx}
         alt={alt || label || 'דרגה'}
-        className={`hm-tier-hero-img object-contain max-w-full max-h-full ${className}`.trim()}
+        className="hm-tier-hero-img max-h-full max-w-full object-contain"
         loading="lazy"
         decoding="async"
         draggable={false}

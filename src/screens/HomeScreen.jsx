@@ -215,18 +215,19 @@ function PredictionGuessLayers({
     layout === 'ribbon' ? (
       <div
         dir="rtl"
-        className="flex shrink min-w-0 flex-row flex-nowrap items-center justify-end gap-1 rounded-lg px-1.5 py-0.5"
-        style={{ background: 'rgba(53,210,111,0.1)', border: '1px solid rgba(53,210,111,0.28)' }}
+        className="inline-flex max-w-full min-w-0 shrink flex-row-reverse flex-nowrap items-center gap-2 rounded-lg px-2 py-1.5"
+        style={{ background: 'rgba(53,210,111,0.12)', border: '1px solid rgba(53,210,111,0.32)' }}
       >
-        <span className="text-[10px] font-black leading-none shrink-0 whitespace-nowrap" style={{ color: 'var(--hm-match-grass-label)' }}>
-          מנצח / תיקו
-        </span>
+        <span className="shrink-0 leading-none">{outcomeFaces}</span>
         {head ? (
-          <span className="text-[10px] font-bold leading-none min-w-0 max-w-[7rem] shrink truncate text-right" style={{ color: 'var(--text)' }} title={head}>
+          <span
+            className="min-w-0 shrink text-right text-[11px] font-extrabold leading-tight tracking-tight text-white"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.42)', maxWidth: '11rem' }}
+            title={head}
+          >
             {head}
           </span>
         ) : null}
-        <span className="shrink-0">{outcomeFaces}</span>
       </div>
     ) : (
       <div
@@ -245,18 +246,7 @@ function PredictionGuessLayers({
     );
 
   const bullseyeBlock =
-    layout === 'ribbon' ? (
-      <div
-        dir="rtl"
-        className="flex shrink-0 flex-row flex-nowrap items-center justify-end gap-1 rounded-lg px-1.5 py-0.5"
-        style={{ background: 'rgba(244,193,93,0.1)', border: '1px solid rgba(244,193,93,0.35)' }}
-      >
-        <span className="text-[10px] font-black whitespace-nowrap leading-none shrink-0" style={{ color: '#fbbf24' }}>
-          🎯 בינגו
-        </span>
-        {scoreRow}
-      </div>
-    ) : (
+    layout === 'ribbon' ? null : (
       <div
         dir="rtl"
         className="flex flex-col items-center gap-1 rounded-xl px-3 py-2 w-full max-w-[20rem]"
@@ -280,15 +270,7 @@ function PredictionGuessLayers({
     );
 
   if (layout === 'ribbon') {
-    return (
-      <div
-        dir="rtl"
-        className="inline-flex max-w-full min-w-0 flex-row flex-nowrap items-center justify-end gap-1.5"
-      >
-        {bullseyeBlock}
-        {outcomeBlock}
-      </div>
-    );
+    return outcomeBlock;
   }
 
   return (
@@ -401,12 +383,13 @@ function HeroCard({
         <TierIcon
           tierLike={tierFromServer}
           sizePx={118}
-          className="shrink-0 drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] opacity-[0.98]"
+          className="hm-tier-hero-shell--elevated shrink-0"
         />
         <div dir="rtl" className="flex-1 min-w-0 text-right pt-0.5">
           <span className="block text-[1.25rem] leading-none mb-1.5 opacity-95" style={{ color: 'var(--red)' }} aria-hidden>❝</span>
-          <p className="text-lg font-black leading-snug" style={{ color: 'var(--text)' }}>פה לא רק רואים מונדיאל.</p>
-          <p className="text-lg font-black leading-snug" style={{ color: 'var(--text)' }}>פה משחקים אותו.</p>
+          <p className="text-lg font-black leading-snug" style={{ color: 'var(--text)' }}>
+            פה לא רק רואים מונדיאל — פה משחקים אותו.
+          </p>
           <div className="flex items-baseline gap-2 justify-end flex-wrap mt-3">
             <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
               {tp === null ? '…' : tp}
@@ -440,7 +423,7 @@ function HeroCard({
       {/* Tier progress */}
       <div className="px-5 pb-4">
         <div className="flex items-center justify-between mb-2">
-          <TierIcon tierLike={tierFromServer} sizePx={26} />
+          <TierIcon tierLike={tierFromServer} sizePx={26} className="hm-tier-hero-shell--dense" />
             <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
             השלב שלי: {tierDisplayLabel || '—'} ↗
           </button>
