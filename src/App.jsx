@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getToken, setToken, clearToken, isLoggedIn } from './lib/session.js';
 import { callFn } from './lib/api.js';
-import { loadConfig } from './lib/config.js';
+import { loadConfig, PROMO_CAMPAIGN_ID } from './lib/config.js';
 import { authenticatedRouteFromHash } from './lib/hashRoute.js';
 import { resolveBookingBranchesForCampaign } from './lib/bookingBranches.js';
 import { ConfigProvider } from './contexts/ConfigContext.jsx';
@@ -37,12 +37,13 @@ const SCREEN = {
 const UUID_CTX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-async function fetchSession(campaignId) {
+async function fetchSession() {
   if (!isLoggedIn()) return { nextScreen: SCREEN.PHONE, playerId: null };
   try {
-    const payload = { token: getToken() };
-    if (campaignId) payload.campaign_id = campaignId;
-    const body = await callFn('promoValidateSession', payload);
+    const body = await callFn('promoValidateSession', {
+      token: getToken(),
+      campaign_id: PROMO_CAMPAIGN_ID,
+    });
     const { valid, playerId, termsAccepted } = body;
     if (!valid) return { nextScreen: SCREEN.PHONE, playerId: null };
     if (!termsAccepted) return { nextScreen: SCREEN.LEGAL, playerId };
@@ -66,7 +67,6 @@ export default function App() {
   const [configBrokenReason, setConfigBrokenReason] = useState('');
   const [sessionRetryReason, setSessionRetryReason] = useState('');
   const [pendingVenueCode, setPendingVenueCode] = useState('');
-  const [pendingCid, setPendingCid] = useState('');
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
 
@@ -125,10 +125,8 @@ export default function App() {
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
     const vc = urlParams.get('venue_code');
-    const cid = urlParams.get('cid');
     if (vc) {
       setPendingVenueCode(vc);
-      setPendingCid(cid || '');
     }
     history.replaceState(null, '', `${window.location.pathname}${window.location.hash || ''}`);
     setScreen(SCREEN.LOADING);
@@ -148,7 +146,7 @@ export default function App() {
 
     let sessionResult;
     try {
-      sessionResult = await fetchSession(cfg.id);
+      sessionResult = await fetchSession();
     } catch {
       sessionResult = {
         nextScreen: SCREEN.SESSION_RETRY,
@@ -181,10 +179,10 @@ export default function App() {
   }
 
   async function retryValidateSessionOnly() {
-    if (!config?.id) return;
+    if (!config) return;
     setScreen(SCREEN.LOADING);
     setSessionRetryReason('');
-    const sessionResult = await fetchSession(config.id).catch(() => ({
+    const sessionResult = await fetchSession().catch(() => ({
       nextScreen: SCREEN.SESSION_RETRY,
       playerId: null,
       error: 'כללית.',
@@ -389,7 +387,7 @@ export default function App() {
       return (
         <PersonalAreaScreen
           token={getToken()}
-          campaignId={config?.id}
+          campaignId={PROMO_CAMPAIGN_ID}
           onBack={() => setScreen(SCREEN.SHELL)}
           onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
           onLedger={() => setScreen(SCREEN.LEDGER)}
@@ -400,7 +398,7 @@ export default function App() {
       return (
         <LedgerScreen
           token={getToken()}
-          campaignId={config?.id}
+          campaignId={PROMO_CAMPAIGN_ID}
           onBack={() => setScreen(SCREEN.PERSONAL_AREA)}
         />
       );
@@ -409,7 +407,7 @@ export default function App() {
       return (
         <VenueCodeScreen
           token={getToken()}
-          campaignId={config?.id || pendingCid}
+          campaignId={PROMO_CAMPAIGN_ID}
           prefillCode={pendingVenueCode}
           entryContext={venueCodeEntryContext}
           onBack={() => {
@@ -424,7 +422,7 @@ export default function App() {
       return (
         <MyQRScreen
           token={getToken()}
-          campaignId={config?.id}
+          campaignId={PROMO_CAMPAIGN_ID}
           onBack={() => setScreen(SCREEN.SHELL)}
         />
       );
@@ -433,7 +431,7 @@ export default function App() {
       return (
         <LeaderboardScreen
           token={getToken()}
-          campaignId={config?.id}
+          campaignId={PROMO_CAMPAIGN_ID}
           onNavigateHome={() => setScreen(SCREEN.SHELL)}
           onBranchBooking={openBranchBooking}
         />
@@ -443,7 +441,7 @@ export default function App() {
       return (
         <BranchBookingScreen
           token={getToken()}
-          campaignId={config?.id}
+          campaignId={PROMO_CAMPAIGN_ID}
           tableBookingPoints={config?.table_booking_points}
           branches={bookingBranchesResolved}
           bookingContext={bookingContext}

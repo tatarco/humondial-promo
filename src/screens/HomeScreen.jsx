@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo, Fragment } from 'react';
 import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
+import { PROMO_CAMPAIGN_ID } from '../lib/config.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { mapPromoError } from '../lib/promoErrors.js';
 import TierIcon from '../components/TierIcon.jsx';
@@ -1191,7 +1192,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const [showScrollTopFab, setShowScrollTopFab]   = useState(false);
 
   const token = getToken();
-  const campaignId = config?.id;
+  const campaignId = PROMO_CAMPAIGN_ID;
   const showHeroSkeleton = loading && !!(campaignId && token);
 
   useLayoutEffect(() => {
