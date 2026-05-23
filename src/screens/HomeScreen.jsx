@@ -466,7 +466,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
         </div>
       </div>
 
-      <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4">
         <p className="text-xs text-right mb-3" style={{ color: 'var(--text-sec)' }}>
           תוצאה מדויקת <span style={{ fontWeight: 'normal' }}>(אופציונלי)</span>
         </p>
@@ -944,7 +944,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
         )}
 
         {canExpandCard ? (
-          <div className="hm-match-grass flex items-center justify-between py-3 px-4 flex-row-reverse">
+          <div className="hm-match-grass-fill hm-match-grass flex items-center justify-between py-3 px-4 flex-row-reverse">
             <span className="text-[11px] font-medium opacity-95" style={{ color: 'var(--text-sec)' }}>
               {isFinal
                 ? (hasPrediction ? 'פתח לפרט ניקוד והודעות' : 'פתח להסבר והמלצה')
@@ -973,7 +973,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
 
       <div style={{ display: 'grid', gridTemplateRows: isActive && canExpandCard ? '1fr' : '0fr', transition: 'grid-template-rows 0.32s cubic-bezier(.4,0,.2,1)' }}>
         <div style={{ overflow: 'hidden' }}>
-          <div className="px-4 pb-4 space-y-3">
+          <div className="hm-match-grass-fill hm-match-expand-body px-4 pb-4 pt-3 space-y-3">
             {canGuess && (!hasPrediction || editMode) && (
               <PredictionEditor
                 match={match}
@@ -999,7 +999,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     🎉 +{config.participation_points} נ׳ נוספו!
                   </div>
                 )}
-                <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4 space-y-3">
                   <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between">
                     <div className="flex items-center gap-2 flex-row-reverse shrink-0">
                       <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
@@ -1054,8 +1054,8 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                       e.stopPropagation();
                       onBranchBooking?.({ matchId: match.id, matchKickoffUtc: match.kickoff_utc ?? null });
                     }}
-                    className="flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem] w-full text-right border-0 appearance-none cursor-pointer"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'inherit' }}
+                    className="hm-match-grass-fill hm-match-grass-pane flex flex-col gap-3 px-4 py-3 rounded-xl min-h-[4.75rem] w-full text-right border-0 appearance-none cursor-pointer"
+                    style={{ fontFamily: 'inherit' }}
                   >
                     <div className="flex flex-row-reverse items-start gap-3 text-right w-full">
                       <span className="text-xl shrink-0 leading-none mt-1" aria-hidden="true">🗓️</span>
