@@ -11,8 +11,8 @@
   --text-sec:    #9D8585;
   --hm-match-burgundy-muted: rgba(248, 243, 234, 0.86);
   --hm-match-grass-label: rgba(246, 252, 247, 0.96);
-  --hm-match-grass-link: #fff6d9;
-  --hm-match-grass-link-danger: #ffc8c4;
+  --hm-match-grass-link: #ffffff;
+  --hm-match-grass-link-danger: #ffd0cc;
   --border:      rgba(214, 58, 54, 0.28);
   --card-bg:     rgba(28, 6, 6, 0.88);
   --card-radius: 22px;
@@ -294,17 +294,19 @@ body {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-color: rgba(255, 246, 217, 0.55);
+  text-decoration-color: rgba(255, 255, 255, 0.65);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .hm-match-grass-textbtn:hover {
-  color: #fffefb;
+  color: #ffffff;
+  text-decoration-color: rgba(255, 255, 255, 0.9);
 }
 .hm-match-grass-textbtn--danger {
   color: var(--hm-match-grass-link-danger);
-  text-decoration-color: rgba(255, 184, 180, 0.55);
+  text-decoration-color: rgba(255, 208, 204, 0.75);
 }
 .hm-match-grass-textbtn--danger:hover {
-  color: #ffe4e2;
+  color: #fff5f4;
 }
 
 /* Match prediction scores: RTL layout must not reorder digits/colons (bidi traps). */

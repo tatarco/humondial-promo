@@ -270,7 +270,7 @@ function PredictionGuessLayers({
             אם הסיום בדיוק בשורת הציון — עד +{bullseyeMaxPts}&nbsp;נ׳ בונוס בינגו, לצד ההצטרפות והכללים בקמפיין (ובונוס תיקו כשמתאים).
           </p>
         ) : null}
-        <p className={`text-[10px] leading-snug text-center m-0 px-0.5 ${quickLine ? '' : 'opacity-90'}`} style={{ color: 'var(--text-sec)' }}>
+        <p className={`text-[10px] leading-snug text-center m-0 px-0.5 ${quickLine ? '' : 'opacity-90'}`} style={{ color: 'rgba(255,255,255,0.86)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
           {quickLine
             ? 'ציון בסיס מתוך הלחיצה במחוון המנצח — עדכנו את הציון בעריכת ניחוש אם מתכוונים לליין אחר פגיעה.'
             : 'הציון שמעלה מכוון לבינגו; מתחת — איזה מנצח או תיקו נקבע במחוון.'}
@@ -290,7 +290,7 @@ function PredictionGuessLayers({
   return (
     <div dir="rtl" className="flex flex-col items-center gap-2 w-full">
       {bullseyeBlock}
-      <div className="text-[9px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-sec)', opacity: 0.88 }}>
+      <div className="text-[9px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.4)', opacity: 0.94 }}>
         מתחת: בחירת מנצח / תיקו
       </div>
       {outcomeBlock}
@@ -639,11 +639,11 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
       </div>
 
       <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4">
-        <p className="text-xs text-right mb-3" style={{ color: 'var(--text-sec)' }}>
+        <p className="text-xs text-right mb-3" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
           אחר כך ניסיון בינגו — ציון מדוייק <span style={{ fontWeight: 'normal' }}>(אופציונלי, לבונוס בינגו)</span>
         </p>
         <div className="flex items-center justify-center gap-3" dir="ltr">
-          <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{homeName}</span>
+          <span className="text-xs" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>{homeName}</span>
           <input
             type="number" min="0" max="20"
             value={homeScore}
@@ -659,9 +659,9 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
             className="w-14 h-12 rounded-xl text-center font-black text-xl outline-none"
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text)' }}
           />
-          <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{awayName}</span>
+          <span className="text-xs" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>{awayName}</span>
         </div>
-        <div className="text-center text-[11px] mt-3 space-y-1.5 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+        <div className="text-center text-[11px] mt-3 space-y-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.88)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
           <p className="m-0">
             בשמירה: +{participationPts} נ׳ הצטרפות מהמשחק · הזיכוי בפועל כפוף לכללי הקמפיין ולהכרה במערכת.
           </p>
@@ -1093,7 +1093,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
 
         {canExpandCard ? (
           <div className="hm-match-grass-fill hm-match-grass flex items-center justify-between py-3 px-4 flex-row-reverse">
-            <span className="text-[11px] font-medium opacity-95" style={{ color: 'var(--text-sec)' }}>
+            <span className="text-[11px] font-medium" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
               {isFinal
                 ? (hasPrediction ? 'פתח לפרט ניקוד והודעות' : 'פתח להסבר והמלצה')
                 : isLive && hasPrediction
@@ -1107,7 +1107,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
             <div className="flex items-center gap-3 flex-row-reverse min-w-0 flex-1 justify-end">
               {hasPrediction ? (
                 <>
-                  <span className="text-[11px] tabular-nums shrink-0" style={{ color: 'var(--text-sec)' }}>
+                  <span className="text-[11px] tabular-nums shrink-0" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)', opacity: 0.92 }}>
                     {isActive ? '▲' : '▼'}
                   </span>
                   <div className="min-w-0 scale-[0.88] origin-left">
@@ -1123,7 +1123,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   </div>
                 </>
               ) : (
-                <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-sec)' }}>
+                <span className="text-[11px] tabular-nums" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)', opacity: 0.92 }}>
                   {isActive ? '▲' : '▼'}
                 </span>
               )}
@@ -1163,7 +1163,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4 space-y-3">
                   <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between">
                     <div className="flex flex-col items-end gap-1 shrink-0 w-full sm:w-auto">
-                      <span className="text-xs w-full text-right" style={{ color: 'var(--text-sec)' }}>
+                      <span className="text-xs w-full text-right" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
                         ניחוש שמור
                       </span>
                       <PredictionGuessLayers
@@ -1179,32 +1179,32 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     {confirmDelete ? (
                       <div className="flex flex-row-reverse flex-wrap items-center gap-3 justify-end">
                         <button
+                          type="button"
                           onClick={() => setConfirmDelete(false)}
-                          className="text-xs"
-                          style={{ color: 'var(--text-sec)' }}
+                          className="text-xs hm-match-grass-textbtn bg-transparent border-0 cursor-pointer p-0 font-inherit"
                         >ביטול</button>
                         <button
+                          type="button"
                           onClick={async () => {
                             setDeleting(true);
                             try { await onDelete(match.id); }
                             catch { setDeleting(false); setConfirmDelete(false); }
                           }}
                           disabled={deleting}
-                          className="text-xs font-bold"
-                          style={{ color: 'var(--red)' }}
+                          className="text-xs hm-match-grass-textbtn hm-match-grass-textbtn--danger bg-transparent border-0 cursor-pointer p-0 font-inherit font-bold disabled:opacity-45"
                         >{deleting ? 'מוחק...' : 'אשר הסרה ✕'}</button>
                       </div>
                     ) : (
                       <div className="flex flex-row-reverse flex-wrap items-center gap-3 justify-end">
                         <button
+                          type="button"
                           onClick={() => setEditMode(true)}
-                          className="text-xs underline"
-                          style={{ color: 'var(--text-sec)' }}
+                          className="text-xs hm-match-grass-textbtn bg-transparent border-0 cursor-pointer p-0 font-inherit"
                         >שנה בחירה</button>
                         <button
+                          type="button"
                           onClick={() => setConfirmDelete(true)}
-                          className="text-xs underline"
-                          style={{ color: 'var(--red)', opacity: 0.65 }}
+                          className="text-xs hm-match-grass-textbtn hm-match-grass-textbtn--danger bg-transparent border-0 cursor-pointer p-0 font-inherit"
                         >הסר ניחוש</button>
                       </div>
                     )}
@@ -1238,7 +1238,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
 
             {!canGuess && hasPrediction && (
               <div className="text-center py-2 space-y-2">
-                <div className="text-xs mb-1" style={{ color: 'var(--text-sec)' }}>הניחוש שלך</div>
+                <div className="text-xs mb-1" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>הניחוש שלך</div>
                 <PredictionGuessLayers
                   prediction={prediction}
                   predOutcome={predOutcome}
