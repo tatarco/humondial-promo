@@ -17,14 +17,14 @@ const MOCK_DATA = {
     nickname: 'גל',
     total_points: 240,
     rank: 4,
-    tier: { id: 'silver', key: 'silver', label_he: 'Silver', min_points: 100 },
+    tier: { id: 'silver', key: 'silver', label_he: 'פותח בהרכב', min_points: 100 },
     tier_detail: {
       progression_mode: 'points_only',
       show_commercial_requirements_ui: false,
       counts: { venue_visits: 3, deliveries: 1 },
-      points_only_tier: { id: 'silver', label_he: 'Silver', min_points: 100 },
-      effective_tier: { id: 'silver', label_he: 'Silver', min_points: 100 },
-      next_tier: { id: 'gold', label_he: 'Gold', min_points: 300, min_verified_visits: 0, min_deliveries: 0 },
+      points_only_tier: { id: 'silver', label_he: 'פותח בהרכב', min_points: 100 },
+      effective_tier: { id: 'silver', label_he: 'פותח בהרכב', min_points: 100 },
+      next_tier: { id: 'gold', label_he: 'חלוץ חוד', min_points: 300, min_verified_visits: 0, min_deliveries: 0 },
       requirements_for_next: [],
       summary_lines_he: [],
     },
@@ -35,15 +35,15 @@ const MOCK_DATA = {
     {
       id: 'bronze',
       key: 'bronze',
-      label_he: 'Bronze',
+      label_he: 'שחקן ספסל',
       min_points: 0,
       perks: [{ id: 'p-b', emoji: '🍺', label_he: 'הטבה לדוגמה', per_day: true }],
     },
-    { id: 'silver', key: 'silver', label_he: 'Silver', min_points: 100, perks: [] },
+    { id: 'silver', key: 'silver', label_he: 'פותח בהרכב', min_points: 100, perks: [] },
     {
       id: 'gold',
       key: 'gold',
-      label_he: 'Gold',
+      label_he: 'חלוץ חוד',
       min_points: 300,
       perks: [{ id: 'p-g', emoji: '🎟️', label_he: 'מתנה פרימיום', per_day: false }],
     },
@@ -64,8 +64,8 @@ describe('PersonalAreaScreen', () => {
   it('shows tier label and progress text', async () => {
     callFn.mockResolvedValue(MOCK_DATA);
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
-    await waitFor(() => expect(screen.getAllByText('Silver').length).toBeGreaterThanOrEqual(1));
-    expect(screen.getAllByText(/Gold/).length).toBeGreaterThanOrEqual(1);
+    await waitFor(() => expect(screen.getAllByText('פותח בהרכב').length).toBeGreaterThanOrEqual(1));
+    expect(screen.getAllByText(/חלוץ חוד/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows trajectory projection', async () => {
@@ -84,10 +84,10 @@ describe('PersonalAreaScreen', () => {
     callFn.mockResolvedValue(MOCK_DATA);
     render(<PersonalAreaScreen token="t" campaignId="c" onBack={() => {}} onLeaderboard={() => {}} onLedger={() => {}} />);
     await waitFor(() => expect(screen.getByText(/דרגות/)).toBeTruthy());
-    expect(screen.getAllByText('Bronze').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('שחקן ספסל').length).toBeGreaterThanOrEqual(1);
     fireEvent.click(screen.getByText(/פתח פירוט/));
     await waitFor(() => expect(screen.getByText(/הטבה לדוגמה/)).toBeTruthy());
-    expect(screen.getAllByText('Bronze').length).toBe(1);
+    expect(screen.getAllByText('שחקן ספסל').length).toBe(1);
   });
 
   it('omits mini top-three list but keeps leaderboard CTA', async () => {

@@ -209,48 +209,44 @@ function HeroCard({
       style={{ border: '1px solid rgba(244,193,93,0.45)', boxShadow: '0 0 40px rgba(244,193,93,0.14), 0 0 80px rgba(214,58,54,0.18)' }}
       onClick={onPersonalArea}
     >
-      {/* Tagline + trophy */}
-      <div className="relative px-5 pt-5 pb-3">
-        <div className="pl-16 text-right">
-          <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>פה לא רק רואים מונדיאל.</p>
-          <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>פה משחקים אותו.</p>
-        </div>
+      <div dir="ltr" className="flex flex-row gap-3 items-start px-5 pt-5 pb-2">
         <TierIcon
           tierLike={tierFromServer}
-          sizePx={56}
-          className="absolute top-4 left-4 drop-shadow-lg opacity-[0.95]"
+          sizePx={118}
+          className="shrink-0 drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] opacity-[0.98]"
         />
-      </div>
-
-      {/* Points */}
-      <div className="px-5 pb-3 text-right">
-        <div className="flex items-baseline gap-2 justify-end">
-          <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
-            {tp === null ? '…' : tp}
-          </span>
-          <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
-        </div>
-        {tp !== null && (
-          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-sec)' }}>
-            <span className="font-bold" style={{ color: 'var(--text)' }}>{tp}</span>
-            {' '}נקודות מאושרות — אלה נספרות בדירוג ובדרגה.
-          </p>
-        )}
-        {typeof pendingBookingPoints === 'number' && pendingBookingPoints > 0 && (
-          <div
-            className="mt-2 rounded-xl px-3 py-2.5 text-right space-y-1"
-            style={{ background: 'rgba(244,193,93,0.08)', border: '1px solid rgba(244,193,93,0.35)' }}
-          >
-            <div className="text-xs font-black" style={{ color: 'var(--gold)' }}>
-              +{pendingBookingPoints} נק׳ ממתינות · הזמנת שולחן
-            </div>
-            <p className="text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
-              עדיין לא חלק מהניקוד המאושר. כדי להפוך אותן למאושרות: לבוא ליומנגס ולהזין את{' '}
-              <span className="font-bold" style={{ color: 'var(--text)' }}>קוד הביקור היומי</span> במסך &quot;הגעת לסניף?&quot;.
-              בכל ביקור משוחררת לפחות הזמנה ממתינה אחת (לפי סדר ההרשמה).
-            </p>
+        <div dir="rtl" className="flex-1 min-w-0 text-right pt-0.5">
+          <span className="block text-[1.25rem] leading-none mb-1.5 opacity-95" style={{ color: 'var(--red)' }} aria-hidden>❝</span>
+          <p className="text-lg font-black leading-snug" style={{ color: 'var(--text)' }}>פה לא רק רואים מונדיאל.</p>
+          <p className="text-lg font-black leading-snug" style={{ color: 'var(--text)' }}>פה משחקים אותו.</p>
+          <div className="flex items-baseline gap-2 justify-end flex-wrap mt-3">
+            <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
+              {tp === null ? '…' : tp}
+            </span>
+            <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
           </div>
-        )}
+          {tp !== null && (
+            <p className="text-[11px] mt-1 leading-relaxed max-w-[20rem] mr-0 ml-auto" style={{ color: 'var(--text-sec)' }}>
+              <span className="font-bold" style={{ color: 'var(--text)' }}>{tp}</span>
+              {' '}נקודות מאושרות — אלה נספרות בדירוג ובדרגה.
+            </p>
+          )}
+          {typeof pendingBookingPoints === 'number' && pendingBookingPoints > 0 && (
+            <div
+              className="mt-2 rounded-xl px-3 py-2.5 text-right space-y-1"
+              style={{ background: 'rgba(244,193,93,0.08)', border: '1px solid rgba(244,193,93,0.35)' }}
+            >
+              <div className="text-xs font-black" style={{ color: 'var(--gold)' }}>
+                +{pendingBookingPoints} נק׳ ממתינות · הזמנת שולחן
+              </div>
+              <p className="text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
+                עדיין לא חלק מהניקוד המאושר. כדי להפוך אותן למאושרות: לבוא ליומנגס ולהזין את{' '}
+                <span className="font-bold" style={{ color: 'var(--text)' }}>קוד הביקור היומי</span> במסך &quot;הגעת לסניף?&quot;.
+                בכל ביקור משוחררת לפחות הזמנה ממתינה אחת (לפי סדר ההרשמה).
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tier progress */}
@@ -703,13 +699,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
       >
         {showLiveBroadcastLayout ? (
           <>
-            <div
-              className="relative w-full hm-match-live-header-rounded pt-3 px-4 pb-3"
-              style={{
-                background: 'linear-gradient(270deg, rgba(96,165,250,0.14), rgba(96,165,250,0.02))',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
+            <div className="relative w-full hm-match-live-header-rounded hm-match-live-score-band hm-match-burgundy pt-3 px-4 pb-3">
               <div
                 className="absolute top-3 z-10 max-w-[42%]"
                 style={{ left: 'max(12px, env(safe-area-inset-left))' }}

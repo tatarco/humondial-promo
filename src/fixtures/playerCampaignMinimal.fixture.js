@@ -1,6 +1,6 @@
 export const PLAYER_CAMPAIGN_MINIMAL_FIXTURE = {
   id: 'bf987a45-9783-4507-9a26-acfd5f145473',
-  tiers: [{ id: 'bronze', key: 'bronze', label_he: 'בדיקה', min_points: 0, perks: [] }],
+  tiers: [{ id: 'bronze', key: 'bronze', label_he: 'שחקן ספסל', min_points: 0, perks: [] }],
   booking_url: 'https://example.com/booking',
   delivery_url: 'https://example.com/delivery',
   table_booking_points: 15,

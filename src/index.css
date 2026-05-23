@@ -384,6 +384,13 @@ body {
   border-radius: calc(22px - var(--hm-rim) - 2px) calc(22px - var(--hm-rim) - 2px) 0 0;
 }
 
+.hm-match-live-score-band.hm-match-burgundy {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.18);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hm-match-card.hm-match-live-glow:not(.hm-match-active-focus) {
     animation: none;

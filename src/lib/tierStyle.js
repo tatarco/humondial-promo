@@ -7,6 +7,14 @@ const KNOWN_CSS = {
 
 const KNOWN_SLUG = new Set(['bronze', 'silver', 'gold', 'legend']);
 
+const HERO_TIER_ART = {
+  bronze: 'tier-1.jpeg',
+  silver: 'tier-2.jpeg',
+  gold: 'tier-3.jpeg',
+  legend: 'tier-4.jpeg',
+  custom: 'tier-5.jpeg',
+};
+
 /** Stable id/key for matching CSS + public/hm-tier-{slug}.svg assets */
 export function resolveTierSlug(tierLike) {
   if (tierLike == null) return 'custom';
@@ -29,9 +37,14 @@ const baseUrl = () => {
   return b && b.endsWith('/') ? b : `${b || ''}/`;
 };
 
-/** Versioned same-origin URL so deploy cache-busts remain optional; files live in /public */
+/** Crest artwork from WhatsApp tier pack (`public/tier-hero`). Unknown Mongo ids resolve to ladder-top art (`tier-5`). */
 export function tierIconSrc(tierLike) {
-  return `${baseUrl()}hm-tier-${resolveTierSlug(tierLike)}.svg?v=1`;
+  const slug = resolveTierSlug(tierLike);
+  const hero = HERO_TIER_ART[slug];
+  if (!hero) {
+    return `${baseUrl()}hm-tier-custom.svg?v=1`;
+  }
+  return `${baseUrl()}tier-hero/${hero}?v=1`;
 }
 
 export function tierClassFromServerTier(tierLike) {
