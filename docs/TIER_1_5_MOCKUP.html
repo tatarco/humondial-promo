@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Humondial — מוקאפ מדליונים שלב 1–5 בכל המסכים</title>
+  <style>
+    :root {
+      --red: #d63a36;
+      --gold: #f4c15d;
+      --gold-dim: rgba(244, 193, 93, 0.55);
+      --green: #35d26f;
+      --text: #f8f3ea;
+      --text-sec: #9d8585;
+      --border: rgba(214, 58, 54, 0.28);
+      --card-bg: rgba(28, 6, 6, 0.92);
+      --card-radius: 22px;
+      --btn-radius: 18px;
+      --phone-w: 390px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0 0 3rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'Noto Sans Hebrew', sans-serif;
+      direction: rtl;
+      background: #080404;
+      color: var(--text);
+    }
+    .doc-top {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1rem 1rem 0;
+      text-align: right;
+    }
+    .doc-top h1 {
+      font-size: 1.25rem;
+      margin: 0 0 0.35rem;
+      border-inline-end: 4px solid var(--red);
+      padding-inline-end: 0.6rem;
+    }
+    .doc-top p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--text-sec);
+      line-height: 1.5;
+    }
+    .legend-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      margin: 1rem 0 0;
+      padding: 0.65rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(28, 6, 6, 0.85);
+    }
+    .legend-strip span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .legend-strip img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    .scroll-hint {
+      font-size: 0.72rem;
+      color: var(--gold);
+      margin-top: 0.75rem;
+    }
+    .screens-grid {
+      max-width: calc(var(--phone-w) * 3 + 4rem);
+      margin: 1.25rem auto 0;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(var(--phone-w), 100%), 1fr));
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (min-width: 1280px) {
+      .screens-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .screen-wrap h2 {
+      font-size: 0.82rem;
+      color: var(--gold);
+      margin: 0 0 0.45rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    .screen-wrap .cap {
+      font-size: 0.68rem;
+      color: var(--text-sec);
+      text-align: center;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      min-height: 2.5em;
+    }
+    .phone {
+      width: min(var(--phone-w), 100%);
+      margin-inline: auto;
+      border-radius: 36px;
+      border: 10px solid #121010;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 24px 64px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      background: #060202;
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+    }
+    .stadium-ph {
+      position: relative;
+      flex: 1;
+      overflow: hidden auto;
+      background:
+        linear-gradient(180deg, rgba(6, 2, 2, 0.78) 0%, rgba(6, 2, 2, 0.9) 50%, rgba(6, 2, 2, 0.97) 100%),
+        radial-gradient(ellipse 120% 60% at 50% -10%, rgba(214, 58, 54, 0.12), transparent 55%),
+        #160808;
+      padding-bottom: 56px;
+    }
+    .hm-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      box-shadow: 0 0 24px rgba(214, 58, 54, 0.08);
+    }
+    .hm-btn-primary {
+      background: var(--red);
+      color: var(--text);
+      border: none;
+      border-radius: var(--btn-radius);
+      font-weight: 800;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      cursor: default;
+      width: 100%;
+      box-shadow: 0 0 18px rgba(214, 58, 54, 0.45);
+    }
+    .hm-btn-secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--btn-radius);
+      font-weight: 700;
+      padding: 0.62rem;
+      font-size: 0.72rem;
+    }
+    .hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0.85rem;
+    }
+    .hdr-btn {
+      font-size: 0.62rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      color: var(--text-sec);
+      background: transparent;
+    }
+    .logo-lockup {
+      text-align: center;
+      line-height: 1.05;
+    }
+    .logo-lockup .w {
+      font-size: 0.94rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      color: #fff;
+      text-shadow: 0 0 16px rgba(214, 58, 54, 0.4);
+    }
+    .logo-lockup .w span { color: var(--red); }
+    .logo-lockup .yr {
+      font-size: 0.62rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 0.35em;
+      margin-top: 2px;
+    }
+    .med {
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .tier-bronze { background: rgba(205, 127, 50, 0.2); color: #cd7f32; border: 1px solid rgba(205, 127, 50, 0.4); }
+    .tier-silver { background: rgba(192, 192, 192, 0.2); color: #c0c0c0; border: 1px solid rgba(192, 192, 192, 0.4); }
+    .tier-gold { background: rgba(244, 193, 93, 0.2); color: var(--gold); border: 1px solid var(--gold-dim); }
+    .tier-legend { background: rgba(214, 58, 54, 0.2); color: var(--red); border: 1px solid var(--border); }
+    .tier-custom { background: rgba(167, 139, 250, 0.15); color: #ddd6fe; border: 1px solid rgba(167, 139, 250, 0.35); }
+    .chip {
+      display: inline-flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 800;
+      border-radius: 9999px;
+      padding: 0.15rem 0.45rem;
+    }
+    .chip.med-16 { font-size: 9px; }
+    .chip.med-18 { font-size: 10px; }
+    .chip.med-20 { font-size: 10px; }
+    .chip.med-22 { font-size: 12px; gap: 0.35rem; padding: 0.2rem 0.55rem; }
+    .pill-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      padding: 0.4rem;
+      padding-bottom: 0.6rem;
+      background: linear-gradient(180deg, transparent 0%, rgba(6, 2, 2, 0.97) 30%);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .pill-nav button {
+      background: transparent;
+      border: none;
+      font-size: 0.54rem;
+      font-weight: 800;
+      color: var(--text-sec);
+      padding: 0.35rem 0;
+    }
+    .pill-nav button.on {
+      color: var(--gold);
+    }
+    .hero-card {
+      position: relative;
+      margin: 0.5rem 0.85rem;
+      padding: 1.1rem 1rem;
+      cursor: default;
+      border: 1px solid rgba(244, 193, 93, 0.45);
+      border-radius: var(--card-radius);
+      background: linear-gradient(180deg, #151010 0%, #0a0808 100%);
+      box-shadow:
+        0 0 40px rgba(244, 193, 93, 0.14),
+        0 0 80px rgba(214, 58, 54, 0.16);
+      overflow: visible;
+    }
+    .hero-card .corner-med {
+      position: absolute;
+      top: 1rem;
+      inset-inline-start: 1rem;
+    }
+    .hero-card .corner-med img { width: 56px; height: 56px; }
+    .hero-text {
+      padding-inline-start: 4.65rem;
+    }
+    .match-fake {
+      margin: 0.65rem 0.85rem;
+      padding: 0.75rem;
+      border-radius: 16px;
+      border: 1px solid rgba(244, 193, 93, 0.25);
+    }
+    .match-fake small { font-size: 9px; color: var(--text-sec); }
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.45rem;
+      margin: 0.5rem 0.85rem 0;
+    }
+    .tile-s {
+      text-align: center;
+      padding: 0.5rem 0.2rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .tile-s .emo { font-size: 1.25rem; }
+    .tile-s .lb { font-size: 9px; font-weight: 800; margin-top: 4px; }
+    .pod-wrap {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0.65rem;
+      padding: 0.6rem;
+    }
+    .pod {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    .ava {
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .rows .row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .rows .row:last-child { border-bottom: none; }
+    .rail-scroll {
+      display: flex;
+      flex-direction: row-reverse;
+      gap: 0.45rem;
+      overflow-x: auto;
+      padding: 0.4rem 0.2rem 0.5rem;
+    }
+    .rail-it {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.45rem 0.62rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.62rem;
+      font-weight: 800;
+      min-width: 3.85rem;
+    }
+    .rail-it.on {
+      border-color: rgba(244, 193, 93, 0.5);
+      background: rgba(244, 193, 93, 0.1);
+    }
+    .rail-it.dim { opacity: 0.45; }
+    .footer-note {
+      max-width: 920px;
+      margin: 1.5rem auto 0;
+      padding: 0 1rem;
+      font-size: 0.7rem;
+      color: var(--text-sec);
+      border-inline-end: 3px solid var(--red);
+      padding-inline-end: 0.65rem;
+    }
+    .footer-note code { font-size: 0.65rem; word-break: break-all; color: rgba(248, 243, 234, 0.75); }
+  </style>
+</head>
+<body>
+  <div class="doc-top">
+    <h1>מוקאפ מלא — שלב‎ ‎1–‎5‎ בתוך פריימים כמו באפליקציה‎</h1>
+    <p>שלוש תצוגות טלפון מסודרות: <strong>בית‎</strong> עם כרטיס הירו, <strong>אזור אישי‎</strong> עם שבב דרגה ורכבת דרגות, <strong>לוח אלופים‎</strong> עם פודיום, כרטיס ״אני״ וגוף רשימה. גדלי מדליון תואמים ל־<code>TierIcon</code>‎ (‎56‎ / ‎26‎ / ‎22‎ /‎ ‎28‎ /‎ ‎20‎ /‎ ‎18‎ /‎ ‎‎16‎).</p>
+    <div class="legend-strip" aria-hidden="true">
+      <span><img src="tier-mockup-assets/tier-1.jpeg" alt="">שלב 1</span>
+      <span><img src="tier-mockup-assets/tier-2.jpeg" alt="">שלב 2</span>
+      <span><img src="tier-mockup-assets/tier-3.jpeg" alt="">שלב 3</span>
+      <span><img src="tier-mockup-assets/tier-4.jpeg" alt="">שלב 4</span>
+      <span><img src="tier-mockup-assets/tier-5.jpeg" alt="">שלב 5</span>
+    </div>
+    <p class="scroll-hint">במובייל: גלול לכל שלוש הסימולציות. זה לא מחובר לשרת — רק הצגת איך הנכס החדש יושב בסביבה הקיימת.</p>
+  </div>
+
+  <div class="screens-grid">
+    <section class="screen-wrap">
+      <h2>① דף הבית</h2>
+      <p class="cap">כרטיס ‎‎Hero‎ + מסלול דרגה + אריחים מהירים + כרטיס משחק לדוגמה</p>
+      <div class="phone">
+        <div class="stadium-ph">
+          <div class="hdr">
+            <button type="button" class="hdr-btn" disabled>⋯</button>
+            <div class="logo-lockup"><div class="w">HUMON<span>DIAL</span></div><div class="yr" dir="ltr">2 0 2 6</div></div>
+            <button type="button" class="hdr-btn" disabled>חשבון</button>
+          </div>
+          <div class="hero-card">
+            <div class="corner-med"><img class="med" src="tier-mockup-assets/tier-5.jpeg" width="56" height="56" alt="" /></div>
+            <div class="hero-text">
+              <div style="font-size: 1rem; font-weight: 900; line-height: 1.3;">פה לא רק רואים מונדיאל.</div>
+              <div style="font-size: 1rem; font-weight: 900; line-height: 1.3;">פה משחקים אותו.</div>
+              <div style="margin-top: 0.85rem;"><span style="font-size: 2rem; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums;">1,842</span> <span style="font-weight: 900; color: var(--gold);">נקודות</span></div>
+              <div style="font-size: 0.62rem; color: var(--text-sec); margin-top: 0.15rem;"><strong style="color: var(--text);">1,842</strong> נקודות מאושרות — בדירוג ובדרגה.</div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem;">
+              <img class="med" src="tier-mockup-assets/tier-5.jpeg" width="26" height="26" alt="" />
+              <span style="font-size: 0.82rem; font-weight: 800;">השלב שלי: שלב 5 ↗</span>
+            </div>
+            <div style="margin-top: 0.45rem;">
+              <div style="height: 10px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden;"><div style="height: 100%; width: 72%; background: linear-gradient(to left, var(--red), var(--gold));"></div></div>
+              <div style="display: flex; justify-content: space-between; margin-top: 0.2rem;"><span style="font-size: 0.58rem; color: var(--gold); font-weight: 800;">72%</span><span style="font-size: 0.58rem; color: var(--text-sec);">מתקדמים לשלב הבא לפי הכללים</span></div>
+            </div>
+          </div>
+          <div class="tiles">
+            <div class="tile-s"><div class="emo">⚽</div><div class="lb">נחש עכשיו</div></div>
+            <div class="tile-s"><div class="emo">📅</div><div class="lb">שמור לי שולחן</div></div>
+            <div class="tile-s"><div class="emo">🛵</div><div class="lb">משלוח</div></div>
+          </div>
+          <div class="hm-card match-fake" style="margin-top: 0.75rem;">
+            <small>משחק בסגנון הבית • מראה פרימיום</small>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <span class="chip med-22 tier-gold"><img class="med" src="tier-mockup-assets/tier-4.jpeg" width="22" height="22" alt="" /><span dir="ltr" style="font-variant-numeric: tabular-nums;">שלב 4</span></span>
+              <div style="text-align: center; flex: 1;">
+                <div style="font-size: 0.68rem; font-weight: 800;">דנמרק · פורטוגל</div>
+                <div style="font-size: 10px; color: var(--text-sec);">פתוח · היום</div>
+              </div>
+              <span style="font-size: 10px; color: var(--green); font-weight: 900;">פתוח ◀</span>
+            </div>
+          </div>
+          <div style="margin: 0.75rem 0.85rem;">
+            <button type="button" class="hm-btn-primary">נחש עכשיו ←</button>
+          </div>
+          <div class="pill-nav">
+            <button type="button" class="on">בית</button>
+            <button type="button">איזור אישי</button>
+            <button type="button">לוח אלופים</button>
+            <button type="button">עוד…</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-wrap">
+      <h2>② אזור אישי</h2>
+      <p class="cap">שבב ‎‎22‎px‎ ליד נקודות, רצועת הצלחות, משפט ‎„צפי סיום״‎, רכבת דרגות אופקית</p>
+      <div class="phone">
+        <div class="stadium-ph">
+          <div class="hdr">
+            <button type="button" class="hdr-btn" disabled>← חזרה</button>
+            <div class="logo-lockup"><div class="w">HUMON<span>DIAL</span></div><div class="yr" dir="ltr">2 0 2 6</div></div>
+            <div style="width: 52px"></div>
+          </div>
+          <div style="padding: 0 0.85rem 0;">
+            <div class="hm-card" style="border: 2px solid var(--red); padding: 0.95rem;">
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <div style="font-size: 1.95rem; font-weight: 900; color: var(--red); flex-shrink: 0;">#12</div>
+                <div>
+                  <div style="font-size: 0.95rem; font-weight: 900;">1,842 נקודות</div>
+                  <span class="chip med-22 tier-gold"><img class="med" src="tier-mockup-assets/tier-3.jpeg" width="22" height="22" alt="" /><span>שלב 3</span></span>
+                </div>
+              </div>
+              <div style="margin-top: 0.7rem;"><div style="height: 5px; border-radius: 99px; background: rgba(255,255,255,0.1); overflow: hidden;"><div style="width: 58%; height: 100%; background: linear-gradient(to left, var(--red), var(--gold));"></div></div>
+                <div style="font-size: 10px; color: var(--text-sec); margin-top: 0.25rem;">158 נקודות מאושרות עד שלב 4</div></div>
+            </div>
+            <div style="margin-top: 0.65rem; padding: 0.62rem 0.85rem; border-radius: 12px; border: 1px solid rgba(244,193,93,0.18); background: rgba(244,193,93,0.06); display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 10px; color: var(--text-sec);">צפי סיום בקצב הנוכחי<br><span style="opacity: 0.7">תאריך לדוגמה</span></div>
+              <div style="font-size: 1.28rem; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums;">2,190 נ׳</div>
+            </div>
+            <div style="margin-top: 0.85rem;">
+              <div style="font-size: 10px; font-weight: 800; color: var(--text-sec); margin-bottom: 0.25rem;">שלבי המסע</div>
+              <div class="rail-scroll">
+                <div class="rail-it dim tier-bronze" style="color: inherit; border-width: 1px;"><img class="med" src="tier-mockup-assets/tier-1.jpeg" width="22" height="22" alt="" />שלב 1</div>
+                <div class="rail-it dim tier-silver" style="color: inherit;"><img class="med" src="tier-mockup-assets/tier-2.jpeg" width="22" height="22" alt="" />שלב 2</div>
+                <div class="rail-it on tier-gold" style="color: inherit;"><img class="med" src="tier-mockup-assets/tier-3.jpeg" width="28" height="28" alt="" />שלב 3</div>
+                <div class="rail-it dim tier-legend" style="color: inherit;"><img class="med" src="tier-mockup-assets/tier-4.jpeg" width="22" height="22" alt="" />שלב 4</div>
+                <div class="rail-it dim tier-custom" style="color: inherit;"><img class="med" src="tier-mockup-assets/tier-5.jpeg" width="22" height="22" alt="" />שלב 5</div>
+              </div>
+              <button type="button" class="hm-btn-secondary w-full mt-3" disabled style="opacity: 0.9;">⋯ פירוט שלבים (מושב מתקפל במוצר האמיתי)</button>
+            </div>
+            <div style="margin-top: 0.85rem;"><div style="font-size: 11px; font-weight: 900; margin-bottom: 8px;">הישגים</div><div style="display: flex; flex-direction: row-reverse; gap: 6px; justify-content: flex-start;"><span style="font-size: 1.4rem;">🎯</span><span style="font-size: 1.4rem; opacity: 0.35;">📷</span><span style="font-size: 1.4rem; opacity: 0.35;">⭐</span></div></div>
+          </div>
+          <div class="pill-nav">
+            <button type="button">בית</button>
+            <button type="button" class="on">אישי</button>
+            <button type="button">לוח</button>
+            <button type="button">עוד</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-wrap">
+      <h2>③ לוח האלופים</h2>
+      <p class="cap">פודיום ‎‎‎18‎px‎, כרטיס ״אני״ עם ‎‎20‎px‎, רשימה עם שבב‎ ‎16‎px‎‎</p>
+      <div class="phone">
+        <div class="stadium-ph">
+          <div class="hdr">
+            <div style="font-size: 0.88rem; font-weight: 900;">לוח האלופים</div>
+            <button type="button" class="hdr-btn" disabled style="opacity: 0.9;">חזרה לדף הבית ←</button>
+          </div>
+          <div class="pod-wrap">
+            <div class="pod">
+              <div class="ava" style="width: 38px; height: 38px; font-size: 0.92rem; background: rgba(200,200,200,0.25);">י</div>
+              <div style="font-size: 11px; font-weight: 800; max-width: 68px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">יכגגי</div>
+              <span class="chip med-18 tier-silver"><img class="med" src="tier-mockup-assets/tier-4.jpeg" width="18" height="18" alt="" /><span>שלב 4</span></span>
+              <div style="font-size: 10px; color: var(--gold); font-weight: 900; font-variant-numeric: tabular-nums;">1,955 נ׳</div>
+              <div style="width: 64px; height: 50px; border-radius: 6px 6px 0 0; background: rgba(200,200,200,0.2); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: rgba(255,255,255,0.38); margin-top: 2px;">2</div>
+            </div>
+            <div class="pod">
+              <div style="font-size: 1rem;">👑</div>
+              <div class="ava" style="width: 48px; height: 48px; font-size: 1.1rem; background: rgba(244,193,93,0.28);">א</div>
+              <div style="font-size: 11px; font-weight: 800; max-width: 72px;">אלון</div>
+              <span class="chip med-18 tier-gold"><img class="med" src="tier-mockup-assets/tier-5.jpeg" width="18" height="18" alt="" /><span>שלב 5</span></span>
+              <div style="font-size: 10px; color: var(--gold); font-weight: 900;">2,441 נ׳</div>
+              <div style="width: 64px; height: 80px; border-radius: 6px 6px 0 0; background: rgba(244,193,93,0.22); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; color: rgba(255,255,255,0.4); margin-top: 2px;">1</div>
+            </div>
+            <div class="pod">
+              <div class="ava" style="width: 38px; height: 38px; font-size: 0.92rem; background: rgba(180,100,40,0.25);">ט</div>
+              <div style="font-size: 11px; font-weight: 800; max-width: 68px;">טל</div>
+              <span class="chip med-18 tier-legend"><img class="med" src="tier-mockup-assets/tier-3.jpeg" width="18" height="18" alt="" /><span>שלב 3</span></span>
+              <div style="font-size: 10px; color: var(--gold); font-weight: 900;">1,840 נ׳</div>
+              <div style="width: 64px; height: 40px; border-radius: 6px 6px 0 0; background: rgba(180,100,40,0.22); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: rgba(255,255,255,0.35); margin-top: 2px;">3</div>
+            </div>
+          </div>
+          <div class="hm-card" style="margin: 0 0.75rem 0.65rem; border: 2px solid var(--red); padding: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <div class="ava" style="width: 40px; height: 40px; flex-shrink: 0; background: rgba(214,58,54,0.28); font-size: 1rem;">א</div>
+              <div style="font-size: 1.68rem; font-weight: 900; color: var(--red); flex-shrink: 0;">#12</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 800;">אלה (אתה)</div>
+                <span class="chip med-20 tier-gold"><img class="med" src="tier-mockup-assets/tier-3.jpeg" width="20" height="20" alt="" /><span>שלב 3</span></span>
+                <div style="font-size: 11px; color: var(--text-sec); margin-top: 2px;">1,842 נקודות</div>
+              </div>
+            </div>
+          </div>
+          <div class="hm-card" style="margin: 0 0.75rem 0.65rem; padding: 0.85rem;">
+            <div style="font-size: 11px; color: var(--text-sec); font-weight: 800;">בקצב הזה אתה בדרך ל…</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: var(--red); margin-top: 0.15rem;">מסלול לשיפור</div>
+            <div style="height: 8px; border-radius: 99px; background: rgba(255,255,255,0.1); margin-top: 0.5rem; overflow: hidden;"><div style="width: 66%; height: 100%; background: linear-gradient(to left, var(--red), var(--gold));"></div></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-sec); margin-top: 0.35rem;"><span dir="ltr">142 ימים</span><span dir="ltr">1842 / 2190 נ׳</span></div>
+          </div>
+          <div class="px-ish" style="padding-inline: 0.85rem; margin-bottom: 0.25rem;"><span style="font-size: 10px; font-weight: 900; letter-spacing: 0.06em; color: var(--text-sec);">שחקנים</span></div>
+          <div class="hm-card rows" style="margin: 0 0.75rem 4rem;">
+            <div class="row">
+              <div style="font-size: 11px; width: 1.85rem; text-align: center; color: var(--text-sec); font-weight: 800;">#4</div>
+              <div class="ava" style="width: 28px; height: 28px; font-size: 11px; background: rgba(53,210,111,0.22); flex-shrink: 0;">מ</div>
+              <div style="flex: 1;"><div style="font-size: 13px; font-weight: 650;">מתי</div><span class="chip med-16 tier-bronze"><img class="med" src="tier-mockup-assets/tier-2.jpeg" width="16" height="16" alt="" /><span>שלב 2</span></span></div>
+              <div style="font-size: 14px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums;">1,798 נ׳</div>
+            </div>
+            <div class="row">
+              <div style="font-size: 11px; width: 1.85rem; text-align: center; color: var(--text-sec); font-weight: 800;">#5</div>
+              <div class="ava" style="width: 28px; height: 28px; font-size: 11px; background: rgba(80,160,255,0.2); flex-shrink: 0;">ג</div>
+              <div style="flex: 1;"><div style="font-size: 13px; font-weight: 650;">גיא</div><span class="chip med-16 tier-bronze"><img class="med" src="tier-mockup-assets/tier-1.jpeg" width="16" height="16" alt="" /><span>שלב 1</span></span></div>
+              <div style="font-size: 14px; font-weight: 900; color: var(--gold);">1,650 נ׳</div>
+            </div>
+            <div class="row">
+              <div style="font-size: 11px; width: 1.85rem; text-align: center; color: var(--text-sec); font-weight: 800;">#6</div>
+              <div class="ava" style="width: 28px; height: 28px; font-size: 11px; background: rgba(200,100,220,0.2); flex-shrink: 0;">ש</div>
+              <div style="flex: 1;"><div style="font-size: 13px; font-weight: 650;">שירן</div><span class="chip med-16 tier-custom"><img class="med" src="tier-mockup-assets/tier-2.jpeg" width="16" height="16" alt="" /><span>שלב 2</span></span></div>
+              <div style="font-size: 14px; font-weight: 900; color: var(--gold);">1,589 נ׳</div>
+            </div>
+          </div>
+          <div class="pill-nav">
+            <button type="button">בית</button>
+            <button type="button">אישי</button>
+            <button type="button" class="on">לוח</button>
+            <button type="button">עוד</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer-note">
+    <strong>מה עוד מתחץ לעומת הפיתוחּ המוצרּי‎?</strong><br />באפליקציה הנתונים שמורים בקמפיין — כאן שמות ‎„שלב ‎‎1–‎5״‎ לדוגמה בלבד. קבצי תמונה: ‎<code>tier-mockup-assets/tier-1.jpeg</code> … ‎<code>tier-5.jpeg</code>‎ (מיפוי מקור ‎WhatsApp‎ כמו בגרסה הקודמת של המסמך הזה).
+  </div>
+</body>
+</html>

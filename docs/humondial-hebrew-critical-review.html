@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>הומונדיאל — ביקורת UX מול משוב (מצב קוד לאחר הסשן)</title>
+<style>
+:root{--bg:#0c0808;--card:#181010;--b:rgba(214,58,54,.35);--red:#d63a36;--gold:#f4c15d;--tx:#f8f3ea;--mu:#a89898;}
+*{box-sizing:border-box}
+body{margin:0;padding:1.1rem;background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;line-height:1.62;max-width:52rem;margin-inline:auto}
+h1{font-size:1.35rem;border-bottom:3px solid var(--red);padding-bottom:.3rem;margin-top:0}
+h2{color:var(--gold);font-size:1.07rem;margin:1.65rem 0 .6rem}
+h3{font-size:.95rem;margin:1rem 0 .4rem;color:#e8dfd8}
+.badges span{display:inline-block;padding:.15rem .45rem;margin:.15rem;font-size:.72rem;font-weight:800;border-radius:5px}
+.b-done{background:rgba(53,210,111,.22);color:#86efac}
+.b-part{background:rgba(251,191,36,.2);color:#fcd34d}
+.b-open{background:rgba(156,163,175,.22);color:#e5e7eb}
+.b-stale{background:rgba(129,140,248,.22);color:#c7d2fe}
+table{width:100%;border-collapse:collapse;font-size:.84rem;margin:.7rem 0}
+th,td{border:1px solid var(--b);padding:.45rem;text-align:right;vertical-align:top}
+th{background:rgba(214,58,54,.14);color:var(--gold)}
+code{font-size:.73rem;background:#00000055;padding:.06rem .2rem;border-radius:3px;word-break:break-all}
+.quote{border-right:4px solid var(--red);background:rgba(255,255,255,.035);padding:.55rem .8rem;margin:.6rem 0;font-size:.86rem;color:#dfd6d6}
+.details{margin-top:2rem;font-size:.82rem;color:var(--mu)}
+.footer{margin-top:2rem;color:var(--mu);font-size:.78rem}
+</style>
+</head>
+<body>
+<article>
+<h1>ביקורת קריטית: משוב לפני הסשן מול הקוד הנוכחי</h1>
+<p>מסמך זה מתייחס ל<strong>משוב שהגיע לפני סשן הפיתוח האחרון</strong> ומשווה אותו ל<strong>מה שיש היום ב־humondial-promo</strong> (כולל טעינה מקבילה במהלך סרטון הפתיחה, ומזהה קמפיין קשיח). מטרת המסמך: להפריד בין משוב <em>מתיישן ביחס לקוד</em>, מתיקונים <em>שבוצעו בפועל</em>, ולבין פערים <em>שעדיין נשארים</em>.</p>
+
+<p class="badges"><span class="b-stale">משוב מתיישן</span><span class="b-done">טופל (קוד)</span><span class="b-part">חלקי</span><span class="b-open">פתוח</span></p>
+
+<h2>מפת מצב מהירה</h2>
+<table>
+<tr><th>נושא</th><th>סטטוס</th><th>הערה קצרה</th></tr>
+<tr><td>זמן בין סוף Splash לפתיחת הבית</td><td><span class="b-done"></span></td><td>במהלך ה־Splash מתחילים <code>loadConfig</code> + <code>promoValidateSession</code>; מתחילים גם טעינה חמה של <code>listMatches</code>. אחרי Splash עיקר ההמתנה היא הצגת ההבטחות שכבר רצות — משפר משמעותית לעומת רצף שמתחיל רק בסוף הווידאו.</td></tr>
+<tr><td>עומס אחרי כניסה לבית (לוח ניקוד + תחזיות)</td><td><span class="b-part"></span></td><td><code>listMyPredictions</code> ו־<code>getLeaderboard</code> עדיין נטענים במסך הבית בהרצת <code>load()</code>; אם הרשת איטית, עדיין יכול להרגיש "טעינה איטית". אין כרגע ריענון אוטומטי (polling) לתוצאות חיות.</td></tr>
+<tr><td>איקון טיר במקום גביע בגיבור העליון</td><td><span class="b-stale"></span></td><td>בקוד כבר משתמשים ב־<code>TierIcon</code> (SVG) בשדה ההירו — לא במודלים ישנים של אימוג'י גביע. המשוב עשוי לשקף בילד ישן, או בעיה קריטית של <strong>כמות העיצוב</strong>: ה־SVG המקומי עדיין "פלייסהולדר" ולא בסגנון המותג הסופי.</td></tr>
+<tr><td>באנר עליון (יהודה)</td><td><span class="b-open"></span></td><td>קובץ <code>public/assets/humondial-banner.jpeg</code> קיים אך <strong>לא מחובר</strong> ב־JSX — אין הצגה בדף הבית.</td></tr>
+<tr><td>פונטים לכותרות</td><td><span class="b-open"></span></td><td>עדיין מחסנית מערכתית ב־Tailwind / body — צריך WOFF2 + חיבור.</td></tr>
+<tr><td>דגלים איכותיים</td><td><span class="b-part"></span></td><td>אם מהשרת יש קוד ISO (שתי אותיות) — מתקבל תמונה מ־flagcdn; אחרת emoji / דגל ברירת מחדל. בעיית "חסרים דגלים" לרוב בעיית <strong>נתונים</strong> במשחק כמו גם בהחלפת ערכות עיצוב.</td></tr>
+<tr><td>טקסט שלב ארוך (חי מול פתוח)</td><td><span class="b-part"></span></td><td>למשחק חי: שימוש ב־<code>pwa_live_scores_explanation_he</code> מהשרת; אם הטקסט ארוך — המראה נשאר עמוס. ללא שרשרת שרת: בשורט משני בשורט לסטטוסים לא‑חיים עדיין יש fallback משלב ותאריך.</td></tr>
+<tr><td>משחקים "חמים" עם הדגשה</td><td><span class="b-part"></span></td><td>קיים סימון מסגרת עם <code>marquee_highlight</code> מה־API + מחלקות CSS (ברק חי וכו'); עוצמת הוויזואל תלויה גם בשורות שמוגדרות בקמפיין.</td></tr>
+<tr><td>צפי סיום — איקון הסבר על ניקוד</td><td><span class="b-open"></span></td><td>אין כפתור ⓜ או מודל עם משפט אחד — לא יושם.</td></tr>
+<tr><td>הישגים ותימחור נקודות</td><td><span class="b-open"></span></td><td>תוכן מתוך הגדרות קמפיין / השרת; לא פרונט בלבד.</td></tr>
+<tr><td>לוח אלופים — איקונים, סליידר "כמו כדורגל"</td><td><span class="b-part"></span></td><td>טיר עם <code>TierIcon</code> כבר בשורות; כרטיסי What‑If והסליידרים עדיין מבוססי אימוג'י בסיסיים.</td></tr>
+<tr><td>ווידאו פתיחה עם גביע חדש</td><td><span class="b-open"></span></td><td>נכס מתעשייה / וידאו — עדיין <code>splash.mp4</code>; לא הוחלף בקוד.</td></tr>
+</table>
+
+<h2>מה בפועל שונה בפרונט בסשן (לסיכום)</h2>
+<ul>
+<li><strong>תזמון רשת:</strong> הפעלה מוקדמת של קונפיג + סשן משתמש במקביל לווידאו, ובמקביל "חימום" רשימת משחקים.</li>
+<li><strong>ארכיטקטורת קמפיין יחיד:</strong> קבוע קמפיין בצד לקוח — צמצום טעויות ולוגיקת תלוי־לאחר מיותרת.</li>
+<li><strong>לא הוחלפו:</strong> פונטים, באנר מחושב, הצהר ניקוד פרוגנוזה, מאגר הישגים, וווידאו חדש — אלה ארוזים ארט/מוצר/שרתים.</li>
+</ul>
+
+<h2>מה עדיין "מטריד QA" מהצד טכני</h2>
+<div class="quote">
+<strong>"חי" אינו אוטומטית "מתעדכן בלייב בלי ריענון":</strong> הלקוח אינו מרענן לבד בתדירות קבועה. עדכון תוצאות דורש הרצת טעינה מחודשת (לאחר פעולה, ניווט וכדומה) אלא אם יוסיפו ריענון/שדרור.</div>
+
+<h3>קבצים קריטיים (למפתפים)</h3>
+<ul>
+<li><code>src/App.jsx</code> — לוגיקת prefetch בזמן Splash</li>
+<li><code>src/lib/warmListMatches.js</code> — טעינה מראש של רשימת משחקים</li>
+<li><code>src/screens/HomeScreen.jsx</code> — Hero + כרטיסי משחק (<code>TierIcon</code>, דגלים, מצבי חיה)</li>
+<li><code>src/lib/matchPhaseLines.js</code> — בניית שורות טקסט מה־API</li>
+<li><code>docs/DESIGNER_ASSET_BRIEF.md</code> — מפרט ארט משלים למעצבים</li>
+</ul>
+
+<h2>מסך ניהול ארט בעברית מלאה (תקציר)</h2>
+<p>לכל קטגוריית מסירה (ווידאו, באנר, פונט, SVG טיר ×5, הסבר מידע, דגלים, מוטיב סליידר/כדורגל, איקון אתגרים) מומלץ לפתוח את <code>DESIGNER_ASSET_BRIEF.md</code> בתיקייה <code>docs/</code>.</p>
+
+<p class="footer">נטען אוטומטית לגרסת שיתוף ציבורית (GitHub Pages). עדכון אחרון: נוצר מקומית מתוך ביקורת מול משוב לפני סשן + מצב repo עדכני.</p>
+</article>
+</body>
+</html>

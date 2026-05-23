@@ -123,6 +123,181 @@ function extractTrailingBracketAside(raw) {
 
 const DISPLAY_MATCH_ORDER = { live: 0, locked: 1, open: 2, final: 3 };
 
+function isQuickOutcomeLine(predOutcome, hs, aw) {
+  if (!predOutcome) return false;
+  if (predOutcome === 'home') return hs === 1 && aw === 0;
+  if (predOutcome === 'away') return hs === 0 && aw === 1;
+  if (predOutcome === 'draw') return hs === 0 && aw === 0;
+  return false;
+}
+
+function outcomeHeadline(predOutcome) {
+  if (predOutcome === 'draw') return 'תיקו בהגשה';
+  if (predOutcome === 'home') return 'ניצחון בית בהגשה';
+  if (predOutcome === 'away') return 'ניצחון חוץ בהגשה';
+  return '';
+}
+
+function PredictionGuessLayers({
+  prediction,
+  predOutcome,
+  homeFlag,
+  awayFlag,
+  size = 'sm',
+  layout = 'stack',
+  bullseyeMaxPts = null,
+}) {
+  if (
+    !prediction ||
+    prediction.home_score == null ||
+    prediction.away_score == null ||
+    typeof prediction.home_score !== 'number' ||
+    typeof prediction.away_score !== 'number'
+  ) return null;
+
+  const hs = prediction.home_score;
+  const aw = prediction.away_score;
+  const fzFlag = size === 'lg' ? 'text-[1.75rem] leading-none' : size === 'sm' ? 'text-[1rem] leading-none' : 'text-[1.125rem] leading-none';
+  const fzNum = size === 'lg' ? 'text-xl' : 'text-sm';
+
+  let ringHome = 'opacity-[0.86] scale-95';
+  let ringAway = 'opacity-[0.86] scale-95';
+  if (predOutcome === 'home') {
+    ringHome = 'brightness-110 drop-shadow-[0_0_10px_rgba(244,193,93,0.45)] scale-110';
+  } else if (predOutcome === 'away') {
+    ringAway = 'brightness-110 drop-shadow-[0_0_10px_rgba(244,193,93,0.45)] scale-110';
+  } else if (predOutcome === 'draw') {
+    ringHome = 'brightness-105 scale-105 opacity-95';
+    ringAway = 'brightness-105 scale-105 opacity-95';
+  }
+
+  const quickLine = isQuickOutcomeLine(predOutcome, hs, aw);
+  const head = outcomeHeadline(predOutcome);
+
+  const scoreRow = (
+    <span
+      lang="und"
+      className={`hm-match-score-ltr inline-flex flex-row items-center justify-center gap-1.5 tabular-nums font-black rounded-lg px-2 py-0.5 ${fzNum}`}
+      style={{
+        background: predOutcome === 'draw' ? 'rgba(244,193,93,0.14)' : 'rgba(244,193,93,0.08)',
+        color: 'var(--text)',
+        border: '1px solid rgba(244,193,93,0.28)',
+      }}
+    >
+      <span className={`shrink-0 select-none transition-transform duration-150 ${fzFlag} ${ringHome}`} aria-hidden>
+        {homeFlag}
+      </span>
+      <span className="opacity-95">{hs}</span>
+      <span className="font-bold opacity-45 text-[12px]" aria-hidden>
+        −
+      </span>
+      <span className="opacity-95">{aw}</span>
+      <span className={`shrink-0 select-none transition-transform duration-150 ${fzFlag} ${ringAway}`} aria-hidden>
+        {awayFlag}
+      </span>
+    </span>
+  );
+
+  const outcomeFaces = predOutcome === 'draw' ? (
+    <span className="inline-flex flex-row-reverse items-center gap-1 justify-center py-1" dir="rtl">
+      <span className={`text-[length:clamp(1.25rem,3.5vw,1.85rem)] leading-none ${ringHome}`} aria-hidden>{homeFlag}</span>
+      <span className="text-[11px] font-black opacity-60 px-1" aria-hidden>↔</span>
+      <span className={`text-[length:clamp(1.25rem,3.5vw,1.85rem)] leading-none ${ringAway}`} aria-hidden>{awayFlag}</span>
+    </span>
+  ) : predOutcome === 'home' ? (
+    <span className={`inline-block text-[length:clamp(1.35rem,3.8vw,2rem)] leading-none py-1 ${ringHome}`} aria-hidden>{homeFlag}</span>
+  ) : predOutcome === 'away' ? (
+    <span className={`inline-block text-[length:clamp(1.35rem,3.8vw,2rem)] leading-none py-1 ${ringAway}`} aria-hidden>{awayFlag}</span>
+  ) : null;
+
+  const outcomeBlock =
+    layout === 'ribbon' ? (
+      <div
+        dir="rtl"
+        className="flex flex-row-reverse flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded-lg px-2 py-1"
+        style={{ background: 'rgba(53,210,111,0.1)', border: '1px solid rgba(53,210,111,0.28)' }}
+      >
+        <span className="text-[10px] font-black leading-tight" style={{ color: 'var(--hm-match-grass-label)' }}>
+          מנצח / תיקו
+        </span>
+        {head ? (
+          <span className="text-[10px] font-bold leading-none max-w-[9.5rem] text-right truncate" style={{ color: 'var(--text)' }} title={head}>
+            {head}
+          </span>
+        ) : null}
+        {outcomeFaces}
+      </div>
+    ) : (
+      <div
+        dir="rtl"
+        className="flex flex-col items-center gap-1.5 text-center rounded-xl px-3 py-2 w-full max-w-[20rem]"
+        style={{ background: 'rgba(53,210,111,0.1)', border: '1px solid rgba(53,210,111,0.28)' }}
+      >
+        <div className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'rgba(246,252,247,0.85)' }}>
+          מנצח / תיקו
+        </div>
+        <div className="text-[12px] font-extrabold leading-tight" style={{ color: 'var(--text)' }}>
+          {head}
+        </div>
+        {outcomeFaces}
+      </div>
+    );
+
+  const bullseyeBlock =
+    layout === 'ribbon' ? (
+      <div
+        dir="rtl"
+        className="flex flex-row-reverse flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded-lg px-2 py-1"
+        style={{ background: 'rgba(244,193,93,0.1)', border: '1px solid rgba(244,193,93,0.35)' }}
+      >
+        <span className="text-[10px] font-black whitespace-nowrap" style={{ color: '#fbbf24' }}>
+          🎯 בינגו
+        </span>
+        {scoreRow}
+      </div>
+    ) : (
+      <div
+        dir="rtl"
+        className="flex flex-col items-center gap-1 rounded-xl px-3 py-2 w-full max-w-[20rem]"
+        style={{ background: 'rgba(244,193,93,0.08)', border: '1px solid rgba(244,193,93,0.35)' }}
+      >
+        <div className="text-[10px] font-black whitespace-nowrap" style={{ color: '#fbbf24' }}>
+          🎯 ניסיון בינגו (ציון מדויק)
+        </div>
+        {scoreRow}
+        {typeof bullseyeMaxPts === 'number' && bullseyeMaxPts > 0 ? (
+          <p className="text-[10px] leading-snug text-center m-0 px-0.5" style={{ color: 'var(--hm-match-grass-label)' }}>
+            אם הסיום בדיוק בשורת הציון — עד +{bullseyeMaxPts}&nbsp;נ׳ בונוס בינגו, לצד ההצטרפות והכללים בקמפיין (ובונוס תיקו כשמתאים).
+          </p>
+        ) : null}
+        <p className={`text-[10px] leading-snug text-center m-0 px-0.5 ${quickLine ? '' : 'opacity-90'}`} style={{ color: 'var(--text-sec)' }}>
+          {quickLine
+            ? 'ציון בסיס מתוך הלחיצה במחוון המנצח — עדכנו את הציון בעריכת ניחוש אם מתכוונים לליין אחר פגיעה.'
+            : 'הציון שמעלה מכוון לבינגו; מתחת — איזה מנצח או תיקו נקבע במחוון.'}
+        </p>
+      </div>
+    );
+
+  if (layout === 'ribbon') {
+    return (
+      <div dir="rtl" className="flex flex-col items-end gap-1">
+        {bullseyeBlock}
+        {outcomeBlock}
+      </div>
+    );
+  }
+
+  return (
+    <div dir="rtl" className="flex flex-col items-center gap-2 w-full">
+      {bullseyeBlock}
+      <div className="text-[9px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-sec)', opacity: 0.88 }}>
+        מתחת: בחירת מנצח / תיקו
+      </div>
+      {outcomeBlock}
+    </div>
+  );
+}
+
 function compareDisplayMatchOrder(a, b) {
   const ra = DISPLAY_MATCH_ORDER[a?.status] ?? 99;
   const rb = DISPLAY_MATCH_ORDER[b?.status] ?? 99;
@@ -435,7 +610,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-bold text-right mb-2.5" style={{ color: 'var(--text)' }}>מי ינצח?</p>
+        <p className="text-sm font-bold text-right mb-2.5" style={{ color: 'var(--text)' }}>בוחרים מנצח או תיקו</p>
         <div className="flex gap-2" dir="ltr">
           {[
             { key: 'away', outcome: 'away', sub: awayName },
@@ -465,7 +640,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
 
       <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4">
         <p className="text-xs text-right mb-3" style={{ color: 'var(--text-sec)' }}>
-          תוצאה מדויקת <span style={{ fontWeight: 'normal' }}>(אופציונלי)</span>
+          אחר כך ניסיון בינגו — ציון מדוייק <span style={{ fontWeight: 'normal' }}>(אופציונלי, לבונוס בינגו)</span>
         </p>
         <div className="flex items-center justify-center gap-3" dir="ltr">
           <span className="text-xs" style={{ color: 'var(--text-sec)' }}>{homeName}</span>
@@ -593,7 +768,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const showTableBooking = Boolean(match.broadcasts_in_venues);
   const isBroadcastVenue = Boolean(match.broadcasts_in_venues);
 
-  const predLabel = predOutcome === 'home' ? homeFlag : predOutcome === 'away' ? awayFlag : predOutcome === 'draw' ? 'X' : null;
+
 
   const statusBadge = isPending
     ? null
@@ -673,9 +848,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
             </div>
             {hasPrediction ? (
               <>
-                <div className="text-2xl font-bold tabular-nums leading-tight" style={{ color: 'var(--text)' }}>
-                  {prediction.home_score} : {prediction.away_score}
-                </div>
+                <PredictionGuessLayers
+                  prediction={prediction}
+                  predOutcome={predOutcome}
+                  homeFlag={homeFlag}
+                  awayFlag={awayFlag}
+                  size="sm"
+                  layout="stack"
+                  bullseyeMaxPts={typeof config?.bullseye_points === 'number' ? config.bullseye_points : null}
+                />
                 {finalCelebrate && finalPointsEarned != null ? (
                   <div className="text-xs font-bold" style={{ color: 'var(--gold)' }}>
                     זכית ב־+{finalPointsEarned} נ׳ בסיום משחק זה
@@ -683,7 +864,10 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 ) : null}
                 {isFinal && hasPrediction && !finalCelebrate ? (
                   <div className="text-xs leading-relaxed pt-1" style={{ color: 'var(--text-sec)' }}>
-                    ניחשת {prediction.home_score}:{prediction.away_score} · בסיום {match.final_home_score}:{match.final_away_score}
+                    ניחשת{' '}
+                    <span className="hm-match-score-ltr tabular-nums font-bold">{prediction.home_score}−{prediction.away_score}</span>
+                    {' '}(בינגו) · בסיום{' '}
+                    <span className="hm-match-score-ltr tabular-nums font-bold">{match.final_home_score}−{match.final_away_score}</span>
                   </div>
                 ) : null}
               </>
@@ -787,14 +971,19 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 {hasPrediction ? (
                   <div
                     dir="rtl"
-                    className="mt-1.5 px-2 text-center text-[10px] leading-snug font-extrabold"
-                    style={{ color: 'rgba(245,245,245,0.42)' }}
+                    className="mt-1.5 px-2 flex flex-col items-center gap-0.5 text-center font-extrabold"
                   >
-                    <span className="whitespace-nowrap">ניחושך </span>
-                    <span dir="ltr" className="inline whitespace-nowrap align-middle tabular-nums text-[13px] font-black" style={{ color: 'var(--gold)' }}>
-                      {prediction.home_score}:{prediction.away_score}
+                    <span className="text-[9px] leading-none" style={{ color: 'rgba(245,245,245,0.38)' }}>
+                      ניחוש בינגו
+                    </span>
+                    <span
+                      lang="und"
+                      className="hm-match-score-ltr inline tabular-nums text-[13px] font-black"
+                      style={{ color: 'var(--gold)' }}
+                    >
+                      {prediction.home_score} : {prediction.away_score}
                       {liveScoresKnown && guessMatchesLiveScores ? (
-                        <span className="ml-1.5 whitespace-nowrap text-[10px] font-black text-emerald-400">✓ מתאים</span>
+                        <span className="mr-1.5 whitespace-nowrap text-[10px] font-black text-emerald-400">✓ מתאים</span>
                       ) : null}
                     </span>
                   </div>
@@ -915,16 +1104,29 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                       ? 'הבחירה שלך'
                       : 'הקש לניחוש'}
             </span>
-            <div className="flex items-center gap-2 flex-row-reverse">
-              {predLabel && hasPrediction ? (
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'var(--red)', color: 'var(--text)' }}>
-                  {predLabel}
+            <div className="flex items-center gap-3 flex-row-reverse min-w-0 flex-1 justify-end">
+              {hasPrediction ? (
+                <>
+                  <span className="text-[11px] tabular-nums shrink-0" style={{ color: 'var(--text-sec)' }}>
+                    {isActive ? '▲' : '▼'}
+                  </span>
+                  <div className="min-w-0 scale-[0.88] origin-left">
+                    <PredictionGuessLayers
+                      prediction={prediction}
+                      predOutcome={predOutcome}
+                      homeFlag={homeFlag}
+                      awayFlag={awayFlag}
+                      size="sm"
+                      layout="ribbon"
+                      bullseyeMaxPts={typeof config?.bullseye_points === 'number' ? config.bullseye_points : null}
+                    />
+                  </div>
+                </>
+              ) : (
+                <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-sec)' }}>
+                  {isActive ? '▲' : '▼'}
                 </span>
-              ) : null}
-              <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-sec)' }}>
-                {isActive ? '▲' : '▼'}
-                {hasPrediction ? ` · ${prediction.home_score}:${prediction.away_score}` : ''}
-              </span>
+              )}
             </div>
           </div>
         ) : null}
@@ -960,11 +1162,19 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 )}
                 <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4 space-y-3">
                   <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between">
-                    <div className="flex items-center gap-2 flex-row-reverse shrink-0">
-                      <span className="text-xs" style={{ color: 'var(--text-sec)' }}>בחרת:</span>
-                      <span className="font-black px-2.5 py-1 rounded-lg text-sm" style={{ background: 'var(--red)', color: 'var(--text)' }}>
-                        {predLabel}
+                    <div className="flex flex-col items-end gap-1 shrink-0 w-full sm:w-auto">
+                      <span className="text-xs w-full text-right" style={{ color: 'var(--text-sec)' }}>
+                        ניחוש שמור
                       </span>
+                      <PredictionGuessLayers
+                        prediction={prediction}
+                        predOutcome={predOutcome}
+                        homeFlag={homeFlag}
+                        awayFlag={awayFlag}
+                        size="sm"
+                        layout="stack"
+                        bullseyeMaxPts={typeof config?.bullseye_points === 'number' ? config.bullseye_points : null}
+                      />
                     </div>
                     {confirmDelete ? (
                       <div className="flex flex-row-reverse flex-wrap items-center gap-3 justify-end">
@@ -999,11 +1209,6 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                       </div>
                     )}
                   </div>
-                  {prediction.home_score != null && (
-                    <div className="text-center text-xs pt-1" style={{ color: 'var(--text-sec)' }}>
-                      תוצאה מדויקת: {prediction.home_score} : {prediction.away_score}
-                    </div>
-                  )}
                 </div>
                 {showTableBooking ? (
                   <button
@@ -1032,11 +1237,17 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
             )}
 
             {!canGuess && hasPrediction && (
-              <div className="text-center py-2">
+              <div className="text-center py-2 space-y-2">
                 <div className="text-xs mb-1" style={{ color: 'var(--text-sec)' }}>הניחוש שלך</div>
-                <div className="text-3xl font-black tabular-nums" style={{ color: 'var(--text)' }}>
-                  {prediction.home_score} : {prediction.away_score}
-                </div>
+                <PredictionGuessLayers
+                  prediction={prediction}
+                  predOutcome={predOutcome}
+                  homeFlag={homeFlag}
+                  awayFlag={awayFlag}
+                  size="lg"
+                  layout="stack"
+                  bullseyeMaxPts={typeof config?.bullseye_points === 'number' ? config.bullseye_points : null}
+                />
                 {isFinal && bullseye && exactDrawMatch && (
                   <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>
                     🤝 תיקו מדויק (+{config.bullseye_points} תוצאה מדויקת +{config.draw_stripe_points} שכבת תיקו)

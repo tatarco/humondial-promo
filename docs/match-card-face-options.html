@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Humondial — 10 variants for match row (teams + flags)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --rim: clamp(2px, 0.62vw, 3px);
+      --red: #D63A36;
+      --gold: #F4C15D;
+      --text: #F8F3EA;
+      --text-sec: #9D8585;
+      --grass-a: #1d5c2c;
+      --grass-b: #0f3b1f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem 1rem 4rem;
+      font-family: Heebo, system-ui, sans-serif;
+      background: #060202;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 800;
+      font-size: clamp(1.35rem, 4vw, 1.85rem);
+      margin: 0 0 0.75rem;
+    }
+    .intro {
+      text-align: center;
+      color: var(--text-sec);
+      font-size: 0.9rem;
+      max-width: 36rem;
+      margin: 0 auto 2rem;
+      line-height: 1.5;
+    }
+    .toc {
+      max-width: 42rem;
+      margin: 0 auto 2.5rem;
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      background: rgba(28, 6, 6, 0.88);
+      border: 1px solid rgba(214, 58, 54, 0.28);
+    }
+    .toc strong { display: block; margin-bottom: 0.5rem; }
+    .toc a {
+      display: inline-block;
+      margin: 0.25rem 0.75rem;
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    .toc a:hover { text-decoration: underline; }
+
+    .deck { max-width: 420px; margin: 0 auto; display: grid; gap: 2.5rem; }
+
+    .card-wrap {
+      border-radius: 22px;
+      padding: calc(var(--rim) + 2px);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(255, 244, 220, 0.13) 0%, transparent 40%),
+        linear-gradient(168deg, #fff6d4 0%, #c9a032 32%, #6b4410 58%, #e8bb6f 100%);
+      box-shadow:
+        0 0 0 var(--rim) #2e0a07,
+        0 0 0 calc(var(--rim) + 2px) rgba(201, 160, 48, 0.62),
+        0 12px 34px rgba(0, 0, 0, 0.58);
+    }
+    .card-inner {
+      overflow: hidden;
+      border-radius: calc(22px - var(--rim) - 2px);
+      background: #080204;
+      box-shadow: inset 0 22px 40px rgba(255, 100, 60, 0.04), inset 0 -6px 16px rgba(0, 0, 0, 0.45);
+    }
+    .burgundy {
+      background:
+        radial-gradient(ellipse 110% 88% at 10% -12%, rgba(255, 220, 200, 0.08), transparent 45%),
+        radial-gradient(ellipse 72% 50% at 92% 6%, rgba(255, 90, 50, 0.08), transparent 42%),
+        linear-gradient(177deg, #5a0a15 0%, #3c0610 42%, #280812 74%, #1f050a 100%);
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.04), inset 0 -14px 24px rgba(0, 0, 0, 0.32);
+    }
+    .top-row {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 1rem 1rem 0.5rem;
+    }
+    .badge-open {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(53, 210, 111, 0.12);
+      color: #5ee9a8;
+      border: 1px solid rgba(53, 210, 111, 0.45);
+      white-space: nowrap;
+    }
+    .badge-open::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #35D26F;
+      box-shadow: 0 0 8px #35D26F;
+    }
+    .phase { text-align: right; flex: 1; min-width: 0; }
+    .phase .p1 { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.92); line-height: 1.3; }
+    .phase .p2 { font-size: 10px; color: var(--text-sec); margin-top: 3px; }
+    .hint {
+      padding: 0 1rem 0.65rem;
+      font-size: 10px;
+      color: var(--text-sec);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .face {
+      padding: 0 1rem 0.85rem;
+    }
+
+    .meta-lines {
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 0 1rem 0.85rem;
+      line-height: 1.65;
+    }
+    .meta-lines .lab { font-weight: 600; color: rgba(255,255,255,0.88); }
+
+    .grass {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      border-top: 1px solid rgba(20, 50, 25, 0.52);
+      background:
+        repeating-linear-gradient(-12deg, transparent 0 3px, rgba(255,255,255,0.028) 3px 5px, transparent 5px 8px),
+        repeating-linear-gradient(90deg, rgba(255,255,255, 0.02), transparent 1px, transparent 16px),
+        radial-gradient(circle at 50% -10%, rgba(255, 255, 235, 0.07), transparent 40%),
+        linear-gradient(to bottom, var(--grass-a) 0%, var(--grass-b) 52%, #061c0e 100%);
+      box-shadow: inset 0 12px 18px rgba(0, 0, 0, 0.32), inset 0 6px rgba(140, 200, 120, 0.07);
+      font-size: 11px;
+    }
+    .grass .muted { color: var(--text-sec); font-weight: 500; opacity: 0.95; }
+    .grass .tag {
+      font-weight: 800;
+      background: var(--red);
+      color: var(--text);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .grass .trail { color: var(--text-sec); font-weight: 700; tabular-nums; }
+
+    .flag {
+      width: 36px; height: 24px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .team-name {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .team-aside {
+      font-size: 10px;
+      color: var(--text-sec);
+      margin-top: 6px;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .var-label {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.03em;
+      margin-bottom: 0.85rem;
+    }
+
+    /* —— Variant 01: Horizontal rail —— */
+    .v01 {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .v01 .side {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .v01     .pill-vs {
+      align-self: center;
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 900;
+      color: rgba(31,10,14,0.85);
+      background: linear-gradient(145deg, var(--gold) 0%, #b8842a 100%);
+      box-shadow: 0 0 0 2px rgba(255,240,210,0.35), inset 0 2px rgba(255,255,255,0.55);
+      letter-spacing: 0.02em;
+    }
+
+    /* —— Variant 02: Inline RTL strip —— */
+    .v02 {
+      display: flex;
+      flex-direction: row-reverse;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 8px 12px;
+      padding: 8px 4px;
+    }
+    .v02 .unit {
+      display: inline-flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+    }
+    .v02 .dash {
+      color: rgba(255,255,255,0.22);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    /* —— Variant 03: Frosted duel panels —— */
+    .v03 {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .v03 .panel {
+      border-radius: 14px;
+      padding: 10px 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+    .v03 .panel .flag-wrap { margin: 0 auto 8px; display: inline-block; }
+    .v03 .orbit {
+      display: grid;
+      place-items: center;
+      align-self: center;
+      width: 30px;
+    }
+    .v03 .orbit span {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.35em;
+      color: rgba(255,255,255,0.28);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    /* —— Variant 04: Pitch split halves —— */
+    .v04 {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 112px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .v04::after {
+      content: "";
+      position: absolute;
+      left: 50%; top: 8%; bottom: 8%;
+      width: 2px;
+      margin-left: -1px;
+      background: rgba(244,193,93,0.55);
+      box-shadow: 0 0 12px rgba(244,193,93,0.35);
+      border-radius: 1px;
+      z-index: 1;
+    }
+    .v04 .half {
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .v04 .h-home {
+      background: linear-gradient(180deg, rgba(53,210,111,0.12) 0%, transparent 60%);
+      border-inline-end: none;
+    }
+    .v04 .h-away {
+      background: linear-gradient(180deg, rgba(214,58,54,0.10) 0%, transparent 60%);
+    }
+
+    /* —— Variant 05: Tilted showdown —— */
+    .v05 {
+      perspective: 500px;
+      padding: 6px 0 10px;
+    }
+    .v05 .skew-row {
+      display: flex;
+      flex-direction: row-reverse;
+      gap: 0;
+      transform: skewX(-4deg);
+    }
+    .v05 .skew-row > * { transform: skewX(4deg); }
+    .v05 .tile {
+      flex: 1;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .v05 .t-home {
+      background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(0,0,0,0.15));
+      border-radius: 0 14px 14px 0;
+      clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
+    }
+    .v05 .t-away {
+      background: linear-gradient(200deg, rgba(255,255,255,0.06), rgba(0,0,0,0.2));
+      border-radius: 14px 0 0 14px;
+      clip-path: polygon(0 0, 92% 0, 100% 100%, 0 100%);
+    }
+    .v05 .vs-cap {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.3em;
+    }
+
+    /* —— Variant 06: Typography masthead —— */
+    .v06 {
+      text-align: center;
+      padding: 4px 0 10px;
+    }
+    .v06 .mast {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 1.25rem;
+      margin-bottom: 8px;
+    }
+    .v06 .gly {
+      font-size: clamp(2.5rem, 14vw, 3.75rem);
+      font-weight: 900;
+      line-height: 0.82;
+      color: rgba(255,255,255,0.12);
+      text-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      font-variant-numeric: tabular-nums;
+    }
+    .v06 .gly.g-old { background: linear-gradient(180deg, var(--gold) 0%, #8a6420 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .v06 .subrow {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 4px;
+    }
+    .v06 .tiny {
+      max-width: 8rem;
+    }
+    .v06 .tiny .team-name { font-size: 12px; }
+    .v06 .flags-above {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    /* —— Variant 07: Compact chips —— */
+    .v07 {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .v07 .chip {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.38);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: inset 0 1px rgba(255,255,255,0.06);
+    }
+    .v07 .chip .txt { flex: 1; min-width: 0; text-align: right; }
+
+    /* —— Variant 08: Neon spine —— */
+    .v08-wrap {
+      position: relative;
+      padding: 4px 0;
+    }
+    .v08 {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      position: relative;
+    }
+    .v08 .col-mid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 32px;
+    }
+    .v08 .spine {
+      width: 4px;
+      border-radius: 99px;
+      flex: 1;
+      min-height: 64px;
+      max-height: 96px;
+      background: linear-gradient(180deg, transparent, var(--gold), transparent);
+      opacity: 0.95;
+      box-shadow: 0 0 20px rgba(244,193,93,0.45);
+    }
+    .v08 .vs-micro {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.38);
+      text-orientation: mixed;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+    .v08 .slot {
+      min-width: 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* —— Variant 09: Ribbons converge —— */
+    .v09 {
+      margin: 10px 0 6px;
+      position: relative;
+      padding: 0 4px;
+    }
+    .v09 .ribbon {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 44px 10px 16px;
+      margin-bottom: -8px;
+      border-radius: 10px;
+      clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+    }
+    .v09 .ribbon.r-home {
+      background: linear-gradient(265deg, rgba(244,193,93,0.22) 0%, rgba(0,0,0,0.2) 100%);
+      justify-content: flex-start;
+      margin-inline-start: auto;
+      width: 96%;
+      border-inline-end: 3px solid rgba(244,193,93,0.45);
+    }
+    .v09 .ribbon.r-away {
+      background: linear-gradient(95deg, rgba(214,58,54,0.18) 0%, rgba(0,0,0,0.2) 100%);
+      justify-content: flex-start;
+      margin-inline-start: 0;
+      width: 96%;
+      margin-top: -2px;
+      clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
+      border-inline-start: 3px solid rgba(214,58,54,0.35);
+      padding-inline: 52px;
+    }
+    .v09 .knot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, var(--gold) 0%, #7a5918 95%);
+      color: rgba(31,10,14,0.85);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 10px;
+      box-shadow:
+        0 0 0 3px rgba(31,5,10,0.92),
+        0 12px 20px rgba(0,0,0,0.55);
+      z-index: 2;
+    }
+
+    /* —— Variant 10: Broadcast lower-third —— */
+    .v10 {
+      background: rgba(0,0,0,0.52);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 10px;
+      display: grid;
+      grid-template-columns: 36px minmax(0,1fr) auto minmax(0,1fr) 36px;
+      gap: 6px;
+      align-items: center;
+    }
+    .v10 .corner-flag { justify-self: center; }
+    .v10 .bloc-end { text-align: right; justify-self: end; }
+    .v10 .bloc-start { text-align: left; justify-self: start; }
+    .v10 .vs-box {
+      font-size: 10px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.45);
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      letter-spacing: 0.12em;
+    }
+  </style>
+</head>
+<body>
+  <h1 dir="ltr">Humondial match row — 10 layout options</h1>
+  <p class="intro" dir="ltr">
+    Same chrome as production (gold rim · burgundy body · grass bar). Only the inner “match face” differs.
+    Dummy flags via <code>flagcdn.com</code>. Hebrew RTL.
+  </p>
+
+  <nav class="toc" aria-label="Jump">
+    <strong dir="ltr">Jump:</strong>
+    <a href="#v01">01 Rail</a>
+    <a href="#v02">02 Inline strip</a>
+    <a href="#v03">03 Panels</a>
+    <a href="#v04">04 Pitch halves</a>
+    <a href="#v05">05 Tilt duel</a>
+    <a href="#v06">06 Masthead</a>
+    <a href="#v07">07 Chips</a>
+    <a href="#v08">08 Neon spine</a>
+    <a href="#v09">09 Ribbons</a>
+    <a href="#v10">10 Lower-third</a>
+  </nav>
+
+  <div class="deck">
+
+    <!-- 01 -->
+    <section id="v01">
+      <div class="var-label" dir="ltr">OPTION 01 — Balanced duel columns · gold puck VS</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <p class="hint">הניחוש ייפתח כשמתקדמים בשלב…</p>
+            <div class="face">
+              <div class="v01">
+                <div class="side">
+                  <img class="flag" src="https://flagcdn.com/w80/il.png" width="72" height="48" alt="" />
+                  <div>
+                    <div class="team-name">קבוצת בית 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+                <div class="pill-vs" dir="ltr">VS</div>
+                <div class="side">
+                  <img class="flag" src="https://flagcdn.com/w80/br.png" width="72" height="48" alt="" />
+                  <div>
+                    <div class="team-name">קבוצת חוץ 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="v02">
+      <div class="var-label" dir="ltr">OPTION 02 — One ticker line · RTL natural reading</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <p class="hint">חלון ניחוש</p>
+            <div class="face">
+              <div class="v02">
+                <div class="unit">
+                  <img class="flag" src="https://flagcdn.com/w80/il.png" alt="" />
+                  <div>
+                    <div class="team-name">קבוצת בית 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+                <span class="dash">vs</span>
+                <div class="unit">
+                  <img class="flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                  <div>
+                    <div class="team-name">קבוצת חוץ 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="v03">
+      <div class="var-label" dir="ltr">OPTION 03 — Frosted duel panels · vertical VS</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <p class="hint"></p>
+            <div class="face">
+              <div class="v03">
+                <div class="panel">
+                  <div class="flag-wrap"><img class="flag" src="https://flagcdn.com/w80/il.png" alt="" /></div>
+                  <div class="team-name">קבוצת בית 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+                <div class="orbit"><span>V S</span></div>
+                <div class="panel">
+                  <div class="flag-wrap"><img class="flag" src="https://flagcdn.com/w80/br.png" alt="" /></div>
+                  <div class="team-name">קבוצת חוץ 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="v04">
+      <div class="var-label" dir="ltr">OPTION 04 — Pitch split · glowing center stripe</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v04">
+                <div class="half h-home">
+                  <img class="flag" src="https://flagcdn.com/w80/il.png" alt="" />
+                  <div class="team-name">קבוצת בית 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+                <div class="half h-away">
+                  <img class="flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                  <div class="team-name">קבוצת חוץ 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="v05">
+      <div class="var-label" dir="ltr">OPTION 05 — Angled arenas · asymmetric bite</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v05">
+                <div class="skew-row">
+                  <div class="tile t-home">
+                    <img class="flag" src="https://flagcdn.com/w80/il.png" alt="" />
+                    <div class="team-name">קבוצת בית 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                  <div class="tile t-away">
+                    <img class="flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                    <div class="team-name">קבוצת חוץ 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+                <div class="vs-cap">V S</div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="v06">
+      <div class="var-label" dir="ltr">OPTION 06 — Typography masthead · initials + micro copy</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v06">
+                <div class="mast">
+                  <span class="gly g-old" aria-hidden="true">ח</span>
+                  <span class="gly" style="opacity:0.35;font-size:clamp(1.75rem,8vw,2.5rem);">·</span>
+                  <span class="gly g-old" aria-hidden="true">ב</span>
+                </div>
+                <div class="subrow">
+                  <div class="tiny">
+                    <img class="flag" style="margin:0 auto 6px;display:block;" src="https://flagcdn.com/w80/br.png" alt="" />
+                    <div class="team-name">קבוצת חוץ 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                  <div class="tiny">
+                    <img class="flag" style="margin:0 auto 6px;display:block;" src="https://flagcdn.com/w80/il.png" alt="" />
+                    <div class="team-name">קבוצת בית 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="v07">
+      <div class="var-label" dir="ltr">OPTION 07 — Full-width oval chips · TV scorebug</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v07">
+                <div class="chip">
+                  <img class="flag" src="https://flagcdn.com/w80/il.png" alt="" />
+                  <div class="txt">
+                    <div class="team-name">קבוצת בית 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+                <div style="text-align:center;font-size:10px;font-weight:800;color:rgba(255,255,255,0.3);letter-spacing:0.4em;">VS</div>
+                <div class="chip">
+                  <img class="flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                  <div class="txt">
+                    <div class="team-name">קבוצת חוץ 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="v08">
+      <div class="var-label" dir="ltr">OPTION 08 — Neon gold spine · teams hug the beam</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v08-wrap">
+              <div class="v08">
+                <div class="slot">
+                  <img class="flag" src="https://flagcdn.com/w80/il.png" alt="" />
+                  <div class="team-name">קבוצת בית 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+                <div class="col-mid"><div class="spine" aria-hidden="true"></div><span class="vs-micro" dir="ltr">VS</span></div>
+                <div class="slot">
+                  <img class="flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                  <div class="team-name">קבוצת חוץ 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+              </div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="v09">
+      <div class="var-label" dir="ltr">OPTION 09 — Converging ribbons · center knot puck</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v09">
+                <div class="ribbon r-home">
+                  <img class="flag" src="https://flagcdn.com/w80/il.png" alt="" />
+                  <div>
+                    <div class="team-name">קבוצת בית 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+                <div class="ribbon r-away">
+                  <img class="flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                  <div>
+                    <div class="team-name">קבוצת חוץ 4</div>
+                    <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                  </div>
+                </div>
+                <div class="knot">vs</div>
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="v10">
+      <div class="var-label" dir="ltr">OPTION 10 — Broadcast lower-third · flags anchored on edges</div>
+      <div class="card-wrap">
+        <div class="card-inner">
+          <div class="burgundy">
+            <div class="top-row">
+              <span class="badge-open">פתוח</span>
+              <div class="phase">
+                <div class="p1">שלב קבוצות – מחזור 1</div>
+                <div class="p2">יום ראשון · 24.5.2026 · פתיחה 05:21</div>
+              </div>
+            </div>
+            <div class="face">
+              <div class="v10" dir="ltr">
+                <img class="flag corner-flag" src="https://flagcdn.com/w80/br.png" alt="" />
+                <div class="bloc-start">
+                  <div class="team-name">קבוצת חוץ 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+                <div class="vs-box">vs</div>
+                <div class="bloc-end">
+                  <div class="team-name">קבוצת בית 4</div>
+                  <div class="team-aside">[דמו – פתוח לניחוש]</div>
+                </div>
+                <img class="flag corner-flag" src="https://flagcdn.com/w80/il.png" alt="" />
+              </div>
+            </div>
+            <div class="meta-lines">
+              <div><span class="lab">פתיחת משחק:</span> ‎05:21‎ שעון ישראל · יום ראשון, ‎24.5</div>
+              <div><span class="lab">סגירת ניחוש:</span> ‎05:16‎</div>
+            </div>
+          </div>
+          <div class="grass">
+            <span class="trail">▼ · ‎1:0‎</span>
+            <div style="display:flex;flex-direction:row-reverse;align-items:center;gap:8px;">
+              <span class="tag">1:0</span>
+              <span class="muted">הבחירה שלך</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

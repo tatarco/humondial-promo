@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Humondial PWA — תקציר אסרטים למעצבים</title>
+  <style>
+    :root {
+      --hm-bg: #060202;
+      --red: #d63a36;
+      --gold: #f4c15d;
+      --green: #35d26f;
+      --text: #f8f3ea;
+      --muted: #9d8585;
+      --card: rgba(28, 6, 6, 0.94);
+      --border: rgba(214, 58, 54, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1.25rem 1rem 3rem;
+      font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Hebrew", sans-serif;
+      background: var(--hm-bg);
+      color: var(--text);
+      line-height: 1.55;
+      max-width: 980px;
+      margin-inline: auto;
+      font-size: 0.95rem;
+      text-align: right;
+    }
+    h1 {
+      font-size: 1.5rem;
+      border-bottom: 3px solid var(--red);
+      padding-bottom: 0.35rem;
+      margin-top: 0;
+    }
+    h2 {
+      margin-top: 2.25rem;
+      font-size: 1.18rem;
+      color: var(--gold);
+      scroll-margin-top: 12px;
+    }
+    h3 { margin-top: 1.35rem; font-size: 1rem; color: #e8dfd8; }
+    .meta { color: var(--muted); font-size: 0.86rem; }
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin: 1rem 0 1.5rem;
+      justify-content: flex-start;
+    }
+    nav.toc a {
+      color: var(--gold);
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.82rem;
+    }
+    nav.toc a:hover { background: rgba(244,193,93,0.08); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.805rem;
+      margin: 0.75rem 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.45rem;
+      vertical-align: top;
+      text-align: right;
+    }
+    th { background: rgba(214,58,54,0.14); color: var(--gold); }
+    code {
+      font-size: 0.76rem;
+      background: rgba(0,0,0,0.35);
+      padding: 0.12rem 0.28rem;
+      border-radius: 4px;
+      word-break: break-word;
+      direction: ltr;
+      unicode-bidi: embed;
+      display: inline-block;
+      text-align: left;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0; }
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.65rem;
+      margin: 0.85rem 0;
+    }
+    .swatch {
+      border-radius: 10px;
+      padding: 0.55rem;
+      border: 1px solid rgba(255,255,255,0.15);
+      min-height: 84px;
+    }
+    .swatch span { font-size: 0.72rem; color: rgba(248,243,234,0.85); display: block; margin-top: 0.35rem; }
+    .swatch code { font-size: 0.68rem; background: rgba(0,0,0,0.4); display: inline-block; margin-top: 0.25rem; }
+    .tier-demo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      margin: 0.85rem 0;
+    }
+    .tier-demo figure {
+      margin: 0;
+      text-align: center;
+    }
+    .tier-disk {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      margin: 0 auto 4px;
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: inset 0 4px 12px rgba(0,0,0,0.35);
+    }
+    .tier-b { background: linear-gradient(135deg,#e8a76a,#6b4423); }
+    .tier-s { background: linear-gradient(135deg,#f0f0f0,#9ca3af); }
+    .tier-g { background: linear-gradient(135deg,#fcd34d,#b45309); }
+    .tier-l { background: linear-gradient(135deg,#fca5a5,#991b1b); }
+    .tier-c { background: linear-gradient(135deg,#c4b5fd,#6366f1); }
+    .tier-demo figcaption {
+      font-size: 0.7rem;
+      color: var(--muted);
+      max-width: 92px;
+      direction: ltr;
+      unicode-bidi: embed;
+      margin-inline: auto;
+    }
+    .mock-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(284px, 1fr));
+      gap: 1.25rem;
+      margin: 1rem 0;
+    }
+    .phone {
+      border: 2px solid var(--border);
+      border-radius: 28px;
+      padding: 12px;
+      background: linear-gradient(180deg, #151010 0%, #060202 100%);
+      aspect-ratio: 260 / 560;
+      max-height: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .phone h4 {
+      margin: 0;
+      font-size: 0.72rem;
+      color: var(--gold);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .phone.rtl { direction: rtl; }
+    .zone {
+      flex: none;
+      border: 2px dashed rgba(244,193,93,0.55);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 0.58rem;
+      color: var(--muted);
+      min-height: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      text-align: center;
+      gap: 2px;
+    }
+    .zone b { color: var(--gold); font-size: 0.62rem; }
+    .zone em { font-style: normal; font-size: 0.54rem; color: rgba(157,133,133,0.95); line-height: 1.35; text-align: right; }
+    .zone.grow { flex: 1; min-height: 48px; }
+    .splash-mock {
+      border-radius: 16px;
+      border: 2px solid rgba(244,193,93,0.7);
+      min-height: 200px;
+      display: grid;
+      place-items: center;
+      margin: 0.85rem 0;
+      background: radial-gradient(circle at 50% 30%, rgba(214,58,54,0.25), transparent 65%),
+        linear-gradient(180deg,#0a0909,#050303);
+    }
+    .splash-mock-inner {
+      padding: 1rem;
+      border: 2px dashed rgba(244,193,93,0.45);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.76rem;
+      color: var(--gold);
+      max-width: 90%;
+    }
+    .folder {
+      font-family: ui-monospace, monospace;
+      font-size: 0.72rem;
+      background: rgba(0,0,0,0.45);
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.45;
+      direction: ltr;
+      text-align: left;
+      unicode-bidi: embed;
+    }
+    .note {
+      border-inline-start: 3px solid var(--red);
+      background: rgba(255,255,255,0.03);
+      padding: 0.55rem 0.85rem;
+      margin: 0.75rem 0;
+      font-size: 0.84rem;
+      color: #ddd6ce;
+    }
+    .footnote { margin-top: 2.25rem; font-size: 0.78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Humondial promo PWA — תקציר אסרטים למעצבים</h1>
+    <p class="meta"><strong>קהל יעד:</strong> מעצבי גרפיקה / מושן / איור / זהות חזותית<br />
+    <strong>מאגר קוד:</strong> <code>humondial-promo</code> (Vite/React PWA — ממשק RTL בעברית)<br />
+    <strong>בסיס צפייה:</strong> רוחבי מובייל עיקריים <strong>390–430px</strong> במונחי CSS. ייצוא רסטר עם <strong>‏@2×</strong> כמינימום; <strong>@3×</strong> כריבוי ל‑hero.</p>
+    <p>משוב משקיעים ממופה להנחיות ממשיות לפי <strong>‏ART‑##‎</strong> למטה. סעיפים שמסומנים מהנדסה מתארים התנהגות — לא נכס גרפי חדש — אבל מופיעים כדי ליישר בין פריסות לקריאות.</p>
+
+    <nav class="toc">
+      <a href="#tokens">טוקנים</a>
+      <a href="#examples">דוגמאות</a>
+      <a href="#checklist">רשימת מסירה</a>
+      <a href="#tier-pack">חבילת דרגות</a>
+      <a href="#typography">טיפוגרפיה</a>
+      <a href="#splash">Splash / באנר / וידאו</a>
+      <a href="#mockups">מוק‑אפי מיקום</a>
+      <a href="#match-ux">חוויית משחקים</a>
+      <a href="#achievements">כלכלת הישגים</a>
+      <a href="#handoff">צ׳ק־אאוט למסירה</a>
+    </nav>
+
+    <h2 id="tokens">טוקנים של מיתוג / ממשק (ליישור קו)</h2>
+    <table>
+      <thead><tr><th>טוקן</th><th>HEX / הערה</th></tr></thead>
+      <tbody>
+        <tr><td>רקע</td><td><code>#060202</code> (<code>--hm-bg</code>) — רקע כללי כהה</td></tr>
+        <tr><td>אדום ראשי</td><td><code>#D63A36</code> (<code>--red</code>)</td></tr>
+        <tr><td>זהב</td><td><code>#F4C15D</code> (<code>--gold</code>)</td></tr>
+        <tr><td>ירוק הדגשה</td><td><code>#35D26F</code> (<code>--green</code>)</td></tr>
+        <tr><td>כרטיס</td><td><code>#1c0606</code> — תחושת ~‎88‎% חוסר‑שקיפות מול תמונה (<code>--card-bg</code> בקוד)</td></tr>
+        <tr><td>מה יש במסך כיום</td><td><strong>רק מערכת הפונטים</strong> — פער זהות ל‑קטעי תצוגה = <strong>‏ART‑03‎</strong></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="examples">דוגמאות — פלטה ודיסקיות דמה לדרגות</h2>
+    <p class="meta">דיסקיות אלה החלפת גרפיקה לפריסה בלבד; הגשה סופית חייבת לענות על <strong>‏ART‑04‎</strong> ברורות בקריאות ב‑~‎16‎px בשורה יצוא.</p>
+    <div class="swatch-grid">
+      <div class="swatch" style="background:#060202"><span>רקע</span><code>#060202</code></div>
+      <div class="swatch" style="background:#d63a36"><span>אדום ראשי</span><code>#D63A36</code></div>
+      <div class="swatch" style="background:#f4c15d;color:#252525"><span>זהב</span><code>#F4C15D</code></div>
+      <div class="swatch" style="background:#35d26f;color:#082010"><span>ירוק הדגשה</span><code>#35D26F</code></div>
+      <div class="swatch" style="background:#1c0606;border-color:#d63a36"><span>כמו כרטיס</span><code>#1c0606</code></div>
+    </div>
+    <div class="tier-demo">
+      <figure><div class="tier-disk tier-b" title="תחליף ארד"></div><figcaption><code>hm-tier-bronze.svg</code></figcaption></figure>
+      <figure><div class="tier-disk tier-s" title="תחליף כסף"></div><figcaption><code>hm-tier-silver.svg</code></figcaption></figure>
+      <figure><div class="tier-disk tier-g" title="תחליף זהב"></div><figcaption><code>hm-tier-gold.svg</code></figcaption></figure>
+      <figure><div class="tier-disk tier-l" title="תחליף Legend"></div><figcaption><code>hm-tier-legend.svg</code></figcaption></figure>
+      <figure><div class="tier-disk tier-c" title="תחליף מותאם"></div><figcaption><code>hm-tier-custom.svg</code></figcaption></figure>
+    </div>
+
+    <h2 id="checklist">רשימת מסירה (מה לספק)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>מזהה</th>
+          <th>מסירה</th>
+          <th>בממשק</th>
+          <th>פורמט / גודל</th>
+          <th>וריאנטים</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>ART‑01‎</strong></td><td>וידאו פתיחה (גליל גביע חדש)</td><td>מלא מסך <code>SplashScreen</code>‎ ‎‎<code>/assets/splash.mp4</code></td><td>MP4‏ H.264 (אופציונלי WebM)‎; מושתק עם ‎<code>playsInline</code>‎.‎ ~‎1080×1920‎ אנכי; דחיסה (יעד ‎LTE ‎‎&lt;4–8 MB).</td><td>פוסטר ‎‎ART‑01b‎</td></tr>
+        <tr><td><strong>‏ART‑01b‎</strong></td><td>פוסטר ל‑splash</td><td>פריים ראשון לחיץ מהווידאו</td><td>WebP ‎‎@2×‎ + JPG; חיתוך ‎‎9∶16‎ ‎~‎1170×2532‎</td><td>אחד בלבד</td></tr>
+        <tr><td><strong>‏ART‑02‎</strong></td><td>באנר קמפיין ב‑hero בית</td><td>בין כותרת לבין <code>HeroCard‎</code>‎ נכס‎ ‎‎<code>public/assets/humondial-banner.jpeg</code>‎ קיים, <strong>עדיין לא חובר ברירת מחדל</strong>.</td><td>‏WebP‎ +‎ PNG‎; ‎‎~780×‎200–260‎px‎ (‏@2×‎ של‎ 390‎)‎ — ‎‎SVG‎ אם השטוח מסוגל</td><td>מותאם RTL; בהירות תחתית אופציונלית</td></tr>
+        <tr><td><strong>‏ART‑03‎</strong></td><td>פונט לכותרות עברית + לטין</td><td>טיפוגרפיה גלובלית</td><td>‏WOFF2‎; ‎‎Bold‎ ~‎900‎ + ‎‎Regular‎ ~‎400‎</td><td>subset לעברית וספרות לטין לפי הרישוי; גרסת ‎‎variable‎ אפשרית‎</td></tr>
+        <tr><td><strong>‏ART‑04‎</strong></td><td>מדליונים לדרגות</td><td>Hero,‎ סולמות אזור אישי, פודיום טבלה…‎</td><td><code>public/hm-tier-{slug‎}.‎svg‎</code>; ראה חבילת דרגות</td><td><code>bronze,silver,gold,legend,custom‎</code></td></tr>
+        <tr><td><strong>‏ART‑05‎</strong></td><td>גרפיקה לתגי הישגים</td><td>אזור אישי‎ (<code>b.badge‎</code>‎ עם אימוג׳י היום)</td><td>‏SVG‎ ‏64‎²‎ או ‏PNG‎ ‏@‎2× טקסטורה</td><td>‎נעול מול בהיר; מתואם עם כללת הנקודות מה‑BA‎</td></tr>
+        <tr><td><strong>ART‑06</strong></td><td>אייקון מידע/עזרה להסבר ניקוד</td><td><code>PersonalAreaScreen</code> — ליד שורת הנחיה עם תחזית נקודות (למשל ״צפי סיום…״)</td><td>SVG בסביבות ‎‎24px‎ (גודל בסיס גם ‎‎20px‎‎)</td><td>אזור נגיעה משמעותי:‎ ~‎‎44×‎44‎px‎ כולל ריפוד‎‎</td></tr>
+        <tr><td><strong>‏ART‑07‎</strong></td><td>מסגרת / זוהר למשחק פרימיום</td><td><code>MatchCard‎</code>‎; ‎<code>marquee_highlight‎</code> מול‎ <code>live‎</code></td><td>מפרט CSS‎ מועדף;‎ ‎‎9‎‑slice‎ ‏PNG‎ ‏‎~‎240‎px‎ גובה מינימום אופציונלי‎</td><td>מרקיז‎ / הילה‎ live‎ / חגיגה‎</td></tr>
+        <tr><td><strong>‏ART‑08‎</strong></td><td>ליטוש דגלים</td><td>שורות משחקים + פריסת ניבוי</td><td>‏CDN‎ לפי‎ ISO‎‎ — או אטלס מקומי ‏WebP/PNG‎ ‏80×‎53‎ ‏@‎1×‎‎, ‏160×‎106‎ ‏@‎2×‎‎</td><td>רשימת קוד מדינה מתואמת</td></tr>
+        <tr><td><strong>ART‑09</strong></td><td>מוטיב כדור בגלגלת הסליידר</td><td>רכבת דרגות בית; בשורת ״מסלול לשיפור״ בטבלה; סליידרי What‑if</td><td>SVG ~32px לידית (אופציונלי תמונה למסילה)</td><td>שלושה צבעי סימנטיקה לפי ההקשר: ניבוי / טבלה / משלוחים</td></tr>
+        <tr><td><strong>‏ART‑10‎</strong></td><td>אייקונים ל‑What‑if‎</td><td>כותרות ‎<code>WhatIfCard‎</code></td><td>‏SVG‎/‏PNG‎ ‏‎28–‎32‎px‎</td><td>‎3‎ אייקונים שמחליפים ⚽‎ ‎🍽️‎‎ ‎🛵‎‎</td></tr>
+        <tr><td><strong>‏ART‑11‎</strong></td><td>כתר לפודיום‎</td><td>ראשון בטבלה</td><td>‏SVG‎ ‏‎~‎40‎px‎ זהב‎</td><td>אופציונלי‎</td></tr>
+        <tr><td><strong>‏ART‑12‎</strong></td><td>רענון רקע אצטדיון‎</td><td><code>index.css‎</code> ‎<code>.‎stadium‑bg‎‎</code></td><td>‏JPG/WebP‎‎ ‏≥‎1920×‎1080‎ רחב‎</td><td>אחד‎</td></tr>
+        <tr><td><strong>ART‑13</strong></td><td>אייקונים לאריחים מהירים בבית</td><td>שורת 3 אריחים בראש דף הבית</td><td>מתאר קווים ~32px, מותאם RTL</td><td>אופציונלי</td></tr>
+      </tbody>
+    </table>
+    <p class="note"><strong>עומס הנדסה (בלי משטוח חדש):</strong> מעבר ‎splash→בית מהיר יותר בזכות ‎prefetch‎; מה שמעבר לזה = מטמון ‎‎/ API‎‎, לא משטוח.</p>
+
+    <h2 id="tier-pack">חבילת אייקוני דרגה (‎‎<strong>ART‑04‎</strong>) — שמות קבצים ובדיקות</h2>
+    <ul dir="ltr" style="text-align:right;">
+      <li dir="ltr" style="text-align:left;"><code>public/hm-tier-bronze.svg</code></li>
+      <li dir="ltr" style="text-align:left;"><code>public/hm-tier-silver.svg</code></li>
+      <li dir="ltr" style="text-align:left;"><code>public/hm-tier-gold.svg</code></li>
+      <li dir="ltr" style="text-align:left;"><code>public/hm-tier-legend.svg</code></li>
+      <li dir="ltr" style="text-align:left;"><code>public/hm-tier-custom.svg</code></li>
+    </ul>
+    <p><strong>לוח ארטבורד:</strong> 512²px וקטור (שקול), עם טבעת ביטחון פנימית בסביבות ‎40–60‎px למינימום בקריאות בגודל משטיחים עד ‎~16‎px בשורות. אל תוזיל מתחת ל‑‎&lt;2‎px בתור קווים דקים אחרי ייצוא/דחיסה.</p>
+    <table>
+      <thead><tr><th>רנדור‎ (‎px‎ ‎CSS)</th><th>מיקום</th></tr></thead>
+      <tbody>
+        <tr><td>56</td><td><code>HeroCard</code> בעמוד הבית — פינת המדליון הגדול לפי פריסת ה‑RTL הנוכחית</td></tr>
+        <tr><td>26</td><td>שורת דרגות ‎<code>HeroCard‎</code></td></tr>
+        <tr><td>28 / 22</td><td>פס דרגה באזור אישי</td></tr>
+        <tr><td>22</td><td>כותרת דרגה מורחבת באזור אישי‎</td></tr>
+        <tr><td>18</td><td>פודיום טבלה‎</td></tr>
+        <tr><td>20</td><td>שבב ‏״אני״‎ בכרטיס הטבלה‎</td></tr>
+        <tr><td>16</td><td>רשימה גוללת בטבלה‎</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="typography">טיפוגרפיה (<strong>ART‑03</strong>)</h2>
+    <p>משוב מהשטח: אין די ״זהות״ לכותרות כשהכל בפונט מערכת. יש לספק שם גופן בצירוף סט <strong>WOFF2‎</strong> לפי רישוי; ההנדסה תחבר ב־<code>tailwind.config.js</code> וב־<code>index.css</code>.</p>
+
+    <h2 id="splash">Splash‎ / באנר / וידאו‎ (<strong>ART‑01</strong>,‎ <strong>ART‑01b</strong>,‎ <strong>ART‑02‎</strong>)</h2>
+    <ul>
+      <li>נתיב הווידאו בזמן ריצה: <code>/assets/splash.mp4</code> (<code>SplashScreen.jsx</code>)</li>
+      <li>גליל הגביע החדש = תוכן ‎motion‎ — נכלל ב־‎ART‑01‎; יש לשמור על ‎bitrate‎ ויחסי גובה־רוחב לפי שורות הווידאו למעלה‎‎</li>
+      <li>באנר ‏ART‑02‎: אל תכללו פריט חיוני בחלון ה־‎notch‎ או בשולי העגוליות של הגוף (פינות מסך / עקמומיות הגב)</li>
+    </ul>
+
+    <h2 id="mockups">מוק‑אפי חוטי מיקום (מלבנים מסומנים)</h2>
+    <p class="meta">מסכי RTL‎: חשְב עם <strong>הצד המוביל בהקראה מימין</strong> (זרימת עברית).</p>
+
+    <h3>אזור Splash‎</h3>
+    <div class="splash-mock">
+      <div class="splash-mock-inner"><strong>ART‑01</strong> — וידאו אנכי ‏9∶16‎ שצריך למלא את מסך הפתיחה (<code>splash.mp4</code>).‎ <em>‎פוסטר ‏ART‑01b‎ אופציונלי מתחת למסך או בשכבות מוטת אווירה‎.</em></div>
+    </div>
+
+    <h3>דף הבית (RTL‎)</h3>
+    <div class="mock-wrap">
+      <div class="phone rtl">
+        <h4>שלד מסך • הבית בעברית‎</h4>
+        <div class="zone"><b>סרגל עליון‎</b><em>HUMONDIAL‎ — משפטי זהות; אם מתאימים משלבים את ‏ART‑03 בשם האפליקציה‎‎</em></div>
+        <div class="zone"><b>ART‑02‎</b><em>‎ פס ‎hero‎ לקמפיין Judah‎‎</em></div>
+        <div class="zone grow"><b>ART‑03‎ +‎ ART‑04‎</b><em> משפטי מפתח ב־RTL + מדליון פינותי בשכבת ה־‎hero‎; רכבת דרגות עם ידית כדור ‏ART‑09 במרכז המסלול‎‎</em></div>
+        <div class="zone"><b>ART‑13‎</b><em> אייקונים קוויים שמחליפים שלושה אריחי פעולה מהירה מהשורה התחתונה (במקום אימוג׳י‎)‎</em></div>
+        <div class="zone grow"><b>רשימת משחקים‎</b><em> בשורות: מצבי מסגרת ‏ART‑07 לפי ‎‎marquee‎ / ‎‎live‎; דגלים של ‏ART‑08 מהצידים של הקבוצות; בפתיחת לוח הניבויים ההרחבה משנה תחום מבלי להוריד דיוק בדגלים‎‎</em></div>
+      </div>
+      <div class="phone rtl">
+        <h4>שלד מסך • כרטיס משחק מורחב‎</h4>
+        <div class="zone grow" style="min-height:120px;"><b>מעטפת האריזה‎</b><em> מצב‎ ‎<strong>‎marquee‎</strong>‎ בזהב אל מול מצב ‎‎<strong>live‎</strong>‎ בזוהר טורקיז — מתבטא בשיעורי הרקע מהמחלקות ‎<code>.hm-match-marquee‎</code>‎ לעומת ‎<code>.hm-match-live-glow‎</code>‎‎</em></div>
+        <div class="zone"><b>שורת כותרת‎</b><em> תגית סטטוס • לוגו שידור • דגלי ‏ART‑08‎ ליד שמות הקבוצות‎‎</em></div>
+        <div class="zone"><b>תא ניבויים מורחב‎</b><em> דגלי ‏ART‑08‎ בגודל מוגדל + ניגודיות חיובי/שלילי מול ירוק/אדום המותג‎‎</em></div>
+      </div>
+    </div>
+
+    <h3>קטעים מהאזור האישי ומלוח המובילים‎</h3>
+    <div class="mock-wrap">
+      <div class="phone rtl">
+        <h4>שלד מסך • אזור אישי‎</h4>
+        <div class="zone"><b>דירוג + נקודות‎</b><em> שבב ‏ART‑04‎ ליד תווית הדרגה בעברית‎‎</em></div>
+        <div class="zone"><b>שורת תחזית ניקוד‎</b><em> נקודות צפויות לסיום העונה • מקום לפופאפ הסבר עם ‏ART‑06‎ (ⓘ‎)‎‎</em></div>
+        <div class="zone grow"><b>סולמות דרגות‎</b><em> ‏ART‑04‎ בגדלים ‎28‎ / ‎22‎ בפס ובשורות‎‎</em></div>
+        <div class="zone"><b>פס הישגים‎</b><em> ‏ART‑05‎ יחליף בעתיד את האימוג׳ים הממוזערים‎‎</em></div>
+      </div>
+      <div class="phone rtl">
+        <h4>שלד מסך • לוח מובילים‎</h4>
+        <div class="zone"><b>פודיום‎</b><em> כתר ‏ART‑11‎ אופציונלי; שבבי ‏ART‑04‎ בגודל ‎18‎px‎‎</em></div>
+        <div class="zone"><b>כרטיס ״אני״‎</b><em> ‏ART‑04‎ ‏@‎20‎px‎‎</em></div>
+        <div class="zone"><b>מסלול לשיפור‎</b><em> מוטיב כדור ‏ART‑09‎ במקום מילוי גרפי גנרי‎‎</em></div>
+        <div class="zone"><b>פאנל What‑if‎</b><em> אייקוני ‏ART‑10‎ בכותרות + ידיות ‏ART‑09‎‎</em></div>
+        <div class="zone"><b>גוף הרשימה‎</b><em> ‏ART‑04‎ בגודל ‎16‎px‎ לכל שורה‎‎</em></div>
+      </div>
+    </div>
+
+    <h2 id="match-ux">תקציר חוויית משחק (מילות ממשק ופריסה‎)</h2>
+    <table>
+      <thead><tr><th>נושא</th><th>מה מחפשים‎</th></tr></thead>
+      <tbody>
+        <tr><td>מצב ‏״חי‎״‎</td><td>קצר וברור; רענון ניקוד יסוכם בהנדסה (למשל ‎polling‎‎)</td></tr>
+        <tr><td>אורך שורת שלב‎</td><td>חי: רק שם השלב; פתוח: תאריך ושעה בשורות נפרדות‎‎</td></tr>
+        <tr><td>מגירת ניבויים‎</td><td>אותה רמת דיוק לדגלי ‏ART‑08‎; ניגודיות חיובי/שלילי מול ירוק/אדום המותג‎‎</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="achievements">כלכלת הישגים (<strong>ART‑05‎</strong>)</h2>
+    <p>מכסות הישגים ומחירי נקודות מגיעות ממבנה ה‑JSON של הקמפיין (<code>promo_campaigns.achievement_templates</code>) — יש לסנכרן את מלאי התגים רק אחרי גיליון נתונים סופי.</p>
+
+    <h2 id="handoff">צ׳ק־ליסט למסירה‎</h2>
+    <ul>
+      <li>חבילות רסטר: מבנה מוצע ‎<code>art/{ART-id}/name@2x.webp</code>‎ (אופציונלי גם ‎@3×‎‎)</li>
+      <li>‏SVG‎: לשטח שכבות ופילטרים כבדים לטובת ביצועים במובייל‎‎</li>
+      <li>אופציונלי: שלד Figma עם מסגרות ‏ART‑01‎…‏ART‑13‎‎</li>
+    </ul>
+    <h3 id="delivery-tree">דרך פריסה בספרייה למסירה‎</h3>
+    <div class="folder">art/ART-01/splash-master-h264.mp4
+art/ART-01/poster@2x.webp
+art/ART-02/banner@2x.webp
+art/ART-03/fonts/Heading-He-Regular.woff2
+art/ART-03/fonts/Heading-He-Bold.woff2
+public/hm-tier-bronze.svg          ← עותק לשורש ‎public/‎‎ בפרויקט‎
+public/hm-tier-silver.svg
+public/hm-tier-gold.svg
+public/hm-tier-legend.svg
+public/hm-tier-custom.svg
+art/ART-06/info-glyph.svg
+art/ART-07/marquee-9slice@2x.png   ← אופציונלי במסלול רסטר
+art/ART-08/flag-atlas@2x.webp
+art/ART-09/slider-knob-football.svg
+art/ART-10/whatif-{pred,table,deliv}.svg
+art/ART-12/stadium-master@2x.webp</div>
+
+    <p class="footnote">מבוסס על ‎<code>docs/DESIGNER_ASSET_BRIEF.md</code>‎; אפשר לפתוח את קובץ ה‑HTML מקומית (‎<code>file://</code>‎) או לפרסם כנכס סטטי.<br /><strong>הערה:</strong> גרסה קודמת הפנתה ל־<code>designer-placement-mocks.html</code> — הוחלף בסעיף המוקאפים שבמסמך זה.</p>
+  </article>
+</body>
+</html>

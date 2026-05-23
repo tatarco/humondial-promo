@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Humondial PWA — design artifacts & UX remediation</title>
+  <style>
+    :root {
+      --bg: #0a0707;
+      --card: #1a1010;
+      --border: rgba(214, 58, 54, 0.35);
+      --red: #d63a36;
+      --gold: #f4c15d;
+      --text: #f8f3ea;
+      --muted: #9d8585;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1.25rem;
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      max-width: 920px;
+      margin-inline: auto;
+    }
+    h1 {
+      font-size: 1.45rem;
+      border-bottom: 2px solid var(--red);
+      padding-bottom: 0.35rem;
+    }
+    h2 {
+      margin-top: 2rem;
+      font-size: 1.15rem;
+      color: var(--gold);
+    }
+    h3 { margin-top: 1.25rem; font-size: 1rem; }
+    nav {
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    nav a {
+      color: var(--gold);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+    }
+    nav a:hover { background: rgba(244,193,93,0.08); }
+    .meta {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin: 0.75rem 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.45rem;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: rgba(214,58,54,0.15); color: var(--gold); }
+    td code { font-size: 0.76rem; word-break: break-all; }
+    .tag {
+      display: inline-block;
+      padding: 0.12rem 0.38rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-right: 0.35rem;
+    }
+    .tag-done { background: rgba(53,210,111,0.2); color: #86efac; }
+    .tag-part { background: rgba(251,191,36,0.2); color: #fcd34d; }
+    .tag-open { background: rgba(156,163,175,0.2); color: #d1d5db; }
+    .mock-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .phone {
+      width: 260px;
+      height: 520px;
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      margin: 0 auto;
+      padding: 12px;
+      background: linear-gradient(180deg, #120808, #060202);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .phone-rtl { direction: rtl; font-family: system-ui; }
+    .zone {
+      border: 2px dashed var(--gold);
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 0.62rem;
+      color: var(--muted);
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .zone strong { color: var(--gold); display: block; }
+    .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 2rem; }
+    blockquote.quote-he {
+      margin: 0.5rem 0;
+      padding: 0.45rem 0.65rem;
+      border-right: 3px solid var(--red);
+      background: rgba(255,255,255,0.03);
+      font-style: italic;
+      font-size: 0.82rem;
+    }
+    details { margin: 0.65rem 0; border: 1px solid var(--border); border-radius: 8px; padding: 0 0.5rem; background: rgba(0,0,0,0.2); }
+    summary { cursor: pointer; padding: 0.5rem; font-weight: 600; color: var(--gold); }
+    details p, details ul { margin: 0.5rem 0 0.75rem 1rem; font-size: 0.82rem; }
+    ul.spaced li { margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Humondial promo PWA — design artifacts & UX traceability</h1>
+    <p class="meta">Consolidates stakeholder feedback + Gemini rollup against <strong>current repo state after one engineering sprint</strong> (prefetch-at-splash + hardcoded campaign id). Audience: designers, PMs, frontend.</p>
+
+    <nav>
+      <a href="#artifacts">§1 Artefact checklist</a>
+      <a href="#mockups">§2 Placement wire-mocks</a>
+      <a href="#feedbacks">§3 Feedback → state → fixes</a>
+      <a href="#actions">§4 Owned next steps</a>
+    </nav>
+
+    <section id="artifacts">
+      <h2>§1 Master artefact checklist (sizes & formats)</h2>
+      <p class="meta">Detailed specs also live in <code>humondial-promo/docs/DESIGNER_ASSET_BRIEF.md</code>; this HTML is the share-facing summary.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Deliverable</th>
+            <th>Embed location (code / screen)</th>
+            <th>Format / size</th>
+            <th>Variants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>ART-01</strong></td><td>Splash opener video with <em>new</em> trophy</td><td><code>SplashScreen.jsx</code> → <code>/assets/splash.mp4</code></td><td>MP4 H.264 (+ optional WebM); ~1080×1920 9:16; compress for LTE (&lt;4–8 MB target)</td><td>Poster frame ART-01b</td></tr>
+          <tr><td><strong>ART-01b</strong></td><td>Video poster / first frame</td><td>Optional future <code>&lt;video poster&gt;</code></td><td>WebP + JPG fallback ~1170×2532 crop</td><td>1</td></tr>
+          <tr><td><strong>ART-02</strong></td><td>Campaign banner strip (“יהודה”)</td><td>Home header → hero (file <code>public/assets/humondial-banner.jpeg</code> exists but <strong>not wired</strong>)</td><td>WebP + PNG; ~780px wide (@2× of 390) × ~200–260px tall</td><td>RTL safe margins</td></tr>
+          <tr><td><strong>ART-03</strong></td><td>Headline Hebrew + Latin webfont</td><td>Global: Tailwind sans + <code>index.css body</code></td><td>WOFF2 subset (Hebrew + digits); Bold/Black instance</td><td>Optional variable font</td></tr>
+          <tr><td><strong>ART-04</strong></td><td>Tier medallion icons</td><td><code>public/hm-tier-{bronze,silver,gold,legend,custom}.svg</code>; <code>TierIcon.jsx</code></td><td>SVG square artboard ~512², 40–60px breathing room</td><td>5 slugs; shrinks down to ~16–56 CSS px everywhere</td></tr>
+          <tr><td><strong>ART-05</strong></td><td>Achievement badge art</td><td>Personal achievements strip/detail (<code>b.badge</code> emoji today)</td><td>PNG @2× or SVG 64² per template id</td><td>Unlocked vs muted tints (+ economy with BA/backend)</td></tr>
+          <tr><td><strong>ART-06</strong></td><td>Info glyph for scoring explainer</td><td><code>PersonalAreaScreen.jsx</code> trajectory row (“צפי סיום”)</td><td>SVG 24px + 44px tap target via padding</td><td>1</td></tr>
+          <tr><td><strong>ART-07</strong></td><td>“Hot match” frame / glow spec</td><td><code>MatchCard</code> + CSS: <code>.hm-match-marquee</code>, <code>.hm-match-live-glow</code>; flag from API <code>marquee_highlight</code></td><td>Prefer written CSS spec (+ optional 9‑slice PNG)</td><td>Marquee highlight vs live vs celebrate</td></tr>
+          <tr><td><strong>ART-08</strong></td><td>Country flags (quality parity)</td><td><code>HomeScreen.jsx</code> Flag component (CDN when ISO codes exist)</td><td>Either QA CDN sizing or local atlas WebP PNG 80×53 @1×, 160×106 @2×</td><td>Fallback when API omits ISO → emoji gap today</td></tr>
+          <tr><td><strong>ART-09</strong></td><td>Football motif for sliders / knobs</td><td>Hero tier rail; Leaderboard “מסלול לשיפור”; What‑if sliders</td><td>SVG ~32² ball (“knob”)</td><td>Match 3 semantic colors vs challenges</td></tr>
+          <tr><td><strong>ART-10</strong></td><td>Challenge category icons</td><td><code>LeaderboardScreen.jsx</code> WhatIfCard headings</td><td>SVG/PNG ~28–32px</td><td>3 cards (predict / table / delivery)</td></tr>
+          <tr><td><strong>ART-11</strong></td><td>Podium crown (optional)</td><td>Leaderboard podium rank 1</td><td>SVG ~40px</td><td>1</td></tr>
+          <tr><td><strong>ART-12</strong></td><td>Stadium background refresh</td><td><code>index.css</code> <code>.stadium-bg::before</code></td><td>JPEG/WebP ≥1920×1080 widescreen</td><td>1</td></tr>
+          <tr><td><strong>ART-13</strong></td><td>Quick action icons (optional)</td><td>Home 3‑tile shortcuts</td><td>Outline 32px</td><td>3</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="mockups">
+      <h2>§2 Placement wire-mocks</h2>
+      <p class="muted">Rough geometry only; rectangles show <strong>where art ships</strong> (RTL = screen right).</p>
+
+      <h3>Home</h3>
+      <div class="mock-wrap">
+        <div class="phone phone-rtl">
+          <div class="zone" style="min-height:32px;"><strong>H1 Header</strong>ART-03 typography on wordmark strip</div>
+          <div class="zone" style="min-height:72px;"><strong>ART-02</strong> Judah campaign banner (full width)</div>
+          <div class="zone flex-col" style="min-height:140px;display:flex;flex-direction:column;justify-content:flex-start;">
+            <div style="margin-bottom:auto;text-align:right;padding:4px;"><strong>ART-03 + ART-04</strong>Hero taglines + large tier medallion TL</div>
+            <div style="text-align:center;font-size:.55rem;"><strong>Tier ladder</strong><br/>ART‑04 chips + ART‑09 ball on gradient bar</div>
+          </div>
+          <div class="zone"><strong>ART-13</strong> quick‑action emoji → optional outline icons row</div>
+          <div class="zone" style="min-height:140px;line-height:1.3;"><strong>Art-07 / ART-08</strong> Match cards: marquee frame + CDN flags.<br/><span dir="ltr" style="color:#fca5a5;">Expand row → guess dropdown: repeats flags ART‑08 &amp; polarity colors</span></div>
+        </div>
+      </div>
+
+      <h3>Personal area</h3>
+      <div class="mock-wrap">
+        <div class="phone phone-rtl">
+          <div class="zone"><strong>Personal stats card</strong>ART‑04 tier chip beside label</div>
+          <div class="zone"><strong>ART‑06</strong> “צפי סיום” row — slot for ⓘ + single sentence modal</div>
+          <div class="zone"><strong>ART‑04</strong> Tiers carousel + expanded perk list</div>
+          <div class="zone"><strong>ART‑05</strong> Achievements strip + expanded rows</div>
+        </div>
+      </div>
+
+      <h3>Leaderboard</h3>
+      <div class="mock-wrap">
+        <div class="phone phone-rtl">
+          <div class="zone"><strong>Podium</strong>ART‑04 on chips • ART‑11 crown</div>
+          <div class="zone"><strong>Me card</strong>ART‑04</div>
+          <div class="zone"><strong>ART‑09</strong> “מסלול לשיפור” bar motif</div>
+          <div class="zone"><strong>ART‑10 + ART‑09</strong> What‑if cards (slider thumb = ball)</div>
+          <div class="zone">List rows: ART‑4 @16‑20px tier chips</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="feedbacks">
+      <h2>§3 Stakeholder comments vs current behaviour</h2>
+
+      <h3>Tiny legend</h3>
+      <p><span class="tag tag-done">Addressed</span>Shipped/improved this sprint&nbsp;
+      <span class="tag tag-part">Partial</span>Improvement begun or depends on curator/content&nbsp;
+      <span class="tag tag-open">Open</span>Needs design/backend/product</p>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>Theme</th><th>Original ask (summarised)</th><th>Current state after sprint</th><th>Rationale / remediation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>F1</td><td>Splash hero video</td>
+            <td>Produce new cinematic with new trophy aesthetic.</td>
+            <td><span class="tag tag-open">Open</span>Still awaiting motion asset (<code>splash.mp4</code>).</td>
+            <td>Stakeholder filming; engineer swaps file + optionally <code>poster</code> (ART‑01b).</td>
+          </tr>
+          <tr>
+            <td>F2</td><td>Slow intermediate load (~5 s)</td>
+            <td>Pause between splash end and usable home dragged.</td>
+            <td><span class="tag tag-done">Addressed</span><code>App.jsx</code> prefetches <code>loadConfig</code> + <code>promoValidateSession</code>; <code>warmListMatches.js</code> overlaps <code>listMatches</code> during splash.</td>
+            <td>Residual delay = network variability + leaderboard/predict fetch on Home mount; optionally prefetch auth‑gated endpoints when token exists (<em>engineering follow‑up</em>).</td>
+          </tr>
+          <tr>
+            <td>F3</td><td>Home hero typography &amp; tier visual</td>
+            <td>Headline fonts feel missing/samey; trophy emoji should → official tier medallion.</td>
+            <td><span class="tag tag-part">Partial</span><code>HeroCard</code> renders <code>TierIcon</code> (56 px + 26 px) plus copy; typography still generic system stack.</td>
+            <td>ART‑03 font files + ART‑04 art polish replaces placeholder geometric SVG shields.</td>
+          </tr>
+          <tr>
+            <td>F4</td><td>Top marketing banner</td>
+            <td>Replace provisional strip with Judah’s approved graphic.</td>
+            <td><span class="tag tag-open">Open</span>Raster exists offline (<code>public/assets/humondial-banner.jpeg</code>) — not wired in JSX/layout.</td>
+            <td>Engineering mounts component between header &amp; <code>HeroCard</code> once final asset signed off (ART‑02).</td>
+          </tr>
+          <tr>
+            <td>F5</td><td>Country flags fidelity</td>
+            <td>Flags missing/low quality vs expectation.</td>
+            <td><span class="tag tag-part">Partial</span>CDN PNG rendered when ISO <code>home_flag/away_flag</code> populated; heuristic emoji map fills gaps (<code>FLAG_MAP</code>).</td>
+            <td>Backend must maintain ISO consistency; alternatively ship local atlas (ART‑08) for guaranteed parity inside dropdown rows.</td>
+          </tr>
+          <tr>
+            <td>F6</td><td>Match phase copy verbosity</td>
+            <td>Live: shorten to competition phase only — open/not started: emphasise fixture date/time.</td>
+            <td><span class="tag tag-open">Open</span><code>MatchCard</code> still builds stacked phase strings (<code>matchPhase*</code>), long lines for broadcasts.</td>
+            <td>Engineering refactor string builder branching on <code>status===live</code> vs <code>open</code>/<code>locked</code>; QA copy Hebrew.</td>
+          </tr>
+          <tr>
+            <td>F7</td><td>Guess accordion delight</td>
+            <td>More colour signalling for correct/incorrect guesses; richer flags inline.</td>
+            <td><span class="tag tag-part">Partial</span>Outcome banners colour‑code points; emoji flags duplicate team column.</td>
+            <td>Design tokens for positive/negative states + ensure flag sprites repeat inside expanded scorer UI (engineering + ART‑08).</td>
+          </tr>
+          <tr>
+            <td>F8</td><td>“Hot matches” prominence</td>
+            <td>Marquee clashes (Argentina–Brazil…) need fire/gold halo beyond normal glow.</td>
+            <td><span class="tag tag-part">Partial</span>.classes <code>hm-match-marquee</code> + glow when backend sets <code>marquee_highlight</code>; curator must flag marquee rows.</td>
+            <td>Visual punch still conservative — iterate ART‑07 spec + lighten CSS layering for focus vs live states.</td>
+          </tr>
+          <tr>
+            <td>F9</td><td>Personal area trajectory explainability</td>
+            <td>“צפי סיום / בקצב הנוכחי” lacks one‑sentence scoring explainer accessible via icon.</td>
+            <td><span class="tag tag-open">Open</span>No info affordance wired.</td>
+            <td>Add ⓘ (ART‑06) triggering modal with agreed microcopy referencing projection formula from backend trajectory payload.</td>
+          </tr>
+          <tr>
+            <td>F10</td><td>Tier ladders &amp; achievements economy</td>
+            <td>Need more badges + repriced bonus points coherent with KPIs.</td>
+            <td><span class="tag tag-part">Partial</span>Icons already reused via <code>TierIcon</code>; achievements emoji from API.</td>
+            <td>Growth product tunes template JSON (<code>getLeaderboard.me.achievements</code>). Designers supply ART‑05 once IDs stable.</td>
+          </tr>
+          <tr>
+            <td>F11</td><td>Leaderboard motifs</td>
+            <td>Replace generic sliders &amp; emojis with football &amp; tier polish.</td>
+            <td><span class="tag tag-part">Partial</span>Tier SVG chips already in rows &amp; podium; sliders still emoji + CSS gradient.</td>
+            <td>Swap WhatIf headings to ART‑10; customise range thumb/track with ART‑09.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <details>
+        <summary>Reference: original stakeholder bullets (verbatim)</summary>
+        <blockquote class="quote-he">
+          צהריים טובים, עברתי על הדברים … סרטון ראשי … וידאו דומה עם הגביע החדש<br/>
+          Loading ~5 שניות … מסך ראשי … פונטים … אייקון TIER במקום אימוג'י הגביע · באנר עליון … יהודה<br/>
+          משחק חי ודגלים · טקסט ארוך · דרופדאון עם דגלים וצבעים · משחק חם HIGHLIGHT<br/>
+          אזור אישי Tier icon · צפי סיום עם information · סקשן דרגות והישגים<br/>
+          לוח אלופים — אייקוני טירים · מסלול לשיפור · סקאלות כדורגל
+        </blockquote>
+      </details>
+    </section>
+
+    <section id="actions">
+      <h2>§4 Ownership matrix (quick)</h2>
+      <ul class="spaced">
+        <li><strong>Design / motion:</strong> ART‑01, ART‑02, ART‑03, ART‑04 polish, ART‑05–07, ART‑08–13.</li>
+        <li><strong>Frontend engineering:</strong> Wire ART‑02, trajectory info modal hooks, refactor match phase copy (<strong>F6</strong>), optional extended prefetch (<strong>F2</strong> leftovers), accordion colour tokens (<strong>F7</strong>), tighten marquee styling (<strong>F8</strong>).</li>
+        <li><strong>Backend / Growth:</strong> Guarantee ISO flags populate listMatches rows; curated <code>marquee_highlight</code>; enlarge achievement templates & points (<strong>F10</strong>).</li>
+        <li><strong>Stakeholder QA:</strong> Verify improved splash→shell timing on LTE &amp; latest Cloudflare Pages build.</li>
+      </ul>
+    </section>
+
+    <p class="footnote">Generated for internal handoff • Source repo: <code>humondial-promo</code> • Companion markdown: <code>docs/DESIGNER_ASSET_BRIEF.md</code>.</p>
+  </article>
+</body>
+</html>
