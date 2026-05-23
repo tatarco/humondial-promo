@@ -704,7 +704,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
         {showLiveBroadcastLayout ? (
           <>
             <div
-              className="relative w-full hm-match-live-header-rounded pt-3 px-4 pb-3 mb-3"
+              className="relative w-full hm-match-live-header-rounded pt-3 px-4 pb-3"
               style={{
                 background: 'linear-gradient(270deg, rgba(96,165,250,0.14), rgba(96,165,250,0.02))',
                 borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -779,7 +779,8 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 ) : null}
               </div>
             </div>
-            <div className="text-right space-y-0.5 mb-2 px-4">
+            <div className="hm-match-burgundy px-4 pt-2 pb-2">
+            <div className="text-right space-y-0.5 mb-2">
               <div className="text-[11px] font-semibold leading-snug break-words text-white/92 antialiased">
                 {phasePrimary || '—'}
               </div>
@@ -790,11 +791,11 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               ) : null}
             </div>
             {openerHint ? (
-              <p className="text-[10px] leading-snug mb-3 text-right break-words px-4" style={{ color: 'var(--text-sec)' }}>
+              <p className="text-[10px] leading-snug mb-3 text-right break-words" style={{ color: 'var(--text-sec)' }}>
                 {openerHint}
               </p>
             ) : null}
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1 px-4" dir="rtl">
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1" dir="rtl">
               <div className="min-w-0 text-center px-px">
                 <div className="flex justify-center mb-1.5">
                   <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="grid" />
@@ -829,8 +830,9 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               </div>
             </div>
             {finalSummaryPanel ? (
-              <div className="px-4 pb-2 pt-1">{finalSummaryPanel}</div>
+              <div className="pb-2 pt-1">{finalSummaryPanel}</div>
             ) : null}
+            </div>
           </>
         ) : (
           <div className="hm-match-burgundy px-4 pt-4 pb-2">
