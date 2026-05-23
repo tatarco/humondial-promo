@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
+import { displayTierPrimaryLabelHe } from '../lib/tierCatalog.js';
 import { tierPerkDisplayRows } from '../lib/tierPerks.js';
 import { tierChipClassFromCampaignTier } from '../lib/tierVisual.js';
 import TierIcon from '../components/TierIcon.jsx';
@@ -29,14 +30,14 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
 
   if (loading) {
     return (
-      <div className="min-h-dvh stadium-bg flex items-center justify-center">
+      <div className="hm-personal-screen-bg flex items-center justify-center">
         <div className="text-2xl font-black animate-pulse" style={{ color: 'var(--red)' }}>טוען...</div>
       </div>
     );
   }
   if (error) {
     return (
-      <div className="min-h-dvh stadium-bg flex flex-col items-center justify-center gap-4 p-6">
+      <div className="hm-personal-screen-bg flex flex-col items-center justify-center gap-4 p-6">
         <div style={{ color: 'var(--text-sec)', fontSize: 13 }}>לא הצלחנו לטעון את הנתונים</div>
         <button onClick={load} className="hm-btn-primary px-6 py-2 text-sm">נסה שוב</button>
       </div>
@@ -72,6 +73,19 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
     : -1;
   const isTierEarned = (tierIdx) => earnedTierIndex >= 0 && tierIdx <= earnedTierIndex;
 
+  const myLadderSlot1 =
+    myTier && tiersAscAll.length
+      ? earnedTierIndex >= 0
+        ? earnedTierIndex + 1
+        : (() => {
+            const ix = tiersAscAll.findIndex(
+              tt => tt?.id === myTier?.id || (typeof tt?.key === 'string' && tt.key === tierKey),
+            );
+            return ix >= 0 ? ix + 1 : 0;
+          })()
+      : 0;
+  const myTierBadgeLabel = myTier ? displayTierPrimaryLabelHe(myTier, myLadderSlot1) : '';
+
   const td            = me.tier_detail ?? null;
   const venueVisitCnt = td?.counts?.venue_visits ?? 0;
   const deliveryCnt   = td?.counts?.deliveries ?? 0;
@@ -104,7 +118,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   };
 
   return (
-    <div className="h-dvh stadium-bg" dir="rtl">
+    <div className="hm-personal-screen-bg" dir="rtl">
     <div className="h-dvh overflow-y-auto pb-8">
       <header className="flex items-center justify-between px-4 py-3">
         <button
@@ -136,7 +150,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
               {myTier && (
                 <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${tierChipClassFromCampaignTier(myTier)}`}>
                   <TierIcon tierLike={myTier} sizePx={22} />
-                  {myTier.label_he}
+                  {myTierBadgeLabel}
                 </span>
               )}
             </div>
@@ -328,7 +342,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                       style={{
                         background: done ? undefined : 'rgba(255,255,255,0.03)',
                         border: done ? undefined : '1px solid rgba(255,255,255,0.07)',
-                        minWidth: 60,
+                        minWidth: 88,
                       }}
                     >
                       <span className="flex flex-col items-center gap-0.5 leading-none">
@@ -339,7 +353,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                         className="text-[10px] font-bold text-center leading-tight"
                         style={{ color: done ? 'inherit' : 'var(--text-sec)' }}
                       >
-                        {t.label_he || tk || 'דרגה'}
+                        {displayTierPrimaryLabelHe(t, idx + 1)}
                       </span>
                     </div>
                   );
@@ -371,52 +385,85 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                     label: `מינימום ${md} משלוחים מאומתים בקוד`,
                     done: deliveryCnt >= md,
                   });
+                  const titleHe = displayTierPrimaryLabelHe(t, i + 1);
                   return (
-                    <div
+                    <article
                       key={String(t.id || tk)}
-                      className="hm-ach-row-item px-3 py-2.5 rounded-xl space-y-2 text-right"
+                      className="hm-ach-row-item w-full space-y-3 rounded-xl px-4 py-3 text-right"
+                      dir="rtl"
                       style={{
                         background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
                         border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
                       }}
                     >
-                      <div className="flex flex-row-reverse items-start gap-2">
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierChipClassFromCampaignTier(t) : ''}`}>
-                            <TierIcon tierLike={t} sizePx={22} />
-                            {t.label_he || tk}
-                          </span>
-                          {benefits.length > 0 ? (
-                            <div className="mt-2 space-y-1.5 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                              <div className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--gold)', opacity: 0.92 }}>הטבות בדרגה</div>
-                              {benefits.map(b => (
-                                <div key={b.key} className="text-[11px] leading-snug pr-2" style={{ color: 'var(--text)' }}>
-                                  {b.text.trim()}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-[10px] mt-1.5" style={{ color: 'var(--text-sec)' }}>לא הוזנו הטבות מפורטות לדרגה זו בהגדרות הקמפיין</div>
-                          )}
-                          {reqs.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              <div className="text-[9px] font-bold uppercase tracking-wide text-right" style={{ color: 'var(--text-sec)' }}>תנאי סף מהקונפיגורציה</div>
-                              {reqs.map(r => (
-                                <div key={r.key} className="flex flex-row-reverse items-start gap-2 text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
-                                  <span className="shrink-0 font-black" style={{ color: r.done ? '#4ade80' : 'rgba(246,239,237,0.35)' }}>
-                                    {r.done ? '✓' : '·'}
-                                  </span>
-                                  <span className="text-right">{r.label}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xl flex-shrink-0" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <span
+                          className={`inline-flex max-w-[min(88%,21rem)] min-w-0 flex-row-reverse flex-nowrap items-center gap-2 rounded-full px-3 py-1.5 font-black ${
+                            done ? tierChipClassFromCampaignTier(t) : ''
+                          }`}
+                          style={
+                            done
+                              ? undefined
+                              : {
+                                  color: 'var(--text-sec)',
+                                  border: '1px solid rgba(255,255,255,0.14)',
+                                  background: 'rgba(255,255,255,0.04)',
+                                }
+                          }
+                        >
+                          <TierIcon tierLike={t} sizePx={26} />
+                          <span className="truncate text-[11px] leading-tight">{titleHe}</span>
+                        </span>
+                        <span
+                          className="shrink-0 text-2xl leading-none tabular-nums"
+                          aria-hidden
+                          style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}
+                        >
                           {done ? '★' : '☆'}
                         </span>
                       </div>
-                    </div>
+                      {benefits.length > 0 ? (
+                        <div className="w-full space-y-2 border-t pt-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                          <div className="text-[9px] font-black uppercase tracking-wide" style={{ color: 'var(--gold)' }}>
+                            הטבות בדרגה
+                          </div>
+                          <ul className="m-0 list-none space-y-2 p-0">
+                            {benefits.map((b) => (
+                              <li
+                                key={b.key}
+                                className="w-full text-[11px] font-medium leading-relaxed"
+                                style={{ color: 'var(--text)' }}
+                              >
+                                {b.text.trim()}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <div className="text-[10px] leading-snug" style={{ color: 'var(--text-sec)' }}>
+                          לא הוזנו הטבות מפורטות לדרגה זו בהגדרות הקמפיין
+                        </div>
+                      )}
+                      {reqs.length > 0 ? (
+                        <div className="w-full space-y-1 border-t pt-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                          <div className="text-[9px] font-black uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>
+                            תנאי סף מהקונפיגורציה
+                          </div>
+                          <ul className="m-0 list-none space-y-1 p-0">
+                            {reqs.map((r) => (
+                              <li key={r.key} className="flex flex-row-reverse items-start gap-2 text-[10px] leading-snug">
+                                <span className="shrink-0 font-black" style={{ color: r.done ? '#4ade80' : 'rgba(246,239,237,0.35)' }}>
+                                  {r.done ? '✓' : '·'}
+                                </span>
+                                <span className="min-w-0 flex-1 text-right leading-snug" style={{ color: 'var(--text-sec)' }}>
+                                  {r.label}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </article>
                   );
                 })}
               </div>

@@ -42,11 +42,11 @@ export function tierChipClassFromCampaignTier(tierLike) {
   return `hm-tier-chip--${v}`;
 }
 
-/** Tier hero JPEG path — positional slot from campaign (`tier.hero_slot`), not id. */
+/** Tier hero PNG path — positional slot from campaign (`tier.hero_slot`), not id. */
 /** @throws Error */
 export function tierIconSrcFromCampaignTier(tierLike) {
   const slot = requireHeroSlotFromTier(tierLike);
-  return `${baseUrl()}tier-hero/tier-${slot}.jpeg?v=1`;
+  return `${baseUrl()}tier-hero/tier-${slot}.png?v=4`;
 }
 
 /** Tailwind accents for perk cards keyed by palette (campaign `tier.chip_variant`). */

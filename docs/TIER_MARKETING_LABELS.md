@@ -1,6 +1,6 @@
 # Tier crest copy (Humondial 2026 ladder)
 
-Source: WhatsApp hero pack dated 2026-05-23 (`public/tier-hero/tier-{1–5}.jpeg`). **Hero art is keyed by positional slot** (`tier.hero_slot` ∈ 1–5), not by tier id.
+Source: WhatsApp hero pack dated 2026-05-23 (`public/tier-hero/tier-{1–5}.jpeg`). **Runtime sprites** are regenerated **RGBA PNGs** at `tier-hero/tier-{n}.png` (JPEG matte knocked out offline via `scripts/knockout_tier_png.py`). **Hero art is keyed by positional slot** (`tier.hero_slot` ∈ 1–5), not by tier id.
 
 Campaign **tier ids** are whatever BizFlow persists in Postgres `promo_campaigns.tiers[].id`; marketing labels are **`label_he` / `label_en`** edited in BizFlow **HumondialCampaignConfig → רמות**.
 

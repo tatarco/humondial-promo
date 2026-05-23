@@ -226,8 +226,13 @@ body {
 }
 
 .hm-tier-hero-img {
-  mix-blend-mode: darken;
-  -webkit-mix-blend-mode: darken;
+  vertical-align: middle;
+}
+
+.hm-personal-screen-bg {
+  min-height: 100dvh;
+  background-color: #060202;
+  background-image: radial-gradient(ellipse 120% 62% at 50% -18%, rgba(214, 58, 54, 0.12), transparent 55%);
 }
 
 .hm-match-broadcast-glow {

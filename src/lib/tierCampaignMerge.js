@@ -1,6 +1,7 @@
+import { marketingLabelHeForLadderIndex } from './tierCatalog.js';
 import { ALLOWED_CHIP_VARIANTS } from './tierVisual.js';
 
-const ALLOWED_CV = new Set(ALLOWED_CHIP_VARIANTS);
+const CHIP_VARIANT_SET = new Set(ALLOWED_CHIP_VARIANTS);
 
 function canonId(tierLike) {
   if (!tierLike || typeof tierLike !== 'object') return '';
@@ -32,6 +33,34 @@ function sortedTiersAscending(tiers) {
   );
 }
 
+function ladderIndexOneBasedFromTiersSorted(tiers, tierLike) {
+  if (!tierLike || typeof tierLike !== 'object' || !Array.isArray(tiers)) return 0;
+  const sorted = sortedTiersAscending(tiers);
+  const want = canonId(tierLike);
+  let idx = want
+    ? sorted.findIndex((t) => t?.id === want || (t?.key != null && t.key === want))
+    : -1;
+  if (idx < 0 && typeof tierLike.min_points === 'number') {
+    const hits = sorted.filter((t) => Number(t.min_points) === Number(tierLike.min_points));
+    if (hits.length === 1) {
+      const only = hits[0];
+      idx = sorted.findIndex(
+        (t) =>
+          (only?.id != null && t?.id === only.id) ||
+          (typeof only?.key === 'string' && typeof t?.key === 'string' && t.key === only.key),
+      );
+    }
+  }
+  return idx >= 0 ? idx + 1 : 0;
+}
+
+function applyMarketingPrimaryLabelHe(tiers, candidate) {
+  const li = ladderIndexOneBasedFromTiersSorted(tiers, candidate);
+  const mk = li >= 1 ? marketingLabelHeForLadderIndex(li) : '';
+  const fb = typeof candidate?.label_he === 'string' ? candidate.label_he.trim() : '';
+  return mk || fb;
+}
+
 export function heroSlotChipPatch(candidate, tiers) {
   const sorted = sortedTiersAscending(tiers);
   const id = canonId(candidate);
@@ -56,7 +85,7 @@ export function heroSlotChipPatch(candidate, tiers) {
   let chip_variant = typeof candidate?.chip_variant === 'string'
     ? candidate.chip_variant.trim().toLowerCase()
     : '';
-  if (!ALLOWED_CV.has(chip_variant)) {
+  if (!CHIP_VARIANT_SET.has(chip_variant)) {
     chip_variant = ALLOWED_CHIP_VARIANTS[i % ALLOWED_CHIP_VARIANTS.length];
   }
 
@@ -68,10 +97,14 @@ export function mergePlayerTierWithCatalog(tierLike, tiers) {
   const row = findCampaignTierLoose(tiers, tierLike);
   if (!row) {
     const p = heroSlotChipPatch(tierLike, tiers);
-    return {
+    const mid = {
       ...tierLike,
       ...p,
       chip_variant: p.chip_variant,
+    };
+    return {
+      ...mid,
+      label_he: applyMarketingPrimaryLabelHe(tiers, mid) || tierLike.label_he,
     };
   }
   const base = {
@@ -83,10 +116,14 @@ export function mergePlayerTierWithCatalog(tierLike, tiers) {
     chip_variant: row.chip_variant ?? tierLike.chip_variant,
   };
   const p = heroSlotChipPatch(base, tiers);
-  return {
+  const shaped = {
     ...base,
     hero_slot: p.hero_slot,
     chip_variant: p.chip_variant,
+  };
+  return {
+    ...shaped,
+    label_he: applyMarketingPrimaryLabelHe(tiers, { ...shaped, id: row.id, key: row.key, min_points: row.min_points }) || shaped.label_he,
   };
 }
 
