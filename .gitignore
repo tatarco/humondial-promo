@@ -1,3 +1,6 @@
+.cursor/
+graphify-out/
+
 node_modules/
 dist/
 .env.local

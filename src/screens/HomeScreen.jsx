@@ -3,6 +3,8 @@ import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { mapPromoError } from '../lib/promoErrors.js';
+import TierIcon from '../components/TierIcon.jsx';
+import { matchPhasePrimary, matchPhaseSecondary } from '../lib/matchPhaseLines.js';
 
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
@@ -50,6 +52,36 @@ const DAYS_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי
 
 function getFlag(teamName, fallback) {
   return FLAG_MAP[teamName] || fallback || '🏳️';
+}
+
+function TeamFlagGraphic({ match, side, parts, variant = 'inline' }) {
+  const emoji = getFlag(parts?.clean, side === 'home' ? match?.home_flag : match?.away_flag);
+  const raw = side === 'home' ? match?.home_country_code : match?.away_country_code;
+  const code = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  const w = variant === 'picker' ? 44 : variant === 'grid' ? 28 : 24;
+  const h = variant === 'picker' ? 33 : variant === 'grid' ? 21 : 18;
+  if (/^[A-Z]{2}$/.test(code)) {
+    return (
+      <img
+        src={`https://flagcdn.com/w80/${code.toLowerCase()}.png`}
+        alt=""
+        width={w}
+        height={h}
+        className={
+          variant === 'picker'
+            ? 'rounded object-cover border border-white/25 shadow-sm'
+            : 'rounded object-cover border border-white/20'
+        }
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+  return (
+    <span className={variant === 'picker' ? 'text-3xl leading-none select-none' : 'text-xl leading-none select-none'}>
+      {emoji}
+    </span>
+  );
 }
 
 function fmtTime(utcIso, tz = 'Asia/Jerusalem') {
@@ -167,8 +199,6 @@ function HeroCard({
 
   const ptsToNextPlain = nextT && tp != null ? nextT.min_points - tp : 0;
 
-  const tierKeyRaw = tierFromServer?.key || tierFromServer?.id || '';
-  const tierMedal = tierKeyRaw === 'legend' ? '🏅' : tierKeyRaw === 'gold' ? '🥇' : tierKeyRaw === 'silver' ? '🥈' : tierKeyRaw === 'bronze' ? '🥉' : '🎖️';
   const delivPts = config.delivery_points;
 
   return (
@@ -183,7 +213,11 @@ function HeroCard({
           <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>פה לא רק רואים מונדיאל.</p>
           <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>פה משחקים אותו.</p>
         </div>
-        <div className="absolute top-4 left-4 text-6xl leading-none select-none">🏆</div>
+        <TierIcon
+          tierLike={tierFromServer}
+          sizePx={56}
+          className="absolute top-4 left-4 drop-shadow-lg opacity-[0.95]"
+        />
       </div>
 
       {/* Points */}
@@ -220,7 +254,7 @@ function HeroCard({
       {/* Tier progress */}
       <div className="px-5 pb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xl leading-none">{tierMedal}</span>
+          <TierIcon tierLike={tierFromServer} sizePx={26} />
             <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
             השלב שלי: {tierFromServer?.label_he ?? '—'} ↗
           </button>
@@ -351,7 +385,7 @@ function QuickActionTile({ icon, label, sub, onClick, href, scrolled }) {
     : inner;
 }
 
-function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeFlag, awayFlag }) {
+function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeParts, awayParts }) {
   const initOutcome = () => {
     if (!prediction) return null;
     if (prediction.home_score > prediction.away_score) return 'home';
@@ -405,9 +439,9 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
         <p className="text-sm font-bold text-right mb-2.5" style={{ color: 'var(--text)' }}>מי ינצח?</p>
         <div className="flex gap-2" dir="ltr">
           {[
-            { key: 'away', label: awayFlag, sub: awayName },
-            { key: 'draw', label: 'X', sub: 'תיקו' },
-            { key: 'home', label: homeFlag, sub: homeName },
+            { key: 'away', outcome: 'away', sub: awayName },
+            { key: 'draw', outcome: null, sub: 'תיקו' },
+            { key: 'home', outcome: 'home', sub: homeName },
           ].map(btn => (
             <button
               key={btn.key}
@@ -415,7 +449,13 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeF
               disabled={submitting}
               className={`score-btn flex-1 py-6 flex flex-col items-center gap-1.5 ${selected === btn.key ? 'selected' : ''}`}
             >
-              <span className="font-black text-3xl">{btn.label}</span>
+              <div className="min-h-[2.75rem] flex items-center justify-center">
+                {btn.key === 'draw' ? (
+                  <span className="font-black text-3xl">X</span>
+                ) : (
+                  <TeamFlagGraphic match={match} side={btn.outcome} parts={btn.key === 'home' ? homeParts : awayParts} variant="picker" />
+                )}
+              </div>
               <span className="text-[11px]" style={{ color: selected === btn.key ? 'rgba(255,255,255,0.75)' : 'var(--text-sec)' }}>
                 {btn.sub}
               </span>
@@ -545,6 +585,12 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const lockTime    = match.lock_deadline_utc ? fmtTime(match.lock_deadline_utc) : '';
   const dayDate     = match.kickoff_utc ? fmtDayDate(match.kickoff_utc) : '';
 
+  const phasePrimary = matchPhasePrimary(match);
+  let phaseSecondary = matchPhaseSecondary(match, { isLive, isFinal });
+  if (phaseSecondary == null && !isLive && !isFinal) {
+    phaseSecondary = [match.stage, dayDate].filter(Boolean).join(' — ') || null;
+  }
+
   const showTableBooking = Boolean(match.broadcasts_in_venues);
   const isBroadcastVenue = Boolean(match.broadcasts_in_venues);
 
@@ -596,7 +642,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   return (
     <div
       data-match-id={match.id}
-      className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''} ${isLive && !isPending ? 'hm-match-live-glow' : ''} ${finalCelebrate && !isActive ? 'hm-match-final-celebrate' : ''} ${isActive ? 'hm-match-active-focus' : ''}`}
+      className={`hm-card mb-2 overflow-hidden ${isPending ? 'opacity-50' : ''} ${isLive && !isPending ? 'hm-match-live-glow' : ''} ${finalCelebrate && !isActive ? 'hm-match-final-celebrate' : ''} ${match.marquee_highlight ? 'hm-match-marquee' : ''} ${isActive ? 'hm-match-active-focus' : ''}`}
       style={outerCardStyle}
     >
       <button
@@ -683,8 +729,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 ) : null}
               </div>
             </div>
-            <div className="text-[11px] leading-snug break-words text-right mb-2" style={{ color: 'var(--text-sec)' }}>
-              {[match.stage, dayDate].filter(Boolean).join(' — ')}
+            <div className="text-right space-y-0.5 mb-2">
+              <div className="text-[11px] font-black leading-snug break-words" style={{ color: 'var(--text)' }}>
+                {phasePrimary || '—'}
+              </div>
+              {phaseSecondary ? (
+                <div className="text-[10px] leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                  {phaseSecondary}
+                </div>
+              ) : null}
             </div>
             {openerHint ? (
               <p className="text-[10px] leading-snug mb-2 text-right break-words px-0.5" style={{ color: 'var(--text-sec)' }}>
@@ -693,7 +746,9 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
             ) : null}
             <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-2 items-start mb-1" dir="rtl">
               <div className="min-w-0 text-center px-px">
-                <div className="text-xl leading-none mb-1.5">{homeFlag}</div>
+                <div className="flex justify-center mb-1.5">
+                  <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="grid" />
+                </div>
                 <div className="font-black text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
                   {homeParts.clean}
                 </div>
@@ -711,7 +766,9 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 vs
               </div>
               <div className="min-w-0 text-center px-px">
-                <div className="text-xl leading-none mb-1.5">{awayFlag}</div>
+                <div className="flex justify-center mb-1.5">
+                  <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="grid" />
+                </div>
                 <div className="font-black text-[13px] leading-snug break-words mx-auto max-w-[7.5rem]" style={{ color: 'var(--text)' }}>
                   {awayParts.clean}
                 </div>
@@ -742,10 +799,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   </span>
                 )}
               </div>
-              <div className="min-w-0 flex-1 text-right">
-                <span className="text-[11px] leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
-                  {[match.stage, dayDate].filter(Boolean).join(' — ')}
-                </span>
+              <div className="min-w-0 flex-1 text-right space-y-0.5">
+                <div className="text-[11px] font-black leading-snug break-words" style={{ color: 'var(--text)' }}>
+                  {phasePrimary || '—'}
+                </div>
+                {phaseSecondary ? (
+                  <div className="text-[10px] leading-snug break-words" style={{ color: 'var(--text-sec)' }}>
+                    {phaseSecondary}
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -757,7 +819,9 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
 
             <div className="flex flex-col gap-2 mb-3" dir="rtl">
               <div className="flex flex-row-reverse items-start gap-2">
-                <span className="text-xl shrink-0 leading-none pt-0.5">{homeFlag}</span>
+                <div className="shrink-0 pt-0.5 leading-none flex items-start justify-center w-8">
+                  <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="inline" />
+                </div>
                 <div className="min-w-0 flex-1 text-right">
                   <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
                     {homeParts.clean}
@@ -771,7 +835,9 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
               </div>
               <div className="text-center text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-sec)' }}>vs</div>
               <div className="flex flex-row-reverse items-start gap-2">
-                <span className="text-xl shrink-0 leading-none pt-0.5">{awayFlag}</span>
+                <div className="shrink-0 pt-0.5 leading-none flex items-start justify-center w-8">
+                  <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="inline" />
+                </div>
                 <div className="min-w-0 flex-1 text-right">
                   <div className="font-black text-base leading-snug break-words" style={{ color: 'var(--text)' }}>
                     {awayParts.clean}
@@ -915,8 +981,8 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 prediction={prediction}
                 config={config}
                 onPredict={onPredict}
-                homeFlag={homeFlag}
-                awayFlag={awayFlag}
+                homeParts={homeParts}
+                awayParts={awayParts}
                 onSaved={() => {
                   setEditMode(false);
                   setShowPointsFlash(true);
@@ -1153,14 +1219,16 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           : Promise.resolve({ predictions: [] }),
         wantLb ? callFn('getLeaderboard', { campaign_id: campaignId, token }) : Promise.resolve(null),
       ]);
+      const mr = matchesRes?.data ?? matchesRes;
+      const pr = predsRes?.data ?? predsRes;
       setMatches(
-        (matchesRes.matches || []).map((m) => {
+        (mr.matches || []).map((m) => {
           const st = typeof m.status === 'string' ? m.status.trim().toLowerCase() : m.status;
           return { ...m, status: st };
         }),
       );
       const predMap = {};
-      for (const p of (predsRes.predictions || [])) predMap[p.match_id] = p;
+      for (const p of (pr.predictions || [])) predMap[p.match_id] = p;
       setPredictions(predMap);
 
       if (lbRes != null && campaignId) {

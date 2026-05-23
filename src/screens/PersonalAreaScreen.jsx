@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
 import { tierPerkDisplayRows } from '../lib/tierPerks.js';
 import { tierClassFromServerTier } from '../lib/tierStyle.js';
+import TierIcon from '../components/TierIcon.jsx';
 
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
   const [data, setData]                     = useState(null);
@@ -139,7 +140,8 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                 </div>
               )}
               {myTier && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tierClassFromServerTier(myTier)}`}>
+                <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${tierClassFromServerTier(myTier)}`}>
+                  <TierIcon tierLike={myTier} sizePx={22} />
                   {myTier.label_he}
                 </span>
               )}
@@ -336,7 +338,10 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                         minWidth: 60,
                       }}
                     >
-                      <span className="text-xl leading-none">{done ? '✓' : '○'}</span>
+                      <span className="flex flex-col items-center gap-0.5 leading-none">
+                        <TierIcon tierLike={t} sizePx={done ? 28 : 22} className={done ? '' : 'opacity-50'} />
+                        <span className="text-[10px]">{done ? '✓' : '○'}</span>
+                      </span>
                       <span
                         className="text-[10px] font-bold text-center leading-tight"
                         style={{ color: done ? 'inherit' : 'var(--text-sec)' }}
@@ -385,7 +390,8 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                     >
                       <div className="flex flex-row-reverse items-start gap-2">
                         <div className="flex-1 min-w-0 space-y-1">
-                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierClassFromServerTier(t) : ''}`}>
+                          <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierClassFromServerTier(t) : ''}`}>
+                            <TierIcon tierLike={t} sizePx={22} />
                             {t.label_he || tk}
                           </span>
                           {benefits.length > 0 ? (
