@@ -6,6 +6,7 @@ import { takeListMatchesWarm } from '../lib/warmListMatches.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { mapPromoError } from '../lib/promoErrors.js';
 import TierIcon from '../components/TierIcon.jsx';
+import { tierHeadlineResolvedLabel, nextTierLabelForProgress } from '../lib/tierCampaignMerge.js';
 import { matchPhasePrimary, matchPhaseSecondary } from '../lib/matchPhaseLines.js';
 import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 
@@ -214,18 +215,18 @@ function PredictionGuessLayers({
     layout === 'ribbon' ? (
       <div
         dir="rtl"
-        className="flex flex-row-reverse flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded-lg px-2 py-1"
+        className="flex shrink min-w-0 flex-row flex-nowrap items-center justify-end gap-1 rounded-lg px-1.5 py-0.5"
         style={{ background: 'rgba(53,210,111,0.1)', border: '1px solid rgba(53,210,111,0.28)' }}
       >
-        <span className="text-[10px] font-black leading-tight" style={{ color: 'var(--hm-match-grass-label)' }}>
+        <span className="text-[10px] font-black leading-none shrink-0 whitespace-nowrap" style={{ color: 'var(--hm-match-grass-label)' }}>
           מנצח / תיקו
         </span>
         {head ? (
-          <span className="text-[10px] font-bold leading-none max-w-[9.5rem] text-right truncate" style={{ color: 'var(--text)' }} title={head}>
+          <span className="text-[10px] font-bold leading-none min-w-0 max-w-[7rem] shrink truncate text-right" style={{ color: 'var(--text)' }} title={head}>
             {head}
           </span>
         ) : null}
-        {outcomeFaces}
+        <span className="shrink-0">{outcomeFaces}</span>
       </div>
     ) : (
       <div
@@ -247,10 +248,10 @@ function PredictionGuessLayers({
     layout === 'ribbon' ? (
       <div
         dir="rtl"
-        className="flex flex-row-reverse flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded-lg px-2 py-1"
+        className="flex shrink-0 flex-row flex-nowrap items-center justify-end gap-1 rounded-lg px-1.5 py-0.5"
         style={{ background: 'rgba(244,193,93,0.1)', border: '1px solid rgba(244,193,93,0.35)' }}
       >
-        <span className="text-[10px] font-black whitespace-nowrap" style={{ color: '#fbbf24' }}>
+        <span className="text-[10px] font-black whitespace-nowrap leading-none shrink-0" style={{ color: '#fbbf24' }}>
           🎯 בינגו
         </span>
         {scoreRow}
@@ -280,7 +281,10 @@ function PredictionGuessLayers({
 
   if (layout === 'ribbon') {
     return (
-      <div dir="rtl" className="flex flex-col items-end gap-1">
+      <div
+        dir="rtl"
+        className="inline-flex max-w-full min-w-0 flex-row flex-nowrap items-center justify-end gap-1.5"
+      >
         {bullseyeBlock}
         {outcomeBlock}
       </div>
@@ -373,7 +377,15 @@ function HeroCard({
     pct = 0;
   }
 
-  const nextLabel = nextT?.label_he;
+  const tiers = Array.isArray(config?.tiers) ? config.tiers : [];
+  const tierDisplayLabel =
+    tierHeadlineResolvedLabel(tierFromServer, tierDetail, tiers);
+
+  let nextLabel = '';
+  if (nextT) {
+    nextLabel = nextTierLabelForProgress(nextT, tiers)
+      || (typeof nextT.label_he === 'string' ? nextT.label_he.trim() : '');
+  }
 
   const ptsToNextPlain = nextT && tp != null ? nextT.min_points - tp : 0;
 
@@ -430,7 +442,7 @@ function HeroCard({
         <div className="flex items-center justify-between mb-2">
           <TierIcon tierLike={tierFromServer} sizePx={26} />
             <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
-            השלב שלי: {tierFromServer?.label_he ?? '—'} ↗
+            השלב שלי: {tierDisplayLabel || '—'} ↗
           </button>
         </div>
         {(() => {
@@ -473,7 +485,7 @@ function HeroCard({
             </span>
           ) : nextT && ptsToNextPlain > 0 && tp !== null ? (
             <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
-              עוד {ptsToNextPlain} נקודות מאושרות ל{nextT.label_he}
+              עוד {ptsToNextPlain} נקודות מאושרות ל{nextLabel || nextT.label_he || 'השלב הבא'}
             </span>
           ) : null}
         </div>
