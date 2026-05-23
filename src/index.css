@@ -200,11 +200,12 @@ body {
   transition: width 0.5s ease;
 }
 
-.tier-bronze { background: rgba(205,127,50,0.2);  color: #cd7f32;       border: 1px solid rgba(205,127,50,0.4); }
-.tier-silver { background: rgba(192,192,192,0.2); color: #c0c0c0;       border: 1px solid rgba(192,192,192,0.4); }
-.tier-gold   { background: rgba(244,193,93,0.2);  color: var(--gold);   border: 1px solid var(--gold-dim); }
-.tier-legend { background: rgba(214,58,54,0.2);   color: var(--red);    border: 1px solid var(--border); }
-.tier-custom { background: rgba(167,139,250,0.15); color: #ddd6fe; border: 1px solid rgba(167,139,250,0.35); }
+.hm-tier-chip--copper { background: rgba(205,127,50,0.2); color: #cd7f32; border: 1px solid rgba(205,127,50,0.4); }
+.hm-tier-chip--mist { background: rgba(192,192,192,0.2); color: #c0c0c0; border: 1px solid rgba(192,192,192,0.4); }
+.hm-tier-chip--golden { background: rgba(244,193,93,0.2); color: var(--gold); border: 1px solid var(--gold-dim); }
+.hm-tier-chip--ruby { background: rgba(214,58,54,0.2); color: var(--red); border: 1px solid var(--border); }
+.hm-tier-chip--lavender { background: rgba(216,189,247,0.18); color: #e9d5ff; border: 1px solid rgba(192,132,252,0.45); }
+.hm-tier-chip--violet { background: rgba(167,139,250,0.18); color: #ddd6fe; border: 1px solid rgba(167,139,250,0.45); }
 
 .hm-match-broadcast-glow {
   outline: none;

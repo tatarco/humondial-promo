@@ -7,6 +7,7 @@ import { useConfig } from '../contexts/ConfigContext.jsx';
 import { mapPromoError } from '../lib/promoErrors.js';
 import TierIcon from '../components/TierIcon.jsx';
 import { matchPhasePrimary, matchPhaseSecondary } from '../lib/matchPhaseLines.js';
+import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
@@ -1412,14 +1413,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
             >
               <span className="text-lg leading-none">👤</span>
             </button>
-            <div className="flex flex-col items-center leading-none">
-              <h1 className="font-black m-0" style={{ fontSize: 22, color: '#fff', textShadow: '0 0 16px rgba(214,58,54,0.4)', letterSpacing: 3 }}>
-                HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
-              </h1>
-              <span dir="ltr" className="font-black" style={{ fontSize: 14, color: 'var(--gold)', letterSpacing: 4, marginTop: 2 }}>
-                2 0 2 6
-              </span>
-            </div>
+            <CampaignHeaderBrand maxLogoHeight={34} titleSizePx={22} />
             <button
               onClick={onLogout}
               className="text-xs px-3 py-1.5 rounded-full"

@@ -1,4 +1,4 @@
-import { tierIconSrc } from '../lib/tierStyle.js';
+import { tierIconSrcFromCampaignTier } from '../lib/tierVisual.js';
 
 export default function TierIcon({ tierLike, sizePx = 40, className = '', alt }) {
   const label =
@@ -7,7 +7,7 @@ export default function TierIcon({ tierLike, sizePx = 40, className = '', alt })
       : '';
   return (
     <img
-      src={tierIconSrc(tierLike)}
+      src={tierIconSrcFromCampaignTier(tierLike)}
       width={sizePx}
       height={sizePx}
       alt={alt || label || 'דרגה'}

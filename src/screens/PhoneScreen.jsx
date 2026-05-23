@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { callFn } from '../lib/api.js';
+import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 
 function normalizePhone(raw) {
   const digits = raw.replace(/\D/g, '');
@@ -73,10 +74,7 @@ export default function PhoneScreen({ onSuccess }) {
     <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black tracking-tight text-hm-white">
-            HUMON<span className="text-hm-red">DIAL</span>
-          </h1>
-          <p className="text-sm text-hm-muted mt-2">2026</p>
+          <CampaignHeaderBrand maxLogoHeight={44} titleSizePx={30} />
         </div>
 
         <div className="bg-hm-card rounded-2xl px-4 py-3 mb-6 text-center border border-hm-dim">

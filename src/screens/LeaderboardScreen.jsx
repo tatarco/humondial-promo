@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
-import { tierClassFromServerTier } from '../lib/tierStyle.js';
+import { tierChipClassFromCampaignTier } from '../lib/tierVisual.js';
 import TierIcon from '../components/TierIcon.jsx';
 
 function getTierForPoints(tiers, pts) {
@@ -138,7 +138,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
                 {entry.nickname}
               </div>
               {entryTier && (
-                <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tierClassFromServerTier(entryTier)}`}>
+                <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tierChipClassFromCampaignTier(entryTier)}`}>
                   <TierIcon tierLike={entryTier} sizePx={18} />
                   {entryTier.label_he}
                 </span>
@@ -167,7 +167,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
           <div className="flex-1">
             <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>{me.nickname ?? 'אתה'}</div>
             {myTier && (
-              <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${tierClassFromServerTier(myTier)}`}>
+              <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${tierChipClassFromCampaignTier(myTier)}`}>
                 <TierIcon tierLike={myTier} sizePx={20} />
                 {myTier.label_he}
               </span>
@@ -261,7 +261,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
               <div className="flex-1">
                 <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{entry.nickname}</div>
                 {entryTier && (
-                  <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${tierClassFromServerTier(entryTier)}`}>
+                  <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${tierChipClassFromCampaignTier(entryTier)}`}>
                     <TierIcon tierLike={entryTier} sizePx={16} />
                     {entryTier.label_he}
                   </span>

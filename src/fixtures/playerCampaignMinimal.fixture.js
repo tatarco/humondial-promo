@@ -1,6 +1,16 @@
 export const PLAYER_CAMPAIGN_MINIMAL_FIXTURE = {
   id: 'bf987a45-9783-4507-9a26-acfd5f145473',
-  tiers: [{ id: 'bronze', key: 'bronze', label_he: 'שחקן ספסל', min_points: 0, perks: [] }],
+  tiers: [
+    {
+      id: 'bronze',
+      key: 'bronze',
+      label_he: 'שחקן ספסל',
+      min_points: 0,
+      perks: [],
+      chip_variant: 'copper',
+      hero_slot: 1,
+    },
+  ],
   booking_url: 'https://example.com/booking',
   delivery_url: 'https://example.com/delivery',
   table_booking_points: 15,
@@ -15,4 +25,7 @@ export const PLAYER_CAMPAIGN_MINIMAL_FIXTURE = {
   prediction_window_games: 5,
   prediction_window_days: 3,
   require_commercial_for_tiers: false,
+  brand_header_logo_url: '',
+  brand_header_subtitle: '2026',
+  brand_header_logo_alt: 'HUMONDIAL',
 };

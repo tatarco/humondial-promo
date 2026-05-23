@@ -8,6 +8,12 @@ vi.mock('../lib/api.js', () => ({
 }));
 
 import { callFn } from '../lib/api.js';
+import { ConfigProvider } from '../contexts/ConfigContext.jsx';
+import { PLAYER_CAMPAIGN_MINIMAL_FIXTURE } from '../fixtures/playerCampaignMinimal.fixture.js';
+
+function renderWithCfg(ui) {
+  return render(<ConfigProvider config={PLAYER_CAMPAIGN_MINIMAL_FIXTURE}>{ui}</ConfigProvider>);
+}
 
 describe('PhoneScreen', () => {
   const onSuccess = vi.fn();
@@ -17,20 +23,20 @@ describe('PhoneScreen', () => {
   });
 
   it('renders phone input and submit button, no nickname initially', () => {
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     expect(screen.getByPlaceholderText(/05/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /המשך/i })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/כינוי/i)).not.toBeInTheDocument();
   });
 
   it('disables submit when phone is empty', () => {
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     expect(screen.getByRole('button', { name: /המשך/i })).toBeDisabled();
   });
 
   it('enables submit once a valid phone is entered', async () => {
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     expect(screen.getByRole('button', { name: /המשך/i })).not.toBeDisabled();
   });
@@ -38,7 +44,7 @@ describe('PhoneScreen', () => {
   it('calls promoCheckPhone on first submit with valid phone', async () => {
     callFn.mockResolvedValueOnce({ isNewUser: false });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() =>
@@ -49,7 +55,7 @@ describe('PhoneScreen', () => {
   it('reveals nickname field and checkboxes when promoCheckPhone returns isNewUser: true', async () => {
     callFn.mockResolvedValueOnce({ isNewUser: true });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => expect(screen.getByPlaceholderText(/כינוי/i)).toBeInTheDocument());
@@ -62,7 +68,7 @@ describe('PhoneScreen', () => {
       .mockResolvedValueOnce({ isNewUser: false })
       .mockResolvedValueOnce({ ok: true });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('972521234567', false));
@@ -72,7 +78,7 @@ describe('PhoneScreen', () => {
   it('new user: button disabled until nickname + both checkboxes filled', async () => {
     callFn.mockResolvedValueOnce({ isNewUser: true });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => screen.getByPlaceholderText(/כינוי/i));
@@ -96,7 +102,7 @@ describe('PhoneScreen', () => {
       .mockResolvedValueOnce({ isNewUser: true })
       .mockResolvedValueOnce({ ok: true });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => screen.getByPlaceholderText(/כינוי/i));
@@ -116,7 +122,7 @@ describe('PhoneScreen', () => {
       .mockResolvedValueOnce({ isNewUser: false })
       .mockResolvedValueOnce({ ok: true });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() =>
@@ -128,7 +134,7 @@ describe('PhoneScreen', () => {
   it('shows error when promoCheckPhone fails', async () => {
     callFn.mockRejectedValueOnce(new Error('שגיאה'));
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => expect(screen.getByText(/שגיאה/i)).toBeInTheDocument());
@@ -140,7 +146,7 @@ describe('PhoneScreen', () => {
       .mockResolvedValueOnce({ isNewUser: false })
       .mockRejectedValueOnce(new Error('rate_limited'));
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => expect(screen.getByText(/שגיאה/i)).toBeInTheDocument());
@@ -150,7 +156,7 @@ describe('PhoneScreen', () => {
   it('editing phone resets to phone-check phase', async () => {
     callFn.mockResolvedValueOnce({ isNewUser: true });
     const user = userEvent.setup();
-    render(<PhoneScreen onSuccess={onSuccess} />);
+    renderWithCfg(<PhoneScreen onSuccess={onSuccess} />);
     await user.type(screen.getByPlaceholderText(/05/i), '0521234567');
     await user.click(screen.getByRole('button', { name: /המשך/i }));
     await waitFor(() => screen.getByPlaceholderText(/כינוי/i));

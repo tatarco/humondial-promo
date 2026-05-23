@@ -3,13 +3,7 @@ import QRCode from 'qrcode';
 import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { tierPerkDisplayRows } from '../lib/tierPerks.js';
-
-const TIER_COLORS = {
-  bronze: 'bg-amber-900/40 border-amber-600 text-amber-300',
-  silver: 'bg-gray-700/40 border-gray-400 text-gray-300',
-  gold: 'bg-yellow-900/40 border-yellow-500 text-yellow-300',
-  legend: 'bg-purple-900/40 border-purple-500 text-purple-300',
-};
+import { tierCardAccentClassesFromCampaignTier } from '../lib/tierVisual.js';
 
 export default function MyQRScreen({ token, campaignId, onBack }) {
   const config = useConfig();
@@ -92,7 +86,7 @@ export default function MyQRScreen({ token, campaignId, onBack }) {
           <h2 className="text-lg font-bold text-hm-white text-right">ההטבות שלך</h2>
           {eligibleTiers.map((tier, idx) => {
             const isActive = tier.id === currentTier?.id;
-            const colorClass = TIER_COLORS[tier.id] ?? 'bg-gray-700/40 border-gray-500 text-gray-300';
+            const colorClass = tierCardAccentClassesFromCampaignTier(tier);
             return (
               <div
                 key={tier.id}

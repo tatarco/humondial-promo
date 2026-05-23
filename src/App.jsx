@@ -16,7 +16,7 @@ import VenueCodeScreen from './screens/VenueCodeScreen.jsx';
 import MyQRScreen from './screens/MyQRScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
-import LedgerScreen from './screens/LedgerScreen.jsx';
+import CampaignHeaderBrand from './components/CampaignHeaderBrand.jsx';
 
 const SCREEN = {
   SPLASH: 'splash',
@@ -331,8 +331,8 @@ export default function App() {
     if (screen === SCREEN.LOADING) {
       return (
         <div className="min-h-dvh bg-hm-bg flex items-center justify-center">
-          <div className="text-hm-red text-2xl font-black tracking-tight animate-pulse">
-            HUMON<span className="text-hm-white">DIAL</span>
+          <div className="animate-pulse">
+            <CampaignHeaderBrand maxLogoHeight={36} titleSizePx={26} />
           </div>
         </div>
       );

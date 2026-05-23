@@ -9,6 +9,14 @@ const INT_KEYS = [
   'draw_stripe_points',
 ];
 
+function isClientSafeBrandAssetUrl(s) {
+  const t = typeof s === 'string' ? s.trim() : '';
+  if (!t) return true;
+  if (/^https?:\/\/[^\s#$]+$/i.test(t)) return true;
+  if (t.includes('..') || t.includes('//')) return false;
+  return /^[A-Za-z0-9_-][A-Za-z0-9_\-.\\/]*\.(svg|png|webp|jpeg|jpg)$/i.test(t);
+}
+
 export function validatePlayerCampaignConfig(cfg) {
   if (!cfg || typeof cfg !== 'object') return { ok: false, reason: 'no_config' };
   if (cfg.error && typeof cfg.error === 'string') return { ok: false, reason: cfg.error };
@@ -43,6 +51,42 @@ export function validatePlayerCampaignConfig(cfg) {
     if (typeof d !== 'number' || !Number.isInteger(d) || d < 1) {
       return { ok: false, reason: 'invalid_prediction_window_days' };
     }
+  }
+
+  for (let i = 0; i < cfg.tiers.length; i++) {
+    const tier = cfg.tiers[i];
+    const cv =
+      tier.chip_variant == null ? '' : String(tier.chip_variant).trim().toLowerCase();
+    const palette = ['copper', 'mist', 'golden', 'ruby', 'lavender', 'violet'];
+    if (!palette.includes(cv)) {
+      return { ok: false, reason: `tier_chip_variant:${i}:${cv}` };
+    }
+    const rawHs = tier.hero_slot;
+    const hn = typeof rawHs === 'string' ? Number(rawHs.trim()) : Number(rawHs);
+    if (!Number.isFinite(hn) || !Number.isInteger(hn) || hn < 1 || hn > 5) {
+      return { ok: false, reason: `tier_hero_slot:${i}` };
+    }
+  }
+
+  if (
+    typeof cfg.brand_header_logo_url === 'string' &&
+    cfg.brand_header_logo_url.trim() &&
+    !isClientSafeBrandAssetUrl(cfg.brand_header_logo_url)
+  ) {
+    return { ok: false, reason: 'brand_header_logo_invalid' };
+  }
+
+  if (
+    typeof cfg.brand_header_logo_alt === 'string' &&
+    cfg.brand_header_logo_alt.length > 160
+  ) {
+    return { ok: false, reason: 'brand_header_logo_alt_too_long' };
+  }
+  if (
+    typeof cfg.brand_header_subtitle === 'string' &&
+    cfg.brand_header_subtitle.length > 80
+  ) {
+    return { ok: false, reason: 'brand_header_subtitle_too_long' };
   }
 
   return { ok: true };

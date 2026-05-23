@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callFn } from '../lib/api.js';
 import { tierPerkDisplayRows } from '../lib/tierPerks.js';
-import { tierClassFromServerTier } from '../lib/tierStyle.js';
+import { tierChipClassFromCampaignTier } from '../lib/tierVisual.js';
 import TierIcon from '../components/TierIcon.jsx';
+import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
   const [data, setData]                     = useState(null);
@@ -111,14 +112,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           className="text-xs px-3 py-2.5 rounded-full border min-h-[44px] flex items-center"
           style={{ color: 'var(--text-sec)', borderColor: 'var(--border)' }}
         >← חזרה</button>
-        <div className="flex flex-col items-center leading-none">
-          <span className="font-black" style={{ fontSize: 18, color: '#fff', textShadow: '0 0 16px rgba(214,58,54,0.4)', letterSpacing: 3 }}>
-            HUMON<span style={{ color: 'var(--red)' }}>DIAL</span>
-          </span>
-          <span dir="ltr" className="font-black" style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: 3, marginTop: 1 }}>
-            2 0 2 6
-          </span>
-        </div>
+        <CampaignHeaderBrand maxLogoHeight={26} titleSizePx={18} />
         <div style={{ width: 64 }} />
       </header>
 
@@ -140,7 +134,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                 </div>
               )}
               {myTier && (
-                <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${tierClassFromServerTier(myTier)}`}>
+                <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${tierChipClassFromCampaignTier(myTier)}`}>
                   <TierIcon tierLike={myTier} sizePx={22} />
                   {myTier.label_he}
                 </span>
@@ -330,7 +324,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                   return (
                     <div
                       key={String(t.id || tk || idx)}
-                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-shrink-0 ${done ? tierClassFromServerTier(t) : ''}`}
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-shrink-0 ${done ? tierChipClassFromCampaignTier(t) : ''}`}
                       style={{
                         background: done ? undefined : 'rgba(255,255,255,0.03)',
                         border: done ? undefined : '1px solid rgba(255,255,255,0.07)',
@@ -390,7 +384,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                     >
                       <div className="flex flex-row-reverse items-start gap-2">
                         <div className="flex-1 min-w-0 space-y-1">
-                          <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierClassFromServerTier(t) : ''}`}>
+                          <span className={`inline-flex flex-row-reverse items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold ${done ? tierChipClassFromCampaignTier(t) : ''}`}>
                             <TierIcon tierLike={t} sizePx={22} />
                             {t.label_he || tk}
                           </span>
