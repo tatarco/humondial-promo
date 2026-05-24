@@ -12,6 +12,7 @@ dist/
 .DS_Store
 .worktrees/
 .superpowers/
-design/match-card-mocks.html
+design/
+public/match-card-design/
 public/header-mockups.html
 docs/tier-mockup-assets/
