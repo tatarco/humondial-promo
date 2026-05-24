@@ -107,7 +107,7 @@ body {
 }
 
 .hm-ach-detail-shell.hm-ach-detail-open {
-  max-height: min(3200px, 200vh);
+  max-height: min(10000px, 800vh);
 }
 
 .hm-ach-row-item {

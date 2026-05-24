@@ -62,7 +62,7 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const stripItems = [...unlockedAchievements.slice(0, 2), ...lockedAchievements.slice(0, 3)];
 
   const tiersAscAll = [...dataTiers].sort((a, b) => (a.min_points ?? 0) - (b.min_points ?? 0));
-  const tierStripItems = tiersAscAll.slice(0, 7);
+  const tierStripItems = tiersAscAll;
   const earnedTierIndex = myTier && tiersAscAll.length
     ? (() => {
         const byId = tiersAscAll.findIndex(t => t.id === myTier.id);
