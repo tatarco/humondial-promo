@@ -2,8 +2,8 @@ export const PLAYER_CAMPAIGN_MINIMAL_FIXTURE = {
   id: 'bf987a45-9783-4507-9a26-acfd5f145473',
   tiers: [
     {
-      id: 'bronze',
-      key: 'bronze',
+      id: 'bench',
+      key: 'bench',
       label_he: 'שחקן ספסל',
       min_points: 0,
       perks: [],

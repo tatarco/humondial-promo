@@ -16,4 +16,24 @@ Suggested default ladder (matches seed migration naming):
 | 4 | `top_scorer` … | Top scorer |
 | 5 | `champion` … | Champion |
 
-Frontend: [`src/lib/tierCatalog.js`](../src/lib/tierCatalog.js) (`TIER_HERO_LADDER_MARKETING` — editorial only). Resolver: [`src/lib/tierVisual.js`](../src/lib/tierVisual.js) (`tierIconSrcFromCampaignTier`, `tierChipClassFromCampaignTier`).
+Frontend: [`src/lib/tierCatalog.js`](../src/lib/tierCatalog.js) (`TIER_HERO_LADDER_MARKETING` — canonical copy for slot-derived labels). Resolver: [`src/lib/tierVisual.js`](../src/lib/tierVisual.js) (`tierIconSrcFromCampaignTier`, `tierChipClassFromCampaignTier`).
+
+## Product rules (enforced end-to-end)
+
+- **Exactly five tiers** map to crest slots **1 … 5** (`tier-{slot}.png`). The player PWA [`validatePlayerCampaignConfig`](../src/lib/campaignConfigStrict.js) and Base44 **`saveCampaignConfig`** both reject **more than five** tiers.
+- **`hero_slot`** values must be **unique** across the ladder (one crest PNG per tier row).
+
+## Quick DB sanity check
+
+```sql
+SELECT
+  id,
+  jsonb_array_length(COALESCE(tiers, '[]'::jsonb)) AS tier_count,
+  tiers
+FROM public.promo_campaigns
+WHERE jsonb_array_length(COALESCE(tiers, '[]'::jsonb)) > 0
+ORDER BY updated_at DESC
+LIMIT 3;
+```
+
+For Humondial you expect **`tier_count = 5`**. Inspect `tiers` JSON: **`hero_slot`** should be **`1`** through **`5`** with no repeats; **`chip_variant`** in the six allowed palette ids.

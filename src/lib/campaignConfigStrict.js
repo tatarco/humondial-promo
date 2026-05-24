@@ -25,6 +25,7 @@ export function validatePlayerCampaignConfig(cfg) {
   if (!Array.isArray(cfg.tiers) || cfg.tiers.length < 1) {
     return { ok: false, reason: 'campaign_tiers_missing' };
   }
+  if (cfg.tiers.length > 5) return { ok: false, reason: 'tier_ladder_max_five' };
 
   for (const k of INT_KEYS) {
     const v = cfg[k];
@@ -53,6 +54,7 @@ export function validatePlayerCampaignConfig(cfg) {
     }
   }
 
+  const seenHeroSlots = new Set();
   for (let i = 0; i < cfg.tiers.length; i++) {
     const tier = cfg.tiers[i];
     const cv =
@@ -66,6 +68,8 @@ export function validatePlayerCampaignConfig(cfg) {
     if (!Number.isFinite(hn) || !Number.isInteger(hn) || hn < 1 || hn > 5) {
       return { ok: false, reason: `tier_hero_slot:${i}` };
     }
+    if (seenHeroSlots.has(hn)) return { ok: false, reason: `tier_hero_slot_dup:${hn}` };
+    seenHeroSlots.add(hn);
   }
 
   if (

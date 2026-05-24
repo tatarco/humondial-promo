@@ -1,37 +1,38 @@
-/** Marketing names from tier crest artwork (Humondial 2026 ladder). Stored as reference for BizFlow קמפיין → רמות `label_he` / `label_en`. Keep API ids `bronze`…`legend` unchanged; tier 5 may use id `legend` at top or an extra tier — match your campaign ladder order ascending. */
+/** Canonical five-rung ladder (Humondial 2026): bench → champion (`promo_campaigns.tiers` defaults after migrations). `hero_slot` 1–5 maps to crest PNG `tier-{n}.png`; `chip_variant` selects chip styling. At most five tier rows server-side + PWA-enforced.
+ */
 
 export const TIER_HERO_LADDER_MARKETING = [
   {
     ladder_index: 1,
-    slug: 'bronze',
+    slug: 'bench',
     label_he: 'שחקן ספסל',
     label_en: 'Bench player',
     asset: 'tier-hero/tier-1.png',
   },
   {
     ladder_index: 2,
-    slug: 'silver',
+    slug: 'starter',
     label_he: 'פותח בהרכב',
     label_en: 'Starter',
     asset: 'tier-hero/tier-2.png',
   },
   {
     ladder_index: 3,
-    slug: 'gold',
+    slug: 'striker',
     label_he: 'חלוץ חוד',
     label_en: 'Striker',
     asset: 'tier-hero/tier-3.png',
   },
   {
     ladder_index: 4,
-    slug: 'legend',
+    slug: 'top_scorer',
     label_he: 'מלך השערים',
     label_en: 'Top scorer',
     asset: 'tier-hero/tier-4.png',
   },
   {
     ladder_index: 5,
-    slug: 'custom',
+    slug: 'champion',
     label_he: 'אלוף',
     label_en: 'Champion',
     asset: 'tier-hero/tier-5.png',
