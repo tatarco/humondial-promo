@@ -25,6 +25,12 @@ vi.mock('../lib/warmListMatches.js', () => ({
   resetListMatchesWarmForTests: vi.fn(),
 }));
 
+vi.mock('../lib/warmHomeAuthenticated.js', () => ({
+  startHomeAuthenticatedWarm: vi.fn(),
+  takeHomeAuthenticatedWarm: vi.fn(() => ({ predictions: null, leaderboard: null })),
+  resetHomeAuthenticatedWarmForTests: vi.fn(),
+}));
+
 import App from '../App.jsx';
 import { loadConfig, resetConfigCache } from '../lib/config.js';
 import { isLoggedIn } from '../lib/session.js';

@@ -4,13 +4,13 @@ Vite/React PWA that talks to BizFlow/Base44 promo functions (`getPlayerLedger`, 
 
 ## Single promotion — not multi-campaign
 
-Humondial runs as **one** operator-facing promo. Players never pick among campaigns. Backend functions still take `campaign_id` because the DB row keys off that UUID. The canonical id for this deployment is the constant `PROMO_CAMPAIGN_ID` in `src/lib/config.js`: every client calls include it; `getPlayerCampaignConfig` is invoked with `{ campaign_id: PROMO_CAMPAIGN_ID }`; `loadConfig()` rejects with `campaign_id_mismatch` if the server returns a different row id. If ops ever recreate the `promo_campaigns` row, update that constant to match the new primary key.
+Humondial runs as **one** operator-facing promo. Players never pick among campaigns. Backend functions still take `campaign_id` because the DB row keys off that UUID. The canonical id for this deployment is the constant `PROMO_CAMPAIGN_ID` in `src/lib/config.js`: every client call includes it; `getPlayerCampaignConfig` is invoked with `{ campaign_id: PROMO_CAMPAIGN_ID }`; `loadConfig()` rejects with `campaign_id_mismatch` if the server returns a different row id. If ops ever recreate the `promo_campaigns` row, update that constant to match the new primary key. The BizFlow ERP admin UI uses the same UUID via `src/constants/humondialPromoCampaign.js` when calling `getCampaignConfig` (`HumondialCampaignConfig`, support, reporting); keep those three values identical.
 
 ## Pending table-booking points (UX summary)
 
 Booking CTAs register **pending** ledger lines. Those points are **not** included in leaderboard or tier until the player visits Humongous and enters the **daily venue code** on “הגעת לסניף?”.
 
-While the splash video plays, **`loadConfig`**, **`promoValidateSession`**, and **`listMatches`** are kicked off concurrently so startup work overlaps the clip instead of starting only after it ends.
+While the splash video plays, **`loadConfig`**, **`promoValidateSession`**, **`listMatches`**, **`listMyPredictions`**, and **`getLeaderboard`** (when a session cookie exists) are started so homepage work overlaps the clip instead of starting only after it ends.
 
 The app surfaces this consistently on the home hero, match cards with booking, branch booking screen, personal area, and ledger — approved total vs pending booking stash, plus the concrete next step (venue code).
 

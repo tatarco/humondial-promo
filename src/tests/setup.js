@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 import { afterEach } from 'vitest';
 
 import { resetListMatchesWarmForTests } from '../lib/warmListMatches.js';
+import { resetHomeAuthenticatedWarmForTests } from '../lib/warmHomeAuthenticated.js';
 
 const mem = new Map();
 globalThis.localStorage = {
@@ -24,5 +25,6 @@ globalThis.localStorage = {
 
 afterEach(() => {
   resetListMatchesWarmForTests();
+  resetHomeAuthenticatedWarmForTests();
 });
 

@@ -3,6 +3,7 @@ import { clearToken, getToken } from '../lib/session.js';
 import { callFn } from '../lib/api.js';
 import { PROMO_CAMPAIGN_ID } from '../lib/config.js';
 import { takeListMatchesWarm } from '../lib/warmListMatches.js';
+import { takeHomeAuthenticatedWarm } from '../lib/warmHomeAuthenticated.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { mapPromoError } from '../lib/promoErrors.js';
 import TierIcon from '../components/TierIcon.jsx';
@@ -1378,17 +1379,23 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
     const wantLb = !!(campaignId && token);
     try {
       const warm = takeListMatchesWarm();
+      const warmHome = takeHomeAuthenticatedWarm();
       const matchesReq =
         warm != null
           ? warm.catch(() => callFn('listMatches', {}))
           : callFn('listMatches', {});
-      const [matchesRes, predsRes, lbRes] = await Promise.all([
-        matchesReq,
+      const predsReq =
         campaignId && token
-          ? callFn('listMyPredictions', { token, campaign_id: campaignId })
-          : Promise.resolve({ predictions: [] }),
-        wantLb ? callFn('getLeaderboard', { campaign_id: campaignId, token }) : Promise.resolve(null),
-      ]);
+          ? (warmHome.predictions ?? callFn('listMyPredictions', { token, campaign_id: campaignId })).catch(
+              () => callFn('listMyPredictions', { token, campaign_id: campaignId }),
+            )
+          : Promise.resolve({ predictions: [] });
+      const lbReq = wantLb
+        ? (warmHome.leaderboard ?? callFn('getLeaderboard', { campaign_id: campaignId, token })).catch(() =>
+            callFn('getLeaderboard', { campaign_id: campaignId, token }),
+          )
+        : Promise.resolve(null);
+      const [matchesRes, predsRes, lbRes] = await Promise.all([matchesReq, predsReq, lbReq]);
       const mr = matchesRes?.data ?? matchesRes;
       const pr = predsRes?.data ?? predsRes;
       setMatches(

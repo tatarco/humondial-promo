@@ -5,6 +5,7 @@ import { loadConfig, PROMO_CAMPAIGN_ID } from './lib/config.js';
 import { authenticatedRouteFromHash } from './lib/hashRoute.js';
 import { resolveBookingBranchesForCampaign } from './lib/bookingBranches.js';
 import { startListMatchesWarm } from './lib/warmListMatches.js';
+import { startHomeAuthenticatedWarm } from './lib/warmHomeAuthenticated.js';
 import { ConfigProvider } from './contexts/ConfigContext.jsx';
 import SplashScreen from './screens/SplashScreen.jsx';
 import PhoneScreen from './screens/PhoneScreen.jsx';
@@ -77,6 +78,15 @@ export default function App() {
     if (splashBootRef.current) return;
     splashBootRef.current = Promise.allSettled([loadConfig(), fetchSession()]);
     startListMatchesWarm();
+    void (async () => {
+      try {
+        const cfg = await loadConfig();
+        if (!isLoggedIn() || !cfg?.id) return;
+        startHomeAuthenticatedWarm(cfg.id, getToken());
+      } catch {
+        return;
+      }
+    })();
   }, [screen]);
 
   function openBranchBooking(ctx) {
