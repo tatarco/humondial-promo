@@ -5,8 +5,13 @@ import { tierPerkDisplayRows } from '../lib/tierPerks.js';
 import { tierChipClassFromCampaignTier } from '../lib/tierVisual.js';
 import TierIcon from '../components/TierIcon.jsx';
 import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
+import TierRequirementBars from '../components/TierRequirementBars.jsx';
+import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
+import { useConfig } from '../contexts/ConfigContext.jsx';
+import { overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
 
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
+  const cfg = useConfig();
   const [data, setData]                     = useState(null);
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState('');
@@ -89,6 +94,8 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const td            = me.tier_detail ?? null;
   const venueVisitCnt = td?.counts?.venue_visits ?? 0;
   const deliveryCnt   = td?.counts?.deliveries ?? 0;
+  const benefitsCopyMerged = overlayBenefitsPlayerCopy(cfg?.benefits_player_copy, data?.benefits_player_copy);
+
   const commercialUi  = !!(td?.show_commercial_requirements_ui && td.requirements_for_next?.length);
 
   const currentTier = dataTiers.find(t => t.key === tierKey || t.id === tierKey) || dataTiers.find(t => t.id === myTier?.id) || { min_points: 0 };
@@ -168,32 +175,36 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
                   </div>
                 )}
 
-                {commercialUi && td?.summary_lines_he?.length ? (
+                {commercialUi && (
                   <div className="mt-3 space-y-1.5 text-right">
-                    {(td.summary_lines_he || []).map((ln, idx) => (
-                      <div key={idx} className="text-[10px]" style={{ color: 'var(--text-sec)', lineHeight: 1.38 }}>
-                        {ln}
-                      </div>
-                    ))}
-                    <div className="rounded-lg p-2 mt-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div className="text-[9px] font-bold mb-1" style={{ color: 'var(--gold)' }}>
-                        מה נדרש ל{td?.next_tier?.label_he || nextTierTarget?.label_he || 'הדרגה הבאה'}
-                      </div>
-                      {(td.requirements_for_next || []).map((r, ri) => (
-                        <div key={r.key + String(ri)} className="flex flex-row-reverse justify-between gap-2 text-[10px] py-0.5" style={{ color: 'var(--text)' }}>
-                          <span className={r.satisfied ? 'text-green-400 font-bold shrink-0' : 'text-amber-300 font-bold shrink-0'}>
-                            {r.satisfied ? '✓' : `−${r.shortfall}`}
-                          </span>
-                          <span className="text-right">{r.label_he}</span>
-                          <span dir="ltr" className="tabular-nums opacity-85 shrink-0">{r.current}/{r.required}</span>
+                    {(td.summary_lines_he || []).length > 0 &&
+                      (td.summary_lines_he || []).map((ln, idx) => (
+                        <div key={idx} className="text-[10px]" style={{ color: 'var(--text-sec)', lineHeight: 1.38 }}>
+                          {ln}
                         </div>
                       ))}
-                    </div>
-                    <div className="text-[9px] mt-1" style={{ color: 'var(--text-sec)' }}>
-                      ביקורים/משלוחים נספרים רק אחרי הפעלה בקוד; נקודות ממתינות להזמנת שולחן לא נספרות לדרגה.
-                    </div>
+                    {(td.requirements_for_next || []).length > 0 && (
+                      <div
+                        className="rounded-lg p-2"
+                        style={{
+                          marginTop: (td.summary_lines_he || []).length > 0 ? 8 : 0,
+                          background: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        <div className="text-[9px] font-bold mb-1" style={{ color: 'var(--gold)' }}>
+                          התקדמות לכל דרישה ל{td?.next_tier?.label_he || nextTierTarget?.label_he || 'הדרגה הבאה'}
+                        </div>
+                        <TierRequirementBars requirements={td.requirements_for_next} density="tight" />
+                      </div>
+                    )}
+                    {(td.summary_lines_he || []).length > 0 || (td.requirements_for_next || []).length > 0 ? (
+                      <div className="text-[9px] mt-1" style={{ color: 'var(--text-sec)' }}>
+                        ביקורים/משלוחים נספרים רק אחרי הפעלה בקוד; נקודות ממתינות להזמנת שולחן לא נספרות לדרגה.
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
+                )}
               </>
             ) : (
               <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 8, fontWeight: 700, textAlign: 'right' }}>
@@ -202,6 +213,8 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             )}
           </div>
         </div>
+
+        <BenefitsPlaybookPanel copy={benefitsCopyMerged} variant="full" />
 
         {/* Block 2 — Trajectory */}
         {trajectory.end_date && (

@@ -10,6 +10,9 @@ import TierIcon from '../components/TierIcon.jsx';
 import { tierHeadlineResolvedLabel, nextTierLabelForProgress } from '../lib/tierCampaignMerge.js';
 import { matchPhasePrimary, matchPhaseSecondary } from '../lib/matchPhaseLines.js';
 import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
+import TierRequirementBars from '../components/TierRequirementBars.jsx';
+import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
+import { normalizeBenefitsPlayerCopy, overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
 
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
@@ -473,21 +476,30 @@ function HeroCard({
             </span>
           ) : null}
         </div>
-        {commercialUi && tierDetail?.summary_lines_he?.length > 0 && (
-          <div className="mt-3 space-y-1 text-[10px] text-right px-1" style={{ color: 'var(--text-sec)' }}>
-            {tierDetail.summary_lines_he.slice(0, 3).map((line, i) => (
-              <p key={i} style={{ margin: '2px 0', lineHeight: 1.35 }}>{line}</p>
-            ))}
-            <div className="rounded-lg mt-2 space-y-1 p-2" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-              {tierDetail.requirements_for_next.map((r, i) => (
-                <div key={r.key ?? i} className="flex flex-row-reverse justify-between gap-2 leading-tight">
-                  <span className={`font-bold ${r.satisfied ? 'text-green-400' : 'text-amber-200'}`}>
-                    {r.satisfied ? '✓' : `${r.shortfall}`}
-                  </span>
-                  <span className="opacity-95">{r.label_he} — {r.current}/{r.required}</span>
+        {commercialUi && (
+          <div className="mt-3 px-1" style={{ color: 'var(--text-sec)' }}>
+            {tierDetail?.summary_lines_he?.length > 0 && (
+              <div className="space-y-1 text-[10px] text-right">
+                {tierDetail.summary_lines_he.slice(0, 3).map((line, i) => (
+                  <p key={i} style={{ margin: '2px 0', lineHeight: 1.35 }}>{line}</p>
+                ))}
+              </div>
+            )}
+            {tierDetail?.requirements_for_next?.length > 0 && (
+              <div
+                className="rounded-lg space-y-1 p-2"
+                style={{
+                  marginTop: tierDetail?.summary_lines_he?.length > 0 ? 8 : 0,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.03)',
+                }}
+              >
+                <div className="text-[9px] font-bold mb-0.5 text-right" style={{ color: 'var(--gold)' }}>
+                  התקדמות לכל דרישה ל{nextLabel || tierDetail?.next_tier?.label_he || 'שלב הבא'}
                 </div>
-              ))}
-            </div>
+                <TierRequirementBars requirements={tierDetail.requirements_for_next} />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1351,6 +1363,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   const [pendingBookingPoints, setPendingBookingPoints] = useState(null);
   const [tierDetailLb, setTierDetailLb]             = useState(null);
   const [tierFromLb, setTierFromLb]               = useState(null);
+  const [benefitsPlayerCopyLb, setBenefitsPlayerCopyLb] = useState(null);
   const scrollContainerRef            = useRef(null);
   const heroRef                       = useRef(null);
   const gamesRef                      = useRef(null);
@@ -1370,6 +1383,9 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
       if (typeof s.pending_booking_points === 'number') setPendingBookingPoints(s.pending_booking_points);
       if (Object.prototype.hasOwnProperty.call(s, 'tier_detail')) setTierDetailLb(s.tier_detail);
       if (Object.prototype.hasOwnProperty.call(s, 'tier')) setTierFromLb(s.tier);
+      if (Object.prototype.hasOwnProperty.call(s, 'benefits_player_copy')) {
+        setBenefitsPlayerCopyLb(normalizeBenefitsPlayerCopy(s.benefits_player_copy));
+      }
     } catch (_) {}
   }, [campaignId]);
 
@@ -1417,6 +1433,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         const tf = d?.me?.tier ?? null;
         setTierDetailLb(td);
         setTierFromLb(tf);
+        setBenefitsPlayerCopyLb(normalizeBenefitsPlayerCopy(d?.benefits_player_copy ?? null));
         try {
           sessionStorage.setItem(
             leaderboardSnapshotKey(campaignId),
@@ -1425,6 +1442,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               pending_booking_points: pbp,
               tier_detail: td,
               tier: tf,
+              benefits_player_copy: normalizeBenefitsPlayerCopy(d?.benefits_player_copy ?? null),
             }),
           );
         } catch (_) {}
@@ -1437,6 +1455,11 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
   }, [campaignId, token]);
 
   useEffect(() => { load(); }, [load]);
+
+  const playbookMerged = useMemo(
+    () => overlayBenefitsPlayerCopy(config?.benefits_player_copy, benefitsPlayerCopyLb),
+    [config?.benefits_player_copy, benefitsPlayerCopyLb],
+  );
 
   const stages = [...new Set(matches.map(m => m.stage))].sort((a, b) =>
     (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
@@ -1618,6 +1641,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               />
             )}
           </div>
+          {!showHeroSkeleton && <BenefitsPlaybookPanel copy={playbookMerged} variant="compact" />}
 
           <div className="grid grid-cols-3 gap-2 px-3 mb-1">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />

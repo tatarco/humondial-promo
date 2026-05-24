@@ -1,3 +1,5 @@
+import { PLAYER_BENEFITS_COPY_KEYS } from './benefitsPlayerCopy.js';
+
 const INT_KEYS = [
   'table_booking_points',
   'visit_points',
@@ -91,6 +93,15 @@ export function validatePlayerCampaignConfig(cfg) {
     cfg.brand_header_subtitle.length > 80
   ) {
     return { ok: false, reason: 'brand_header_subtitle_too_long' };
+  }
+
+  const bpc = cfg.benefits_player_copy;
+  if (bpc !== undefined && bpc !== null) {
+    if (typeof bpc !== 'object' || Array.isArray(bpc)) return { ok: false, reason: 'invalid_benefits_player_copy' };
+    for (const [fk, fv] of Object.entries(bpc)) {
+      if (!PLAYER_BENEFITS_COPY_KEYS.includes(fk)) continue;
+      if (typeof fv !== 'string') return { ok: false, reason: `invalid_benefits_field:${fk}` };
+    }
   }
 
   return { ok: true };

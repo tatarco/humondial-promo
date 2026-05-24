@@ -28,4 +28,12 @@ export const PLAYER_CAMPAIGN_MINIMAL_FIXTURE = {
   brand_header_logo_url: '',
   brand_header_subtitle: '2026',
   brand_header_logo_alt: 'HUMONDIAL',
+  benefits_player_copy: {
+    milestones_he: '',
+    redemption_notice_he: '',
+    alcohol_notice_he: '',
+    stacking_notice_he: '',
+    booking_notice_he: '',
+    contingency_notice_he: '',
+  },
 };

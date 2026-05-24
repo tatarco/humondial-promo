@@ -1,5 +1,6 @@
 import { callFn } from './api.js';
 import { validatePlayerCampaignConfig } from './campaignConfigStrict.js';
+import { normalizeBenefitsPlayerCopy } from './benefitsPlayerCopy.js';
 
 export const PROMO_CAMPAIGN_ID = 'bf987a45-9783-4507-9a26-acfd5f145473';
 
@@ -21,7 +22,10 @@ export async function loadConfig() {
   if (cfg.id !== PROMO_CAMPAIGN_ID) {
     throw new Error('campaign_id_mismatch');
   }
-  _config = cfg;
+  _config = {
+    ...cfg,
+    benefits_player_copy: normalizeBenefitsPlayerCopy(cfg.benefits_player_copy),
+  };
   return _config;
 }
 
