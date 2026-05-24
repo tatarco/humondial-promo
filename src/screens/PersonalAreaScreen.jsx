@@ -328,29 +328,36 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           </div>
           <div className="hm-card overflow-hidden p-3">
             {!tiersExpanded && (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <div
+                className={
+                  tierStripItems.length >= 5
+                    ? 'grid w-full grid-cols-5 gap-1 pb-1'
+                    : 'flex gap-2 overflow-x-auto pb-1 scrollbar-none'
+                }
+              >
                 {tierStripItems.length === 0 && (
-                  <div className="text-[10px] py-3 w-full text-center" style={{ color: 'var(--text-sec)' }}>לא הוגדרו דרגות בקמפיין זה</div>
+                  <div className="text-[10px] py-3 w-full text-center col-span-full" style={{ color: 'var(--text-sec)' }}>לא הוגדרו דרגות בקמפיין זה</div>
                 )}
                 {tierStripItems.map((t, idx) => {
                   const tk = t.key || t.id || '';
                   const done = isTierEarned(idx);
+                  const dense = tierStripItems.length >= 5;
                   return (
                     <div
                       key={String(t.id || tk || idx)}
-                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-shrink-0 ${done ? tierChipClassFromCampaignTier(t) : ''}`}
+                      className={`flex flex-col items-center gap-0.5 rounded-xl min-w-0 ${dense ? 'px-1 py-1.5' : 'gap-1 px-3 py-2 flex-shrink-0'} ${done ? tierChipClassFromCampaignTier(t) : ''}`}
                       style={{
                         background: done ? undefined : 'rgba(255,255,255,0.03)',
                         border: done ? undefined : '1px solid rgba(255,255,255,0.07)',
-                        minWidth: 88,
+                        minWidth: dense ? 0 : 88,
                       }}
                     >
                       <span className="flex flex-col items-center gap-0.5 leading-none">
-                        <TierIcon tierLike={t} sizePx={done ? 28 : 22} />
+                        <TierIcon tierLike={t} sizePx={dense ? (done ? 24 : 20) : (done ? 28 : 22)} />
                         <span className="text-[10px]">{done ? '✓' : '○'}</span>
                       </span>
                       <span
-                        className="text-[10px] font-bold text-center leading-tight"
+                        className={`font-bold text-center leading-tight ${dense ? 'text-[8px]' : 'text-[10px]'}`}
                         style={{ color: done ? 'inherit' : 'var(--text-sec)' }}
                       >
                         {displayTierPrimaryLabelHe(t, idx + 1)}

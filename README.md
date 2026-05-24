@@ -4,7 +4,11 @@ Vite/React PWA that talks to BizFlow/Base44 promo functions (`getPlayerLedger`, 
 
 ## Single promotion — not multi-campaign
 
-Humondial runs as **one** operator-facing promo. Players never pick among campaigns. Backend functions still take `campaign_id` because the DB row keys off that UUID. The canonical id for this deployment is the constant `PROMO_CAMPAIGN_ID` in `src/lib/config.js`: every client call includes it; `getPlayerCampaignConfig` is invoked with `{ campaign_id: PROMO_CAMPAIGN_ID }`; `loadConfig()` rejects with `campaign_id_mismatch` if the server returns a different row id. If ops ever recreate the `promo_campaigns` row, update that constant to match the new primary key. The BizFlow ERP admin UI uses the same UUID via `src/constants/humondialPromoCampaign.js` when calling `getCampaignConfig` (`HumondialCampaignConfig`, support, reporting); keep those three values identical.
+Humondial runs as **one** operator-facing promo. Players never pick among campaigns. Backend reads still accept `campaign_id` for flexibility, but **`listMatches`**, **`getPlayerCampaignConfig`**, **`getCampaignConfig`**, **`getPromoReporting`**, **`syncLiveFixtureScores`**, **`syncPromoFixtureSchedule`**, **`seedHumondialUiDemoMatches`** resolve the **`promo_campaigns`** row via **body `campaign_id`** → env **`HUMONDIAL_PROMO_CAMPAIGN_ID`** → fallback UUID **`bf987a45-9783-4507-9a26-acfd5f145473`** (same as **`PROMO_CAMPAIGN_ID`** in `src/lib/config.js`). Older **`limit=1&order=id.asc`** lookups are gone — multiple DB rows previously made **`getLeaderboard.tiers`** and BizFlow tier editor disagree.
+
+The BizFlow admin UI passes that UUID (`src/constants/humondialPromoCampaign.js`). If **`promo_campaigns`** is ever recreated, update **PWA** `config.js`, **BizFlow** constant/env, **and** fallback strings in **`base44/functions/*/entry.ts`** (search **`HUMONDIAL_PROMO_ROW_ID_DEFAULT`**), or rely on **`HUMONDIAL_PROMO_CAMPAIGN_ID`** env only.
+
+The collapsed tier strip shows **five columns** (`grid grid-cols-5`) whenever the API sends five tiers so the fifth crest is never off-screen-only.
 
 ## Pending table-booking points (UX summary)
 
