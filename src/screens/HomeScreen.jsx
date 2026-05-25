@@ -1325,11 +1325,11 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 {!isFinal && (
                   <button
                     type="button"
-                    className="mt-1 text-[11px] font-bold flex items-center gap-1"
-                    style={{ color: 'rgba(255,255,255,0.5)' }}
+                    className="w-full mt-2 rounded-xl py-2.5 text-sm font-black flex items-center justify-center gap-2 border-0 cursor-pointer"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: '#F6EFed', fontFamily: 'inherit' }}
                     onClick={(e) => { e.stopPropagation(); setShowPredShareModal(true); }}
                   >
-                    📤 שתף את הניחוש שלי
+                    📤 שתף את הניחוש וקבל נקודות
                   </button>
                 )}
                 {showTableBooking ? (
@@ -1373,11 +1373,11 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                 {hasPrediction && !isFinal && (
                   <button
                     type="button"
-                    className="mt-1 text-[11px] font-bold flex items-center gap-1"
-                    style={{ color: 'rgba(255,255,255,0.5)' }}
+                    className="w-full mt-2 rounded-xl py-2.5 text-sm font-black flex items-center justify-center gap-2 border-0 cursor-pointer"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: '#F6EFed', fontFamily: 'inherit' }}
                     onClick={(e) => { e.stopPropagation(); setShowPredShareModal(true); }}
                   >
-                    📤 שתף את הניחוש שלי
+                    📤 שתף את הניחוש וקבל נקודות
                   </button>
                 )}
                 {isFinal && bullseye && exactDrawMatch && (
