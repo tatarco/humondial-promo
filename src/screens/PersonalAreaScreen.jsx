@@ -9,6 +9,7 @@ import TierRequirementBars from '../components/TierRequirementBars.jsx';
 import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
+import ShareModal from '../components/ShareModal.jsx';
 
 export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger }) {
   const cfg = useConfig();
@@ -17,13 +18,25 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
   const [error, setError]                   = useState('');
   const [achievementsExpanded, setAchievementsExpanded] = useState(false);
   const [tiersExpanded, setTiersExpanded]   = useState(false);
+  const [showTierShare, setShowTierShare] = useState(false);
+  const [showRankShare, setShowRankShare] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const result = await callFn('getLeaderboard', { token, campaign_id: campaignId });
-      setData(result?.data ?? result);
+      const loaded = result?.data ?? result;
+      setData(loaded);
+      const tierId = loaded?.me?.tier?.id;
+      const lsKey = `hm_last_tier:${campaignId}`;
+      const lastTierId = localStorage.getItem(lsKey);
+      if (tierId) {
+        if (lastTierId !== null && lastTierId !== tierId) {
+          setShowTierShare(true);
+        }
+        localStorage.setItem(lsKey, tierId);
+      }
     } catch (e) {
       setError(e.message || 'שגיאה בטעינה');
     } finally {
@@ -137,12 +150,52 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
         <div style={{ width: 64 }} />
       </header>
 
+      {showTierShare && me.tier && (
+        <ShareModal
+          context="tier_upgrade"
+          cardData={{
+            tier_name: me.tier.label_he || '',
+            points: myPts,
+            rank: me.rank ?? null,
+          }}
+          token={token}
+          campaignId={campaignId}
+          eventId={me.tier.id}
+          onClose={() => setShowTierShare(false)}
+        />
+      )}
+      {showRankShare && (
+        <ShareModal
+          context="rank_share"
+          cardData={{
+            rank: me.rank ?? null,
+            points: myPts,
+            tier_name: me.tier?.label_he || '',
+          }}
+          token={token}
+          campaignId={campaignId}
+          onClose={() => setShowRankShare(false)}
+        />
+      )}
+
       <div className="px-4 space-y-4">
         {/* Block 1 — My Stats */}
         <div className="hm-card p-4" style={{ borderColor: 'var(--red)', borderWidth: 2 }}>
           <div className="flex items-center gap-3">
-            <div className="text-4xl font-black" style={{ color: 'var(--red)' }}>
-              {me.rank ? `#${me.rank}` : '—'}
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-4xl font-black" style={{ color: 'var(--red)' }}>
+                {me.rank ? `#${me.rank}` : '—'}
+              </div>
+              {me.rank && (
+                <button
+                  type="button"
+                  className="text-[11px] font-bold"
+                  style={{ color: '#f4c15d' }}
+                  onClick={() => setShowRankShare(true)}
+                >
+                  📤 שתף
+                </button>
+              )}
             </div>
             <div>
               <div className="text-base font-black" style={{ color: 'var(--text)' }}>{myPts} נקודות</div>
