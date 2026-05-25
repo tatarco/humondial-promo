@@ -66,22 +66,31 @@ function TeamFlagGraphic({ match, side, parts, variant = 'inline' }) {
   const emoji = getFlag(parts?.clean, side === 'home' ? match?.home_flag : match?.away_flag);
   const raw = side === 'home' ? match?.home_country_code : match?.away_country_code;
   const code = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
-  const w = variant === 'picker' ? 44 : variant === 'grid' ? 28 : 24;
-  const h = variant === 'picker' ? 33 : variant === 'grid' ? 21 : 18;
+  if (variant === 'grid') {
+    if (/^[A-Z]{2}$/.test(code)) {
+      return (
+        <div className="flex flex-col items-center gap-1">
+          <img
+            src={`https://flagcdn.com/w160/${code.toLowerCase()}.png`}
+            alt="" width={64} height={40}
+            className="rounded-md object-cover border border-white/20 shadow"
+            loading="lazy" decoding="async"
+          />
+          <span className="text-[9px] font-black tracking-widest uppercase" style={{ color: 'rgba(246,236,237,0.45)' }}>{code}</span>
+        </div>
+      );
+    }
+    return <span className="text-3xl leading-none select-none">{emoji}</span>;
+  }
+  const w = variant === 'picker' ? 44 : 24;
+  const h = variant === 'picker' ? 33 : 18;
   if (/^[A-Z]{2}$/.test(code)) {
     return (
       <img
         src={`https://flagcdn.com/w80/${code.toLowerCase()}.png`}
-        alt=""
-        width={w}
-        height={h}
-        className={
-          variant === 'picker'
-            ? 'rounded object-cover border border-white/25 shadow-sm'
-            : 'rounded object-cover border border-white/20'
-        }
-        loading="lazy"
-        decoding="async"
+        alt="" width={w} height={h}
+        className={variant === 'picker' ? 'rounded object-cover border border-white/25 shadow-sm' : 'rounded object-cover border border-white/20'}
+        loading="lazy" decoding="async"
       />
     );
   }
@@ -567,35 +576,114 @@ function QuickActionTile({ icon, label, sub, onClick, href, scrolled }) {
     : inner;
 }
 
+const WHEEL_ITEM_H = 40;
+const WHEEL_VALUES = Array.from({ length: 11 }, (_, i) => i); // 0–10
+
+function ScoreWheel({ value, onChange, color }) {
+  const wrapRef = useRef(null);
+  const drumRef = useRef(null);
+  const stateRef = useRef({ val: value, startY: 0, startVal: 0, vel: 0, lastY: 0, lastT: 0, raf: null });
+
+  function commitVal(raw, animate) {
+    const clamped = Math.max(0, Math.min(10, Math.round(raw)));
+    stateRef.current.val = clamped;
+    const wrap = wrapRef.current;
+    const drum = drumRef.current;
+    if (!wrap || !drum) return;
+    const center = wrap.clientHeight / 2 - WHEEL_ITEM_H / 2;
+    const y = center - clamped * WHEEL_ITEM_H;
+    drum.style.transition = animate ? 'transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+    drum.style.transform = `translateY(${y}px)`;
+    onChange(clamped);
+  }
+
+  useEffect(() => {
+    commitVal(value, false);
+  }, []);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const s = stateRef.current;
+
+    function onDown(e) {
+      if (s.raf) { cancelAnimationFrame(s.raf); s.raf = null; }
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      s.startY = y; s.startVal = s.val; s.vel = 0; s.lastY = y; s.lastT = Date.now();
+      e.preventDefault();
+    }
+    function onMove(e) {
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      const now = Date.now();
+      s.vel = (s.lastY - y) / Math.max(1, now - s.lastT);
+      s.lastY = y; s.lastT = now;
+      const delta = (s.startY - y) / WHEEL_ITEM_H;
+      commitVal(s.startVal + delta, false);
+      e.preventDefault();
+    }
+    function onUp() {
+      let v = s.vel * 14;
+      function coast() {
+        if (Math.abs(v) < 0.25) { commitVal(s.val, true); return; }
+        commitVal(s.val + v / WHEEL_ITEM_H * 2, false);
+        v *= 0.86;
+        s.raf = requestAnimationFrame(coast);
+      }
+      coast();
+    }
+    function onWheel(e) {
+      e.preventDefault();
+      commitVal(s.val + Math.sign(e.deltaY) * 1, true);
+    }
+
+    wrap.addEventListener('pointerdown', onDown, { passive: false });
+    wrap.addEventListener('pointermove', onMove, { passive: false });
+    wrap.addEventListener('pointerup',    onUp);
+    wrap.addEventListener('pointerleave', onUp);
+    wrap.addEventListener('wheel',        onWheel, { passive: false });
+    return () => {
+      wrap.removeEventListener('pointerdown', onDown);
+      wrap.removeEventListener('pointermove', onMove);
+      wrap.removeEventListener('pointerup',    onUp);
+      wrap.removeEventListener('pointerleave', onUp);
+      wrap.removeEventListener('wheel',        onWheel);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      className="hm-score-wheel-wrap"
+      style={{ '--wheel-color': color }}
+    >
+      <div className="hm-score-wheel-fade hm-score-wheel-fade--top" />
+      <div className="hm-score-wheel-selector" />
+      <div ref={drumRef} className="hm-score-wheel-drum">
+        {WHEEL_VALUES.map(v => (
+          <div key={v} className="hm-score-wheel-item">{v}</div>
+        ))}
+      </div>
+      <div className="hm-score-wheel-fade hm-score-wheel-fade--bot" />
+    </div>
+  );
+}
+
 function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeParts, awayParts }) {
-  const initOutcome = () => {
-    if (!prediction) return null;
-    if (prediction.home_score > prediction.away_score) return 'home';
-    if (prediction.home_score < prediction.away_score) return 'away';
-    return 'draw';
-  };
-  const [selected, setSelected] = useState(initOutcome);
   const [homeScore, setHomeScore] = useState(prediction?.home_score ?? 0);
   const [awayScore, setAwayScore] = useState(prediction?.away_score ?? 0);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    if (!prediction) { setSelected(null); setHomeScore(0); setAwayScore(0); return; }
-    setSelected(initOutcome());
-    setHomeScore(prediction.home_score);
-    setAwayScore(prediction.away_score);
+    if (!prediction) { setHomeScore(0); setAwayScore(0); return; }
+    setHomeScore(prediction.home_score ?? 0);
+    setAwayScore(prediction.away_score ?? 0);
   }, [prediction]);
 
-  function pickOutcome(outcome) {
-    setSelected(outcome);
-    if (outcome === 'home')  { setHomeScore(1); setAwayScore(0); }
-    else if (outcome === 'away') { setHomeScore(0); setAwayScore(1); }
-    else                     { setHomeScore(0); setAwayScore(0); }
-  }
+  const derivedOutcome = homeScore > awayScore ? 'home' : homeScore < awayScore ? 'away' : 'draw';
 
   async function handleSave() {
-    if (!selected || submitting) return;
+    if (submitting) return;
     setSubmitting(true);
     setErr('');
     try {
@@ -608,75 +696,58 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
     }
   }
 
-  const homeName = match.home_team || '?';
-  const awayName = match.away_team || '?';
-  const participationPts = typeof config.participation_points === 'number' ? config.participation_points : 0;
-  const bullseyePts = typeof config.bullseye_points === 'number' ? config.bullseye_points : 0;
-  const outcomePtsCfg = typeof config.outcome_points === 'number' ? config.outcome_points : 0;
-  const drawStripePtsCfg = typeof config.draw_stripe_points === 'number' ? config.draw_stripe_points : 0;
+  const participationPts  = typeof config.participation_points === 'number' ? config.participation_points : 0;
+  const bullseyePts       = typeof config.bullseye_points      === 'number' ? config.bullseye_points      : 0;
+  const outcomePtsCfg     = typeof config.outcome_points       === 'number' ? config.outcome_points       : 0;
+  const drawStripePtsCfg  = typeof config.draw_stripe_points   === 'number' ? config.draw_stripe_points   : 0;
+
+  const outcomeLabel =
+    derivedOutcome === 'home' ? `ניצחון ${homeParts.clean}` :
+    derivedOutcome === 'away' ? `ניצחון ${awayParts.clean}` :
+    'תיקו';
+  const outcomeColor =
+    derivedOutcome === 'home' ? 'var(--green)' :
+    derivedOutcome === 'away' ? 'var(--red)'   :
+    'var(--gold)';
 
   return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-sm font-bold text-right mb-2.5" style={{ color: 'var(--text)' }}>בוחרים מנצח או תיקו</p>
-        <div className="flex gap-2" dir="ltr">
-          {[
-            { key: 'away', outcome: 'away', sub: awayName },
-            { key: 'draw', outcome: null, sub: 'תיקו' },
-            { key: 'home', outcome: 'home', sub: homeName },
-          ].map(btn => (
-            <button
-              key={btn.key}
-              onClick={() => pickOutcome(btn.key)}
-              disabled={submitting}
-              className={`score-btn flex-1 py-6 flex flex-col items-center gap-1.5 ${selected === btn.key ? 'selected' : ''}`}
-            >
-              <div className="min-h-[2.75rem] flex items-center justify-center">
-                {btn.key === 'draw' ? (
-                  <span className="font-black text-3xl">X</span>
-                ) : (
-                  <TeamFlagGraphic match={match} side={btn.outcome} parts={btn.key === 'home' ? homeParts : awayParts} variant="picker" />
-                )}
-              </div>
-              <span className="text-[11px]" style={{ color: selected === btn.key ? 'rgba(255,255,255,0.75)' : 'var(--text-sec)' }}>
-                {btn.sub}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="space-y-3">
+      <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl pt-4 px-3 pb-3">
+        {/* Wheels row: away (left) | colon | home (right) — matches pitch card direction */}
+        <div className="flex items-start gap-2" dir="ltr">
+          {/* Away column */}
+          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+            <TeamFlagGraphic match={match} side="away" parts={awayParts} variant="picker" />
+            <span className="text-[10px] font-bold leading-tight text-center" style={{ color: 'var(--hm-match-grass-label)' }}>
+              {awayParts.clean}
+            </span>
+            <ScoreWheel value={awayScore} onChange={setAwayScore} color="var(--red)" />
+          </div>
 
-      <div className="hm-match-grass-fill hm-match-grass-pane rounded-xl p-4">
-        <p className="text-xs text-right mb-3" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
-          אחר כך ניסיון בינגו — ציון מדוייק <span style={{ fontWeight: 'normal' }}>(אופציונלי, לבונוס בינגו)</span>
-        </p>
-        <div className="flex items-center justify-center gap-3" dir="ltr">
-          <span className="text-xs" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>{homeName}</span>
-          <input
-            type="number" min="0" max="20"
-            value={homeScore}
-            onChange={e => setHomeScore(Math.max(0, parseInt(e.target.value) || 0))}
-            className="w-14 h-12 rounded-xl text-center font-black text-xl outline-none"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text)' }}
-          />
-          <span className="font-black text-lg" style={{ color: 'var(--text)' }}>:</span>
-          <input
-            type="number" min="0" max="20"
-            value={awayScore}
-            onChange={e => setAwayScore(Math.max(0, parseInt(e.target.value) || 0))}
-            className="w-14 h-12 rounded-xl text-center font-black text-xl outline-none"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text)' }}
-          />
-          <span className="text-xs" style={{ color: 'var(--hm-match-grass-label)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>{awayName}</span>
+          {/* Middle: colon + derived outcome */}
+          <div className="flex flex-col items-center justify-center gap-2 pt-12 flex-shrink-0">
+            <span className="font-black text-2xl leading-none" style={{ color: 'var(--hm-match-grass-label)' }}>:</span>
+            <div
+              className="rounded-full px-2 py-0.5 text-[10px] font-black text-center whitespace-nowrap"
+              style={{ background: 'rgba(255,255,255,0.08)', border: `1px solid ${outcomeColor}`, color: outcomeColor }}
+            >
+              {outcomeLabel}
+            </div>
+          </div>
+
+          {/* Home column */}
+          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+            <TeamFlagGraphic match={match} side="home" parts={homeParts} variant="picker" />
+            <span className="text-[10px] font-bold leading-tight text-center" style={{ color: 'var(--hm-match-grass-label)' }}>
+              {homeParts.clean}
+            </span>
+            <ScoreWheel value={homeScore} onChange={setHomeScore} color="var(--green)" />
+          </div>
         </div>
-        <div className="text-center text-[11px] mt-3 space-y-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.88)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
-          <p className="m-0">
-            בשמירה: +{participationPts} נ׳ הצטרפות מהמשחק · הזיכוי בפועל כפוף לכללי הקמפיין ולהכרה במערכת.
-          </p>
-          <p className="m-0">
-            אחרי תוצאה סופית: עד +{bullseyePts} נ׳ לפגיעה מדוייקת בניצחון/הפרש; עד +{bullseyePts + drawStripePtsCfg}
-            נ׳ לפגיעה מדוייקת כשמתאים למצב תיקו בשכבה; עד +{outcomePtsCfg} נ׳ לבחירת מנצח או תיקו נכונים בלי התאמת ספרות.
-          </p>
+
+        <div className="text-center text-[10px] mt-3 leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
+          שמירה: +{participationPts} נ׳ · בינגו: +{bullseyePts} נ׳ · תוצאה נכונה: +{outcomePtsCfg} נ׳
+          {drawStripePtsCfg > 0 ? ` · תיקו שכבה: +${bullseyePts + drawStripePtsCfg} נ׳` : ''}
         </div>
       </div>
 
@@ -684,9 +755,9 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
 
       <button
         onClick={handleSave}
-        disabled={!selected || submitting}
+        disabled={submitting}
         className="hm-btn-primary w-full py-4 rounded-2xl text-base font-black"
-        style={{ opacity: !selected || submitting ? 0.5 : 1 }}
+        style={{ opacity: submitting ? 0.5 : 1 }}
       >
         {submitting ? 'שומר...' : 'שמור תחזית'}
       </button>
