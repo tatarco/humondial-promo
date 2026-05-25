@@ -1322,6 +1322,16 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     )}
                   </div>
                 </div>
+                {!isFinal && (
+                  <button
+                    type="button"
+                    className="mt-1 text-[11px] font-bold flex items-center gap-1"
+                    style={{ color: 'rgba(255,255,255,0.5)' }}
+                    onClick={(e) => { e.stopPropagation(); setShowPredShareModal(true); }}
+                  >
+                    📤 שתף את הניחוש שלי
+                  </button>
+                )}
                 {showTableBooking ? (
                   <button
                     type="button"
