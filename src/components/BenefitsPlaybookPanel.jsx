@@ -19,23 +19,19 @@ export default function BenefitsPlaybookPanel({ copy, variant = 'compact' }) {
   const items = sectionItems(c);
   if (!items.length) return null;
 
-  const body = (
-    <div className={variant === 'compact' ? 'space-y-3 px-4 pb-3 pt-2' : 'space-y-4'}>
-      {items.map(({ key, title }) => (
-        <div key={key}>
-          <div className="text-xs font-black text-right mb-1" style={{ color: 'var(--gold)' }}>
-            {title}
-          </div>
-          <p
-            className="text-[10px] leading-relaxed text-right whitespace-pre-wrap m-0"
-            style={{ color: 'var(--text-sec)' }}
-          >
-            {c[key]}
-          </p>
-        </div>
-      ))}
+  const sectionsBlock = items.map(({ key, title }) => (
+    <div key={key}>
+      <div className="text-xs font-black text-right mb-1" style={{ color: 'var(--gold)' }}>
+        {title}
+      </div>
+      <p
+        className="text-[10px] leading-relaxed text-right whitespace-pre-wrap m-0"
+        style={{ color: 'var(--text-sec)' }}
+      >
+        {c[key]}
+      </p>
     </div>
-  );
+  ));
 
   if (variant === 'compact') {
     return (
@@ -51,7 +47,7 @@ export default function BenefitsPlaybookPanel({ copy, variant = 'compact' }) {
           </span>
         </summary>
         <div className="border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-          {body}
+          <div className="space-y-3 px-4 pb-3 pt-2">{sectionsBlock}</div>
         </div>
       </details>
     );
@@ -63,10 +59,26 @@ export default function BenefitsPlaybookPanel({ copy, variant = 'compact' }) {
       dir="rtl"
       style={{ borderColor: 'rgba(244,193,93,0.35)', background: 'rgba(255,255,255,0.03)' }}
     >
-      <h3 className="text-sm font-black text-right m-0 mb-3" style={{ color: 'var(--gold)' }}>
+      <h3 className="text-sm font-black text-right m-0 mb-2" style={{ color: 'var(--gold)' }}>
         מדריך הטבות וכללים
       </h3>
-      {body}
+      <details
+        className="rounded-xl overflow-hidden border"
+        style={{ borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.2)' }}
+      >
+        <summary
+          className="cursor-pointer list-none px-3 py-2.5 text-xs font-black text-right select-none [&::-webkit-details-marker]:hidden"
+          style={{ color: 'var(--text)' }}
+        >
+          האותיות הקטנות
+          <span className="block text-[10px] font-normal mt-0.5" style={{ color: 'var(--text-sec)' }}>
+            {items.length} סעיפים · לחץ להרחבה
+          </span>
+        </summary>
+        <div className="border-t px-2 pb-3 pt-1" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <div className="space-y-4">{sectionsBlock}</div>
+        </div>
+      </details>
     </section>
   );
 }
