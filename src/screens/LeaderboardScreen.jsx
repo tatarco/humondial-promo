@@ -3,6 +3,7 @@ import { callFn } from '../lib/api.js';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { tierChipClassFromCampaignTier } from '../lib/tierVisual.js';
 import TierIcon from '../components/TierIcon.jsx';
+import ShareModal from '../components/ShareModal.jsx';
 
 function getTierForPoints(tiers, pts) {
   const sorted = [...tiers].sort((a, b) => b.min_points - a.min_points);
@@ -49,6 +50,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const [predCount, setPredCount]     = useState(4);
   const [tableCount, setTableCount]   = useState(3);
   const [delivCount, setDelivCount]   = useState(2);
+  const [showRankShare, setShowRankShare] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -175,7 +177,28 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
             <div className="text-xs mt-0.5" style={{ color: 'var(--text-sec)' }}>{myPts} נקודות</div>
           </div>
         </div>
+        <button
+          type="button"
+          className="mt-2 text-xs font-bold flex items-center gap-1"
+          style={{ color: '#f4c15d' }}
+          onClick={() => setShowRankShare(true)}
+        >
+          📤 שתף את הדירוג שלי
+        </button>
       </div>
+      {showRankShare && (
+        <ShareModal
+          context="rank_share"
+          cardData={{
+            rank: me.rank ?? null,
+            points: myPts,
+            tier_name: myTier?.label_he || '',
+          }}
+          token={token}
+          campaignId={campaignId}
+          onClose={() => setShowRankShare(false)}
+        />
+      )}
 
       <div className="hm-card p-4 mx-4 mb-3">
         <div className="text-xs font-bold mb-1" style={{ color: 'var(--text-sec)' }}>בקצב הזה אתה בדרך ל...</div>
