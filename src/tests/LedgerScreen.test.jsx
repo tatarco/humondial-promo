@@ -93,4 +93,23 @@ describe('LedgerScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: /נסה שוב/i }));
     await waitFor(() => expect(screen.getByText('85')).toBeInTheDocument());
   });
+
+  it('renders שיתוף חברתי label and sub-context for social_share reason', async () => {
+    const todayISO2 = new Date().toISOString();
+    callFn.mockResolvedValue({
+      total_points: 5,
+      rows: [
+        {
+          id: '10',
+          reason: 'social_share',
+          points: 5,
+          created_at: todayISO2,
+          note: JSON.stringify({ context: 'rank_share', platform: 'instagram' }),
+        },
+      ],
+    });
+    render(<LedgerScreen token="t" campaignId="c" onBack={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/שיתוף חברתי/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('rank_share')).toBeInTheDocument());
+  });
 });

@@ -7,6 +7,7 @@ const REASON_MAP = {
   table_booking:            { emoji: '🍽️', label: 'הזמנת שולחן' },
   venue_visit:              { emoji: '🏟️', label: 'ביקור' },
   achievement:              { emoji: '🏅', label: 'הישג' },
+  social_share:             { emoji: '📤', label: 'שיתוף חברתי' },
 };
 
 const groupByDate = (rows) => {
@@ -140,6 +141,16 @@ export default function LedgerScreen({ token, campaignId, onBack }) {
                         <div>
                           <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>{meta.label}</div>
                           <div className="text-xs" style={{ color: 'var(--text-sec)' }}>{formatTime(row.created_at)}{row.pending ? ' · ממתין' : ''}</div>
+                          {row.reason === 'social_share' && row.note && (() => {
+                            try {
+                              const parsed = JSON.parse(row.note);
+                              return parsed.context ? (
+                                <div className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                                  {parsed.context}
+                                </div>
+                              ) : null;
+                            } catch { return null; }
+                          })()}
                           {row.reason === 'table_booking' && row.pending && (
                             <div className="text-[10px] mt-1 leading-snug text-right max-w-[14rem]" style={{ color: 'var(--gold)' }}>
                               הנקודות ייכנסו לניקוד המאושר אחרי קוד ביקור יומי בסניף
