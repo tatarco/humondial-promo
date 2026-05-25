@@ -13,6 +13,7 @@ import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 import TierRequirementBars from '../components/TierRequirementBars.jsx';
 import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
 import { normalizeBenefitsPlayerCopy, overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
+import ShareModal from '../components/ShareModal.jsx';
 
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
@@ -723,8 +724,8 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
   const drawStripePtsCfg  = typeof config.draw_stripe_points   === 'number' ? config.draw_stripe_points   : 0;
 
   const outcomeLabel =
-    derivedOutcome === 'home' ? `ניצחון ${homeParts.clean}` :
-    derivedOutcome === 'away' ? `ניצחון ${awayParts.clean}` :
+    derivedOutcome === 'home' ? homeParts.clean :
+    derivedOutcome === 'away' ? awayParts.clean :
     'תיקו';
   const outcomeColor =
     derivedOutcome === 'home' ? 'var(--green)' :
@@ -768,7 +769,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
 
         <div className="text-center text-[10px] mt-3 leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)', textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
           שמירה: +{participationPts} נ׳ · בינגו: +{bullseyePts} נ׳ · תוצאה נכונה: +{outcomePtsCfg} נ׳
-          {drawStripePtsCfg > 0 ? ` · תיקו שכבה: +${bullseyePts + drawStripePtsCfg} נ׳` : ''}
+          {drawStripePtsCfg > 0 ? ` · תיקו לא מדוייק: +${bullseyePts + drawStripePtsCfg} נ׳` : ''}
         </div>
       </div>
 
@@ -786,7 +787,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
   );
 }
 
-function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onOpenGames, onBranchBooking, isActive, onToggle }) {
+function MatchCard({ match, prediction, config, windowLocked, predictionWindowOpensHint, onPredict, onDelete, onOpenGames, onBranchBooking, isActive, onToggle, token, campaignId }) {
   const isPending = !match.home_team || !match.away_team ||
     match.home_team.startsWith('?') || match.away_team.startsWith('?');
   const outsideGuessWindow = !isPending && windowLocked && match.status === 'open';
@@ -802,6 +803,8 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting]           = useState(false);
   const [showPointsFlash, setShowPointsFlash] = useState(false);
+  const [showShareModal, setShowShareModal]         = useState(false);
+  const [showPredShareModal, setShowPredShareModal] = useState(false);
   const flashTimer = useRef(null);
   const prevActive = useRef(isActive);
   useEffect(() => {
@@ -962,6 +965,15 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     זכית ב־+{finalPointsEarned} נ׳ בסיום משחק זה
                   </div>
                 ) : null}
+                {isFinal && hasPrediction && (bullseye || correctOutcome) && (
+                  <button
+                    type="button"
+                    className="hm-btn-secondary w-full py-2.5 rounded-xl text-xs font-bold mt-1 flex items-center justify-center gap-1"
+                    onClick={(e) => { e.stopPropagation(); setShowShareModal(true); }}
+                  >
+                    📤 שתף את הניחוש וקבל נקודות
+                  </button>
+                )}
                 {isFinal && hasPrediction && !finalCelebrate ? (
                   <div className="text-xs leading-relaxed pt-1" style={{ color: 'var(--text-sec)' }}>
                     ניחשת{' '}
@@ -1348,9 +1360,19 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   layout="stack"
                   bullseyeMaxPts={typeof config?.bullseye_points === 'number' ? config.bullseye_points : null}
                 />
+                {hasPrediction && !isFinal && (
+                  <button
+                    type="button"
+                    className="mt-1 text-[11px] font-bold flex items-center gap-1"
+                    style={{ color: 'rgba(255,255,255,0.5)' }}
+                    onClick={(e) => { e.stopPropagation(); setShowPredShareModal(true); }}
+                  >
+                    📤 שתף את הניחוש שלי
+                  </button>
+                )}
                 {isFinal && bullseye && exactDrawMatch && (
                   <div className="mt-2 text-sm font-bold" style={{ color: 'var(--gold)' }}>
-                    🤝 תיקו מדויק (+{config.bullseye_points} תוצאה מדויקת +{config.draw_stripe_points} שכבת תיקו)
+                    🤝 תיקו מדויק (+{config.bullseye_points} תוצאה מדויקת +{config.draw_stripe_points} תיקו לא מדוייק)
                   </div>
                 )}
                 {isFinal && bullseye && !exactDrawMatch && (
@@ -1388,6 +1410,42 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
         </div>
       </div>
       </div>
+      {showShareModal && (
+        <ShareModal
+          context={bullseye ? 'bullseye' : 'correct_prediction'}
+          cardData={{
+            home: homeParts.clean,
+            away: awayParts.clean,
+            home_score: match.final_home_score,
+            away_score: match.final_away_score,
+            home_flag: homeFlag,
+            away_flag: awayFlag,
+            points_earned: finalPointsEarned ?? 0,
+            points: null,
+            rank: null,
+          }}
+          token={token}
+          campaignId={campaignId}
+          eventId={match.id}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
+      {showPredShareModal && (
+        <ShareModal
+          context="prediction_share"
+          cardData={{
+            home: homeParts.clean,
+            away: awayParts.clean,
+            home_score: prediction?.home_score,
+            away_score: prediction?.away_score,
+            home_flag: homeFlag,
+            away_flag: awayFlag,
+          }}
+          token={token}
+          campaignId={campaignId}
+          onClose={() => setShowPredShareModal(false)}
+        />
+      )}
     </div>
   );
 }
@@ -1771,6 +1829,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
                 onBranchBooking={onBranchBooking}
                 isActive={activeCard === match.id}
                 onToggle={() => setActiveCard((prev) => (prev === match.id ? null : match.id))}
+                token={token}
+                campaignId={campaignId}
               />
             </Fragment>
           ))}
