@@ -62,10 +62,28 @@ function getFlag(teamName, fallback) {
   return FLAG_MAP[teamName] || fallback || '🏳️';
 }
 
+// Derives a flagcdn-compatible code from a flag emoji via Unicode regional indicators.
+// Handles England/Scotland/Wales subdivision flags explicitly.
+function emojiToFlagCode(emoji) {
+  if (!emoji) return '';
+  const SUBDIV = { '🏴󠁧󠁢󠁥󠁮󠁧󠁿': 'gb-eng', '🏴󠁧󠁢󠁳󠁣󠁴󠁿': 'gb-sct', '🏴󠁧󠁢󠁷󠁬󠁳󠁿': 'gb-wls' };
+  if (SUBDIV[emoji]) return SUBDIV[emoji];
+  const chars = [...emoji];
+  if (chars.length < 2) return '';
+  const a = chars[0].codePointAt(0);
+  const b = chars[1].codePointAt(0);
+  if (a >= 0x1F1E6 && a <= 0x1F1FF && b >= 0x1F1E6 && b <= 0x1F1FF) {
+    return String.fromCharCode(a - 0x1F1E6 + 65) + String.fromCharCode(b - 0x1F1E6 + 65);
+  }
+  return '';
+}
+
 function TeamFlagGraphic({ match, side, parts, variant = 'inline' }) {
   const emoji = getFlag(parts?.clean, side === 'home' ? match?.home_flag : match?.away_flag);
-  const raw = side === 'home' ? match?.home_country_code : match?.away_country_code;
-  const code = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  const rawCode = side === 'home' ? match?.home_country_code : match?.away_country_code;
+  const code = (typeof rawCode === 'string' && /^[A-Z]{2}$/i.test(rawCode.trim()))
+    ? rawCode.trim().toUpperCase()
+    : emojiToFlagCode(emoji);
   if (variant === 'grid') {
     if (/^[A-Z]{2}$/.test(code)) {
       return (
@@ -198,16 +216,16 @@ function PredictionGuessLayers({
         border: '1px solid rgba(244,193,93,0.28)',
       }}
     >
-      <span className={`shrink-0 select-none transition-transform duration-150 ${fzFlag} ${ringHome}`} aria-hidden>
-        {homeFlag}
+      <span className={`shrink-0 select-none transition-transform duration-150 ${fzFlag} ${ringAway}`} aria-hidden>
+        {awayFlag}
       </span>
-      <span className="opacity-95">{hs}</span>
+      <span className="opacity-95">{aw}</span>
       <span className="font-bold opacity-45 text-[12px]" aria-hidden>
         −
       </span>
-      <span className="opacity-95">{aw}</span>
-      <span className={`shrink-0 select-none transition-transform duration-150 ${fzFlag} ${ringAway}`} aria-hidden>
-        {awayFlag}
+      <span className="opacity-95">{hs}</span>
+      <span className={`shrink-0 select-none transition-transform duration-150 ${fzFlag} ${ringHome}`} aria-hidden>
+        {homeFlag}
       </span>
     </span>
   );
@@ -681,9 +699,11 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
   }, [prediction]);
 
   const derivedOutcome = homeScore > awayScore ? 'home' : homeScore < awayScore ? 'away' : 'draw';
+  const savingRef = useRef(false);
 
   async function handleSave() {
-    if (submitting) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSubmitting(true);
     setErr('');
     try {
@@ -692,6 +712,7 @@ function PredictionEditor({ match, prediction, config, onPredict, onSaved, homeP
     } catch (e) {
       setErr(mapPromoError(e));
     } finally {
+      savingRef.current = false;
       setSubmitting(false);
     }
   }
