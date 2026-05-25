@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { callFn } from '../lib/api.js';
+import ShareModal from '../components/ShareModal.jsx';
 
 const VENUE_CODE_COPY = {
   neutral: {
@@ -38,6 +39,8 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, entryC
   const [pointsGranted, setPointsGranted] = useState(0);
   const [bookingReleased, setBookingReleased] = useState(0);
   const [pendingAchievements, setPendingAchievements] = useState([]);
+  const [shareData, setShareData] = useState(null);
+  const [showShare, setShowShare] = useState(false);
 
   const copy = VENUE_CODE_COPY[entryContext] ?? VENUE_CODE_COPY.neutral;
 
@@ -57,11 +60,24 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, entryC
       const r = await callFn('redeemVenueCode', { token, campaign_id: campaignId, code });
       const d = r?.data ?? r;
       if (d?.success) {
-        setPointsGranted(d.points_granted ?? 0);
+        const earned = d.points_granted ?? 0;
+        setPointsGranted(earned);
         setBookingReleased(d.booking_points_released ?? 0);
         setStatus('success');
         const unlocked = d.achievements_unlocked ?? [];
         if (unlocked.length) setPendingAchievements(unlocked);
+        callFn('getLeaderboard', { token, campaign_id: campaignId })
+          .then(lr => {
+            const ld = lr?.data ?? lr;
+            setShareData({
+              points_earned: earned,
+              points: ld?.me?.total_points ?? 0,
+              rank: ld?.me?.rank ?? null,
+              tier_name: ld?.me?.tier?.label_he ?? '',
+            });
+            setShowShare(true);
+          })
+          .catch(() => setShowShare(true));
       } else if (d?.already_redeemed) {
         setStatus('already_redeemed');
       } else {
@@ -74,6 +90,15 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, entryC
 
   return (
     <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center px-6 gap-6" dir="rtl">
+      {showShare && (
+        <ShareModal
+          context={entryContext === 'delivery' ? 'delivery' : 'venue_visit'}
+          cardData={shareData || { points_earned: pointsGranted, points: pointsGranted }}
+          token={token}
+          campaignId={campaignId}
+          onClose={() => setShowShare(false)}
+        />
+      )}
       {pendingAchievements.length > 0 && (
         <AchievementToast
           achievement={pendingAchievements[0]}
