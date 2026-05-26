@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { drawShareCard, fillTemplatePlaceholders } from '../lib/shareCard.js';
 import { useShareBonus } from '../lib/useShareBonus.js';
 
@@ -26,6 +27,12 @@ export default function ShareModal({ context, cardData, token, campaignId, event
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  useEffect(() => {
     if (claimed) {
       const t = setTimeout(() => onClose?.(), 2200);
       return () => clearTimeout(t);
@@ -50,10 +57,10 @@ export default function ShareModal({ context, cardData, token, campaignId, event
 
   if (!shareEnabled) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
+      className="fixed inset-0 flex items-end justify-center"
+      style={{ background: 'rgba(0,0,0,0.7)', zIndex: 9999 }}
       onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}
       dir="rtl"
     >
@@ -76,13 +83,19 @@ export default function ShareModal({ context, cardData, token, campaignId, event
           <img
             src={cardBlobUrl}
             alt="כרטיס שיתוף"
-            className="w-full rounded-2xl"
-            style={{ maxHeight: 280, objectFit: 'contain' }}
+            style={{
+              width: '40%',
+              height: 'auto',
+              borderRadius: 12,
+              display: 'block',
+              margin: '0 auto',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+            }}
           />
         ) : (
           <div
-            className="w-full rounded-2xl flex items-center justify-center text-2xl animate-pulse"
-            style={{ height: 200, background: 'rgba(255,255,255,0.05)' }}
+            className="rounded-2xl flex items-center justify-center text-2xl animate-pulse mx-auto"
+            style={{ width: '40%', aspectRatio: '9/16', background: 'rgba(255,255,255,0.05)' }}
           >
             📤
           </div>
@@ -97,7 +110,6 @@ export default function ShareModal({ context, cardData, token, campaignId, event
           </div>
         ) : (
           <>
-            {/* Share button */}
             <button
               onClick={handleShare}
               disabled={sharing}
@@ -110,7 +122,6 @@ export default function ShareModal({ context, cardData, token, campaignId, event
               {sharing ? 'פותח שיתוף...' : '📱 שתף לאינסטגרם / ווצאפ'}
             </button>
 
-            {/* Claim button — disabled until share was tapped */}
             <button
               onClick={claim}
               disabled={!hasAttemptedShare || claiming}
@@ -126,6 +137,7 @@ export default function ShareModal({ context, cardData, token, campaignId, event
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
