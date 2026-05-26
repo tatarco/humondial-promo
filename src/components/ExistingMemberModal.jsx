@@ -1,9 +1,15 @@
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 
 export default function ExistingMemberModal({ bonusPoints, tierName, onClose }) {
   const config = useConfig();
   const mc = config?.modal_copy ?? {};
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const title = mc.existing_member_title_he || 'ברוך הבא בחזרה!';
   const body = mc.existing_member_body_he
