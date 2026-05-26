@@ -1747,6 +1747,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           achievement={pendingAchievements[0]}
           token={token}
           campaignId={campaignId}
+          playerPoints={totalPoints}
           onClose={() => setPendingAchievements(prev => prev.slice(1))}
         />
       )}

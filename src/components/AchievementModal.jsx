@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import ShareModal from './ShareModal.jsx';
 
-export default function AchievementModal({ achievement, token, campaignId, onClose }) {
+export default function AchievementModal({ achievement, token, campaignId, playerPoints, playerRank, onClose }) {
   const config = useConfig();
   const mc = config?.modal_copy ?? {};
   const isTierUpgrade = achievement?.type === 'tier_reached';
@@ -24,11 +24,20 @@ export default function AchievementModal({ achievement, token, campaignId, onClo
   }, []);
 
   if (showShare) {
+    const tierLabel = achievement.tier
+      ? (config?.tiers ?? []).find(t => t.id === achievement.tier)?.label_he
+      : undefined;
     return (
       <ShareModal
         context={isTierUpgrade ? 'tier_upgrade' : 'achievement_share'}
         eventId={isTierUpgrade ? (achievement.tier ?? null) : null}
-        cardData={{ badge: achievement.badge, label: achievement.label_he }}
+        cardData={{
+          badge: achievement.badge,
+          label: achievement.label_he,
+          tier_name: tierLabel ?? achievement.label_he ?? '',
+          points: playerPoints ?? null,
+          rank: playerRank ?? null,
+        }}
         token={token}
         campaignId={campaignId}
         onClose={onClose}
