@@ -18,6 +18,7 @@ import MyQRScreen from './screens/MyQRScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
 import CampaignHeaderBrand from './components/CampaignHeaderBrand.jsx';
+import ExistingMemberModal from './components/ExistingMemberModal.jsx';
 
 const SCREEN = {
   SPLASH: 'splash',
@@ -71,6 +72,7 @@ export default function App() {
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
+  const [komoWelcome, setKomoWelcome] = useState(null);
   const splashBootRef = useRef(null);
 
   useEffect(() => {
@@ -310,9 +312,12 @@ export default function App() {
     setScreen(SCREEN.OTP);
   }
 
-  function handleOtpSuccess(playerId, tok) {
+  function handleOtpSuccess(playerId, tok, komoWelcomeData) {
     setPlayer(playerId);
     setTokenState(tok);
+    if (komoWelcomeData && !localStorage.getItem(`komo_welcomed_${playerId}`)) {
+      setKomoWelcome(komoWelcomeData);
+    }
     setScreen(SCREEN.SHELL);
   }
 
@@ -524,6 +529,20 @@ export default function App() {
   }
 
   return (
-    <ConfigProvider config={config}>{inner}</ConfigProvider>
+    <ConfigProvider config={config}>
+      <>
+        {inner}
+        {komoWelcome && (
+          <ExistingMemberModal
+            bonusPoints={komoWelcome.bonusPoints}
+            tierName={komoWelcome.tierName}
+            onClose={() => {
+              localStorage.setItem(`komo_welcomed_${player}`, '1');
+              setKomoWelcome(null);
+            }}
+          />
+        )}
+      </>
+    </ConfigProvider>
   );
 }
