@@ -13,7 +13,7 @@ export default function AchievementModal({ achievement, token, campaignId, onClo
     ? (mc.tier_upgrade_title_he || 'עלית לדרגה!')
     : (mc.achievement_title_he || 'הישג חדש!');
   const body = isTierUpgrade
-    ? (mc.tier_upgrade_body_he || 'גישה לטבות הכי שוות של הומונדיאל')
+    ? (mc.tier_upgrade_body_he || 'גישה להטבות הכי שוות של הומונדיאל')
     : (mc.achievement_body_he || 'כל הכבוד, המשך כך!');
   const shareCta = mc.share_cta_he || '📱 שתף ברשתות חברתיות';
 
