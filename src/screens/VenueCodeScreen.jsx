@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { callFn } from '../lib/api.js';
 import ShareModal from '../components/ShareModal.jsx';
+import AchievementModal from '../components/AchievementModal.jsx';
 
 const VENUE_CODE_COPY = {
   neutral: {
@@ -17,21 +18,6 @@ const VENUE_CODE_COPY = {
   },
 };
 
-function AchievementToast({ achievement, onClose }) {
-  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-  return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-hm-card border border-hm-red rounded-2xl px-5 py-4 shadow-lg flex items-center gap-3 animate-in slide-in-from-top">
-      <span className="text-3xl">{achievement.badge}</span>
-      <div>
-        <p className="text-hm-white font-bold text-sm">הישג חדש!</p>
-        <p className="text-hm-muted text-xs">{achievement.label_he}</p>
-        {achievement.bonus_points > 0 && (
-          <p className="text-hm-red text-xs font-bold">+{achievement.bonus_points} נקודות</p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function VenueCodeScreen({ token, campaignId, prefillCode, entryContext = 'neutral', onBack }) {
   const [code, setCode] = useState(prefillCode || '');
@@ -100,8 +86,10 @@ export default function VenueCodeScreen({ token, campaignId, prefillCode, entryC
         />
       )}
       {pendingAchievements.length > 0 && (
-        <AchievementToast
+        <AchievementModal
           achievement={pendingAchievements[0]}
+          token={token}
+          campaignId={campaignId}
           onClose={() => setPendingAchievements(prev => prev.slice(1))}
         />
       )}

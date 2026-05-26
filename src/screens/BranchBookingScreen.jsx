@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { callFn } from '../lib/api.js';
+import AchievementModal from '../components/AchievementModal.jsx';
 
 const RESERVATION_BASE =
   'https://tabitisrael.co.il/%D7%94%D7%96%D7%9E%D7%A0%D7%AA-%D7%9E%D7%A7%D7%95%D7%9D/create-reservation?step=search&locale=he-IL&source=website&type=future_reservation&orgId=';
@@ -27,6 +28,7 @@ export default function BranchBookingScreen({
   const [msg, setMsg]       = useState('');
   const [branchTip, setBranchTip] = useState('');
   const [busy, setBusy]       = useState(null);
+  const [pendingAchievements, setPendingAchievements] = useState([]);
 
   const matchId = bookingContext?.matchId;
   const matchKickoffUtc = bookingContext?.matchKickoffUtc;
@@ -57,10 +59,7 @@ export default function BranchBookingScreen({
           ? `נשמרו +${pts} נק׳ ממתין. נפתח טאבּיט להזמנה — אחר כך הקוד היומי בסניף משחרר למאושר.`
           : 'נשמרו נקודות ממתין. נפתח טאבּיט להזמנה — אחר כך הקוד היומי בסניף משחרר למאושר.';
     if (!duplicate && ach.length) {
-      const extras = ach
-        .map(a => `${a.badge ?? ''} ${a.label_he ?? ''}`.trim())
-        .filter(Boolean);
-      if (extras.length) tip += ` · ${extras.join(' · ')}`;
+      setPendingAchievements(ach);
     }
     setBranchTip(tip);
   }
@@ -200,6 +199,14 @@ export default function BranchBookingScreen({
         </button>
         {msg && <p className="text-xs text-right" style={{ color: 'var(--green)' }}>{msg}</p>}
       </div>
+      {pendingAchievements.length > 0 && (
+        <AchievementModal
+          achievement={pendingAchievements[0]}
+          token={token}
+          campaignId={campaignId}
+          onClose={() => setPendingAchievements(prev => prev.slice(1))}
+        />
+      )}
     </div>
   );
 }
