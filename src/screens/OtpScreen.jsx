@@ -34,13 +34,13 @@ export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
     setLoading(true);
     try {
       const result = await callFn('promoVerifyOtp', { phone, code, acceptTerms: isNewUser === true });
-      const { token, playerId, komo_status, komo_bonus_points, komo_tier_name } = result;
+      const { token, playerId, komo_status: memberStatus, komo_bonus_points: bonusPoints, komo_tier_name: tierName } = result;
       setToken(token);
-      const komoWelcome =
-        komo_status === 'existing_member'
-          ? { bonusPoints: komo_bonus_points ?? 0, tierName: komo_tier_name ?? '' }
+      const memberWelcome =
+        memberStatus === 'existing_member'
+          ? { bonusPoints: bonusPoints ?? 0, tierName: tierName ?? '' }
           : null;
-      onSuccess(playerId, token, komoWelcome);
+      onSuccess(playerId, token, memberWelcome);
     } catch {
       setCode('');
       setError('קוד שגוי — נסה להזין שוב');

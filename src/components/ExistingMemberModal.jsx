@@ -12,9 +12,9 @@ export default function ExistingMemberModal({ bonusPoints, tierName, onClose }) 
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  const title = mc.existing_member_title_he || 'ברוך הבא בחזרה!';
+  const title = mc.existing_member_title_he || 'ברוך הבא בחזרה, שמנמן!';
   const body = mc.existing_member_body_he
-    || `זיהינו שאתה כבר חבר מועדון KOMO. כאות הוקרה — אתה מתחיל מדרגת ${tierName || 'כסף'} עם בונוס נקודות!`;
+    || `זיהינו שאתה כבר חבר Chubby's Club — המקום שבו שמנמנים מתפנקים יותר! כאות הוקרה — אתה מתחיל מדרגת ${tierName || 'כסף'} עם בונוס נקודות!`;
 
   return createPortal(
     <div
@@ -36,7 +36,7 @@ export default function ExistingMemberModal({ bonusPoints, tierName, onClose }) 
             border: '1px solid rgba(52,199,89,0.3)',
           }}
         >
-          חבר KOMO מוכר
+          חבר Chubby's Club ✓
         </div>
 
         <div className="text-white font-black text-lg text-center">{title}</div>

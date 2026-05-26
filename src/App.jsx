@@ -72,7 +72,7 @@ export default function App() {
   const [pendingVenueCode, setPendingVenueCode] = useState('');
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
-  const [komoWelcome, setKomoWelcome] = useState(null);
+  const [memberWelcome, setMemberWelcome] = useState(null);
   const splashBootRef = useRef(null);
 
   useEffect(() => {
@@ -312,11 +312,11 @@ export default function App() {
     setScreen(SCREEN.OTP);
   }
 
-  function handleOtpSuccess(playerId, tok, komoWelcomeData) {
+  function handleOtpSuccess(playerId, tok, memberWelcomeData) {
     setPlayer(playerId);
     setTokenState(tok);
-    if (komoWelcomeData && !localStorage.getItem(`komo_welcomed_${playerId}`)) {
-      setKomoWelcome(komoWelcomeData);
+    if (memberWelcomeData && !localStorage.getItem(`club_welcomed_${playerId}`)) {
+      setMemberWelcome(memberWelcomeData);
     }
     setScreen(SCREEN.SHELL);
   }
@@ -532,13 +532,13 @@ export default function App() {
     <ConfigProvider config={config}>
       <>
         {inner}
-        {komoWelcome && (
+        {memberWelcome && (
           <ExistingMemberModal
-            bonusPoints={komoWelcome.bonusPoints}
-            tierName={komoWelcome.tierName}
+            bonusPoints={memberWelcome.bonusPoints}
+            tierName={memberWelcome.tierName}
             onClose={() => {
-              localStorage.setItem(`komo_welcomed_${player}`, '1');
-              setKomoWelcome(null);
+              localStorage.setItem(`club_welcomed_${player}`, '1');
+              setMemberWelcome(null);
             }}
           />
         )}
