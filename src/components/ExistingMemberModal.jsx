@@ -7,8 +7,9 @@ export default function ExistingMemberModal({ bonusPoints, tierName, onClose }) 
   const mc = config?.modal_copy ?? {};
 
   useEffect(() => {
+    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    return () => { document.body.style.overflow = prev; };
   }, []);
 
   const title = mc.existing_member_title_he || 'ברוך הבא בחזרה!';
