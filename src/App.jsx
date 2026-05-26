@@ -80,7 +80,8 @@ export default function App() {
     startListMatchesWarm();
     void (async () => {
       try {
-        const cfg = await loadConfig();
+        const settled = await splashBootRef.current;
+        const cfg = settled[0].status === 'fulfilled' ? settled[0].value : null;
         if (!isLoggedIn() || !cfg?.id) return;
         startHomeAuthenticatedWarm(cfg.id, getToken());
       } catch {

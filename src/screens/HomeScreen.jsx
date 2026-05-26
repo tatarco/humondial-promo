@@ -836,6 +836,9 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
   const bullseyePts = config.bullseye_points;
   const outcomePts = config.outcome_points;
   const drawStripePts = config.draw_stripe_points;
+  const ssc = config?.social_share_config;
+  const predShareEnabled = !!(ssc?.enabled && ssc?.contexts?.prediction_share?.enabled);
+  const finalShareEnabled = !!(ssc?.enabled && (ssc?.contexts?.bullseye?.enabled || ssc?.contexts?.correct_prediction?.enabled));
 
   let finalPointsEarned = null;
   if (isFinal && hasPrediction) {
@@ -965,7 +968,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     זכית ב־+{finalPointsEarned} נ׳ בסיום משחק זה
                   </div>
                 ) : null}
-                {isFinal && hasPrediction && (bullseye || correctOutcome) && (
+                {isFinal && hasPrediction && (bullseye || correctOutcome) && finalShareEnabled && (
                   <button
                     type="button"
                     className="hm-btn-secondary w-full py-2.5 rounded-xl text-xs font-bold mt-1 flex items-center justify-center gap-1"
@@ -1322,7 +1325,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                     )}
                   </div>
                 </div>
-                {!isFinal && (
+                {!isFinal && predShareEnabled && (
                   <button
                     type="button"
                     className="w-full mt-2 rounded-xl py-2.5 text-sm font-black flex items-center justify-center gap-2 border-0 cursor-pointer"
@@ -1370,7 +1373,7 @@ function MatchCard({ match, prediction, config, windowLocked, predictionWindowOp
                   layout="stack"
                   bullseyeMaxPts={typeof config?.bullseye_points === 'number' ? config.bullseye_points : null}
                 />
-                {hasPrediction && !isFinal && (
+                {hasPrediction && !isFinal && predShareEnabled && (
                   <button
                     type="button"
                     className="w-full mt-2 rounded-xl py-2.5 text-sm font-black flex items-center justify-center gap-2 border-0 cursor-pointer"
