@@ -75,7 +75,6 @@ export default function App() {
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
   const [memberWelcome, setMemberWelcome] = useState(null);
-  const [staffBranchId, setStaffBranchId] = useState(null);
   const splashBootRef = useRef(null);
 
   useEffect(() => {
@@ -150,11 +149,7 @@ export default function App() {
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
 
-    const staffMode = urlParams.get('mode') === 'staff';
-    const staffBranch = urlParams.get('b');
-    if (staffMode && staffBranch) {
-      setStaffBranchId(staffBranch);
-      history.replaceState(null, '', window.location.pathname);
+    if (window.location.pathname === '/staff') {
       setScreen(SCREEN.STAFF);
       return;
     }
@@ -355,12 +350,7 @@ export default function App() {
 
   const inner = (() => {
     if (screen === SCREEN.STAFF) {
-      return (
-        <StaffScanScreen
-          campaignId={PROMO_CAMPAIGN_ID}
-          branchId={staffBranchId}
-        />
-      );
+      return <StaffScanScreen />;
     }
     if (screen === SCREEN.SPLASH) {
       return <SplashScreen onDone={handleSplashDone} />;

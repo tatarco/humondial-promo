@@ -1,30 +1,31 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { callFn } from '../lib/api.js';
+import { PROMO_CAMPAIGN_ID } from '../lib/config.js';
 import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 
-const STAFF_SESSION_KEY_PREFIX = 'promo_staff_session:';
-const SESSION_60D_MS = 60 * 24 * 60 * 60 * 1000;
+const STAFF_SESSION_KEY = 'promo_staff_session';
 
-function loadStaffSession(branchId) {
+function loadStaffSession() {
   try {
-    const raw = localStorage.getItem(STAFF_SESSION_KEY_PREFIX + branchId);
+    const raw = localStorage.getItem(STAFF_SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s.token || !s.expires_at) return null;
     if (new Date(s.expires_at) < new Date()) {
-      localStorage.removeItem(STAFF_SESSION_KEY_PREFIX + branchId);
+      localStorage.removeItem(STAFF_SESSION_KEY);
       return null;
     }
     return s;
   } catch { return null; }
 }
 
-function saveStaffSession(branchId, token, expires_at, branch_name) {
-  localStorage.setItem(
-    STAFF_SESSION_KEY_PREFIX + branchId,
-    JSON.stringify({ token, expires_at, branch_name })
-  );
+function saveStaffSession(token, expires_at, branch_name) {
+  localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify({ token, expires_at, branch_name }));
+}
+
+function clearStaffSession() {
+  localStorage.removeItem(STAFF_SESSION_KEY);
 }
 
 const TIER_STYLES = {
@@ -47,7 +48,7 @@ function formatPhone(phone) {
 }
 
 // ─── Sub-screen: Password ─────────────────────────────────────────────────────
-function PasswordScreen({ campaignId, branchId, onSuccess }) {
+function PasswordScreen({ onSuccess }) {
   const [pw, setPw] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -57,8 +58,8 @@ function PasswordScreen({ campaignId, branchId, onSuccess }) {
     setError(null);
     setLoading(true);
     try {
-      const data = await callFn('staffLogin', { campaign_id: campaignId, branch_id: branchId, password: pw });
-      saveStaffSession(branchId, data.token, data.expires_at, data.branch_name);
+      const data = await callFn('staffLogin', { campaign_id: PROMO_CAMPAIGN_ID, password: pw });
+      saveStaffSession(data.token, data.expires_at, data.branch_name);
       onSuccess({ token: data.token, branch_name: data.branch_name });
     } catch (err) {
       setError(err.status === 401 ? 'סיסמה שגויה' : 'שגיאה, נסה שנית');
@@ -126,7 +127,7 @@ function HomeStaffScreen({ branchName, onScan }) {
 }
 
 // ─── Sub-screen: Camera Scanner ───────────────────────────────────────────────
-function CameraScreen({ token, campaignId, onResult, onCancel }) {
+function CameraScreen({ token,  onResult, onCancel }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const processingRef = useRef(false);
@@ -167,7 +168,7 @@ function CameraScreen({ token, campaignId, onResult, onCancel }) {
     } catch {
       setError('לא ניתן לגשת למצלמה');
     }
-  }, [token, campaignId, onResult]);
+  }, [token,  onResult]);
 
   useEffect(() => {
     startScanner();
@@ -317,16 +318,16 @@ function ResultScreen({ result, onBack }) {
 }
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
-export default function StaffScanScreen({ campaignId, branchId }) {
+export default function StaffScanScreen() {
   const [view, setView] = useState('loading');
   const [session, setSession] = useState(null);
   const [scanResult, setScanResult] = useState(null);
 
   useEffect(() => {
-    const s = loadStaffSession(branchId);
+    const s = loadStaffSession();
     setSession(s);
     setView(s ? 'home' : 'password');
-  }, [branchId]);
+  }, []);
 
   function handleLogin(s) {
     setSession(s);
@@ -347,14 +348,13 @@ export default function StaffScanScreen({ campaignId, branchId }) {
   }
 
   if (view === 'password') {
-    return <PasswordScreen campaignId={campaignId} branchId={branchId} onSuccess={handleLogin} />;
+    return <PasswordScreen onSuccess={handleLogin} />;
   }
 
   if (view === 'scanner') {
     return (
       <CameraScreen
         token={session.token}
-        campaignId={campaignId}
         onResult={handleResult}
         onCancel={() => setView('home')}
       />
