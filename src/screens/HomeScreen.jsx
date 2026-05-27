@@ -23,16 +23,18 @@ function leaderboardSnapshotKey(cid) {
 const STAGE_HE = {
   'group': 'שלב הבתים', 'Group Stage': 'שלב הבתים',
   'Group Stage - 1': 'שלב הבתים 1', 'Group Stage - 2': 'שלב הבתים 2', 'Group Stage - 3': 'שלב הבתים 3',
+  'Round of 32': 'שלב 32', 'round of 32': 'שלב 32',
   'Round of 16': 'שמינית גמר', 'round of 16': 'שמינית גמר',
-  'Quarter Final': 'רבע גמר', 'quarter final': 'רבע גמר',
-  'Semi Final': 'חצי גמר', 'semi final': 'חצי גמר',
+  'Quarter Final': 'רבע גמר', 'quarter final': 'רבע גמר', 'Quarter-finals': 'רבע גמר', 'quarter-finals': 'רבע גמר',
+  'Semi Final': 'חצי גמר', 'semi final': 'חצי גמר', 'Semi-finals': 'חצי גמר', 'semi-finals': 'חצי גמר',
+  '3rd Place Final': 'גמר שלישית', '3rd place final': 'גמר שלישית',
   'Final': 'גמר', 'final': 'גמר',
 };
 function stageHe(s) { return STAGE_HE[s] || s; }
 
 const STAGE_SORT_KEYS = {
   'שלב הבתים': 0, 'שלב הבתים 1': 0, 'שלב הבתים 2': 0, 'שלב הבתים 3': 0,
-  'שמינית גמר': 1, 'רבע גמר': 2, 'חצי גמר': 3, 'גמר': 4,
+  'שלב 32': 1, 'שמינית גמר': 2, 'רבע גמר': 3, 'חצי גמר': 4, 'גמר שלישית': 5, 'גמר': 6,
 };
 
 const FLAG_MAP = {
