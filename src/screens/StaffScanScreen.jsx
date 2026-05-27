@@ -234,6 +234,15 @@ function CameraScreen({ token,  onResult, onCancel }) {
       <div className="relative flex-1" style={{ minHeight: '70dvh' }}>
         <video ref={videoRef} className="w-full h-full object-cover" style={{ minHeight: '70dvh' }} playsInline />
 
+        {/* Fixed back button — always visible over camera */}
+        <button
+          onClick={onCancel}
+          className="absolute top-4 right-4 z-20 font-bold px-4 py-2 rounded-xl text-sm"
+          style={{ background: 'rgba(0,0,0,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
+        >
+          ← חזור
+        </button>
+
         {/* Corner viewfinder */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="relative w-64 h-64">
