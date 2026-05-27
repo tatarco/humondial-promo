@@ -19,6 +19,7 @@ import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
 import CampaignHeaderBrand from './components/CampaignHeaderBrand.jsx';
 import ExistingMemberModal from './components/ExistingMemberModal.jsx';
+import StaffScanScreen from './screens/StaffScanScreen.jsx';
 
 const SCREEN = {
   SPLASH: 'splash',
@@ -35,6 +36,7 @@ const SCREEN = {
   LEADERBOARD: 'leaderboard',
   BRANCH_BOOKING: 'branch_booking',
   LEDGER: 'ledger',
+  STAFF: 'staff',
 };
 
 const UUID_CTX =
@@ -73,6 +75,7 @@ export default function App() {
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
   const [memberWelcome, setMemberWelcome] = useState(null);
+  const [staffBranchId, setStaffBranchId] = useState(null);
   const splashBootRef = useRef(null);
 
   useEffect(() => {
@@ -146,6 +149,16 @@ export default function App() {
 
   async function handleSplashDone() {
     const urlParams = new URLSearchParams(window.location.search);
+
+    const staffMode = urlParams.get('mode') === 'staff';
+    const staffBranch = urlParams.get('b');
+    if (staffMode && staffBranch) {
+      setStaffBranchId(staffBranch);
+      history.replaceState(null, '', window.location.pathname);
+      setScreen(SCREEN.STAFF);
+      return;
+    }
+
     const vc = urlParams.get('venue_code');
     if (vc) {
       setPendingVenueCode(vc);
@@ -341,6 +354,14 @@ export default function App() {
   const bookingBranchesResolved = resolveBookingBranchesForCampaign(config);
 
   const inner = (() => {
+    if (screen === SCREEN.STAFF) {
+      return (
+        <StaffScanScreen
+          campaignId={PROMO_CAMPAIGN_ID}
+          branchId={staffBranchId}
+        />
+      );
+    }
     if (screen === SCREEN.SPLASH) {
       return <SplashScreen onDone={handleSplashDone} />;
     }
