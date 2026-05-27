@@ -101,26 +101,80 @@ function PasswordScreen({ onSuccess }) {
 }
 
 // ─── Sub-screen: Home ─────────────────────────────────────────────────────────
-function HomeStaffScreen({ branchName, onScan }) {
-  return (
-    <div className="min-h-dvh flex flex-col items-center justify-center gap-10 px-6" style={{ background: '#060202' }} dir="rtl">
-      <CampaignHeaderBrand maxLogoHeight={48} titleSizePx={32} />
-      {branchName && (
-        <div className="px-5 py-2 rounded-full text-sm font-bold" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--gold)' }}>
-          {branchName}
-        </div>
-      )}
+function HomeStaffScreen({ branchName, token, onScan }) {
+  const [codes, setCodes] = useState(null);
+  const [loadingCodes, setLoadingCodes] = useState(true);
 
+  async function fetchCodes() {
+    setLoadingCodes(true);
+    try {
+      const data = await callFn('getStaffDailyCodes', { token });
+      setCodes(data);
+    } catch {
+      setCodes({ venue_code: null, delivery_code: null });
+    } finally {
+      setLoadingCodes(false);
+    }
+  }
+
+  useEffect(() => { fetchCodes(); }, []);
+
+  return (
+    <div className="min-h-dvh flex flex-col px-5 pt-8 pb-6 gap-6" style={{ background: '#060202' }} dir="rtl">
+      <div className="flex flex-col items-center gap-2">
+        <CampaignHeaderBrand maxLogoHeight={38} titleSizePx={26} />
+        {branchName && (
+          <div className="px-4 py-1.5 rounded-full text-sm font-bold" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', color: 'var(--gold)' }}>
+            {branchName}
+          </div>
+        )}
+      </div>
+
+      {/* Daily codes */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={fetchCodes}
+            className="text-xs font-semibold px-3 py-1.5 rounded-xl"
+            style={{ background: 'var(--card-bg)', color: 'var(--text-sec)', border: '1px solid var(--border)' }}
+          >
+            {loadingCodes ? '...' : '↻ רענן'}
+          </button>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-sec)' }}>קודים יומיים</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col items-center gap-2 rounded-3xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
+            <span className="text-2xl">🏟️</span>
+            <p className="text-xs font-semibold" style={{ color: 'var(--text-sec)' }}>הגעה לסניף</p>
+            <p className="font-black tracking-widest" style={{ fontSize: '2.6rem', lineHeight: 1, color: 'var(--gold)' }}>
+              {loadingCodes ? '—' : (codes?.venue_code ?? '—')}
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-2 rounded-3xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
+            <span className="text-2xl">🛵</span>
+            <p className="text-xs font-semibold" style={{ color: 'var(--text-sec)' }}>משלוח</p>
+            <p className="font-black tracking-widest" style={{ fontSize: '2.6rem', lineHeight: 1, color: 'var(--gold)' }}>
+              {loadingCodes ? '—' : (codes?.delivery_code ?? '—')}
+            </p>
+          </div>
+        </div>
+        {!loadingCodes && !codes?.venue_code && (
+          <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>הקודים ייווצרו אוטומטית בחצות</p>
+        )}
+      </div>
+
+      {/* Scan button */}
       <button
         onClick={onScan}
-        className="hm-btn-primary flex flex-col items-center gap-4 px-14 py-8 text-2xl font-black rounded-3xl active:scale-95 transition-transform"
+        className="hm-btn-primary flex flex-col items-center gap-3 w-full py-8 text-xl font-black rounded-3xl active:scale-95 transition-transform"
       >
-        <span className="text-5xl">📷</span>
+        <span className="text-4xl">📷</span>
         <span>סרוק QR של לקוח</span>
       </button>
 
-      <p className="text-xs text-center max-w-xs" style={{ color: 'var(--text-sec)' }}>
-        הצג ללקוח את קוד ה-QR שלו מהאפליקציה, ולאחר הסריקה הזן את מספר הטלפון בטאביט
+      <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>
+        הצג ללקוח את קוד ה-QR שלו, ולאחר הסריקה הזן את מספר הטלפון בטאביט
       </p>
     </div>
   );
@@ -368,6 +422,7 @@ export default function StaffScanScreen() {
   return (
     <HomeStaffScreen
       branchName={session?.branch_name}
+      token={session?.token}
       onScan={() => setView('scanner')}
     />
   );
