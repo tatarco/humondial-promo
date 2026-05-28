@@ -69,8 +69,16 @@ export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
   }
 
   return (
-    <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
+    <div
+      className="min-h-dvh flex flex-col justify-end px-6 pb-10"
+      style={{
+        backgroundImage: 'url(/assets/login-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="w-full max-w-sm mx-auto">
         <button
           onClick={onBack}
           className="text-hm-muted text-xs mb-8 flex items-center gap-1 opacity-40 hover:opacity-70"

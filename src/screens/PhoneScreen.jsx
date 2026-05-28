@@ -71,12 +71,16 @@ export default function PhoneScreen({ onSuccess }) {
   const isNewUser    = phase === 'new-user';
 
   return (
-    <div className="min-h-dvh bg-hm-bg flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <CampaignHeaderBrand maxLogoHeight={44} titleSizePx={30} />
-        </div>
-
+    <div
+      className="min-h-dvh flex flex-col justify-end px-6 pb-10"
+      style={{
+        backgroundImage: 'url(/assets/login-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="w-full max-w-sm mx-auto">
         <div className="bg-hm-card rounded-2xl px-4 py-3 mb-6 text-center border border-hm-dim">
           <p className="text-hm-white text-sm font-semibold leading-relaxed">
             🏆 ניחשו, נצחו, אכלו
@@ -168,3 +172,4 @@ export default function PhoneScreen({ onSuccess }) {
     </div>
   );
 }
+
