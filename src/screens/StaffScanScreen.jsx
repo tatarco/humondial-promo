@@ -232,6 +232,13 @@ function CameraScreen({ token,  onResult, onCancel }) {
   }, [token,  onResult]);
 
   useEffect(() => {
+    history.pushState({ staff_scanner: true }, '');
+    const handlePop = () => onCancel();
+    window.addEventListener('popstate', handlePop);
+    return () => { window.removeEventListener('popstate', handlePop); };
+  }, [onCancel]);
+
+  useEffect(() => {
     startScanner();
     return () => {
       readerRef.current?.reset();
