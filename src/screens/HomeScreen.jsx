@@ -10,8 +10,7 @@ import TierIcon from '../components/TierIcon.jsx';
 import { tierHeadlineResolvedLabel, nextTierLabelForProgress } from '../lib/tierCampaignMerge.js';
 import { matchPhasePrimary, matchPhaseSecondary } from '../lib/matchPhaseLines.js';
 import TierRequirementBars from '../components/TierRequirementBars.jsx';
-import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
-import { normalizeBenefitsPlayerCopy, overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
+import { normalizeBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
 import ShareModal from '../components/ShareModal.jsx';
 import AchievementModal from '../components/AchievementModal.jsx';
 
@@ -1605,10 +1604,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
 
   useEffect(() => { load(); }, [load]);
 
-  const playbookMerged = useMemo(
-    () => overlayBenefitsPlayerCopy(config?.benefits_player_copy, benefitsPlayerCopyLb),
-    [config?.benefits_player_copy, benefitsPlayerCopyLb],
-  );
 
   const stages = [...new Set(matches.map(m => m.stage))].sort((a, b) =>
     (STAGE_SORT_KEYS[stageHe(a)] ?? 99) - (STAGE_SORT_KEYS[stageHe(b)] ?? 99)
@@ -1802,8 +1797,6 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               />
             )}
           </div>
-          {!showHeroSkeleton && <BenefitsPlaybookPanel copy={playbookMerged} variant="compact" />}
-
           <div className="grid grid-cols-3 gap-2 px-3 mb-1">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
             <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={false} />
