@@ -9,7 +9,6 @@ import { mapPromoError } from '../lib/promoErrors.js';
 import TierIcon from '../components/TierIcon.jsx';
 import { tierHeadlineResolvedLabel, nextTierLabelForProgress } from '../lib/tierCampaignMerge.js';
 import { matchPhasePrimary, matchPhaseSecondary } from '../lib/matchPhaseLines.js';
-import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 import TierRequirementBars from '../components/TierRequirementBars.jsx';
 import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
 import { normalizeBenefitsPlayerCopy, overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
@@ -1775,7 +1774,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
             >
               <img src="/assets/icon-exit.png" alt="יציאה" className="w-11 h-11 object-contain" />
             </button>
-            <CampaignHeaderBrand maxLogoHeight={34} titleSizePx={22} />
+            <div className="flex-1" />
             <button
               onClick={onPersonalArea}
               className="flex-shrink-0"
