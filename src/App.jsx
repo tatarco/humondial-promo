@@ -81,17 +81,20 @@ export default function App() {
     if (screen !== SCREEN.SPLASH) return;
     if (splashBootRef.current) return;
     splashBootRef.current = Promise.allSettled([loadConfig(), fetchSession()]);
-    startListMatchesWarm();
-    void (async () => {
-      try {
-        const settled = await splashBootRef.current;
-        const cfg = settled[0].status === 'fulfilled' ? settled[0].value : null;
-        if (!isLoggedIn() || !cfg?.id) return;
-        startHomeAuthenticatedWarm(cfg.id, getToken());
-      } catch {
-        return;
-      }
-    })();
+    const isStaffPath = window.location.pathname === '/staff';
+    if (!isStaffPath) {
+      startListMatchesWarm();
+      void (async () => {
+        try {
+          const settled = await splashBootRef.current;
+          const cfg = settled[0].status === 'fulfilled' ? settled[0].value : null;
+          if (!isLoggedIn() || !cfg?.id) return;
+          startHomeAuthenticatedWarm(cfg.id, getToken());
+        } catch {
+          return;
+        }
+      })();
+    }
   }, [screen]);
 
   function openBranchBooking(ctx) {

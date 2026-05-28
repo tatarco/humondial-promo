@@ -181,7 +181,7 @@ function HomeStaffScreen({ branchName, token, onScan, onLogout }) {
       </button>
 
       <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>
-        הצג ללקוח את קוד ה-QR שלו, ולאחר הסריקה הזן את מספר הטלפון בטאביט
+        סרוק את הקוד של הלקוח, ברך אותו על השלב שהוא הגיע אליו והזן את מספר הטלפון לטאביט, ההטבה כבר מוזנת כחלק ממועדון הלקוחות
       </p>
     </div>
   );
@@ -233,7 +233,13 @@ function CameraScreen({ token,  onResult, onCancel }) {
 
   useEffect(() => {
     startScanner();
-    return () => { readerRef.current?.reset(); };
+    return () => {
+      readerRef.current?.reset();
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
   }, [startScanner]);
 
   return (
