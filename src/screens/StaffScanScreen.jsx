@@ -188,7 +188,7 @@ function HomeStaffScreen({ branchName, token, onScan, onLogout }) {
 }
 
 // ─── Sub-screen: Camera Scanner ───────────────────────────────────────────────
-function CameraScreen({ token,  onResult, onCancel }) {
+function CameraScreen({ token, onResult, onCancel }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
   const processingRef = useRef(false);
@@ -229,14 +229,7 @@ function CameraScreen({ token,  onResult, onCancel }) {
     } catch {
       setError('לא ניתן לגשת למצלמה');
     }
-  }, [token,  onResult]);
-
-  useEffect(() => {
-    history.pushState({ staff_scanner: true }, '');
-    const handlePop = () => onCancel();
-    window.addEventListener('popstate', handlePop);
-    return () => { window.removeEventListener('popstate', handlePop); };
-  }, [onCancel]);
+  }, [token, onResult]);
 
   useEffect(() => {
     startScanner();
@@ -405,12 +398,45 @@ export default function StaffScanScreen() {
   const [view, setView] = useState('loading');
   const [session, setSession] = useState(null);
   const [scanResult, setScanResult] = useState(null);
+  const scannerHistoryPushed = useRef(false);
+  const suppressNextPop = useRef(false);
 
   useEffect(() => {
     const s = loadStaffSession();
     setSession(s);
     setView(s ? 'home' : 'password');
   }, []);
+
+  // Single popstate listener for the whole component lifetime
+  useEffect(() => {
+    const handlePop = () => {
+      if (suppressNextPop.current) {
+        suppressNextPop.current = false;
+        return;
+      }
+      scannerHistoryPushed.current = false;
+      setView(v => (v === 'scanner' ? 'home' : v));
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
+
+  function openScanner() {
+    if (!scannerHistoryPushed.current) {
+      history.pushState({ staff_scanner: true }, '');
+      scannerHistoryPushed.current = true;
+    }
+    setView('scanner');
+  }
+
+  function closeScanner() {
+    setView('home');
+    if (scannerHistoryPushed.current) {
+      scannerHistoryPushed.current = false;
+      suppressNextPop.current = true;
+      history.back();
+    }
+  }
 
   function handleLogin(s) {
     setSession(s);
@@ -439,7 +465,7 @@ export default function StaffScanScreen() {
       <CameraScreen
         token={session.token}
         onResult={handleResult}
-        onCancel={() => setView('home')}
+        onCancel={closeScanner}
       />
     );
   }
@@ -458,7 +484,7 @@ export default function StaffScanScreen() {
     <HomeStaffScreen
       branchName={session?.branch_name}
       token={session?.token}
-      onScan={() => setView('scanner')}
+      onScan={openScanner}
       onLogout={handleLogout}
     />
   );

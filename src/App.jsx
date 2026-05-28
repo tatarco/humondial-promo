@@ -262,7 +262,8 @@ export default function App() {
       screen === SCREEN.SPLASH ||
       screen === SCREEN.LOADING ||
       screen === SCREEN.CONFIG_INVALID ||
-      screen === SCREEN.SESSION_RETRY
+      screen === SCREEN.SESSION_RETRY ||
+      screen === SCREEN.STAFF
     )
       return;
 
