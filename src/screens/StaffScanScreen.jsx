@@ -191,8 +191,26 @@ function HomeStaffScreen({ branchName, token, onScan, onLogout }) {
 function CameraScreen({ token, onResult, onCancel }) {
   const videoRef = useRef(null);
   const readerRef = useRef(null);
+  const controlsRef = useRef(null);
+  const streamRef = useRef(null);
   const processingRef = useRef(false);
   const [error, setError] = useState(null);
+
+  const killCamera = useCallback(() => {
+    try { controlsRef.current?.stop(); } catch {}
+    controlsRef.current = null;
+    try { readerRef.current?.reset(); } catch {}
+    readerRef.current = null;
+    const stream = streamRef.current ?? videoRef.current?.srcObject;
+    if (stream) {
+      stream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+    }
+    streamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.load();
+    }
+  }, []);
 
   const startScanner = useCallback(async () => {
     try {
@@ -205,7 +223,7 @@ function CameraScreen({ token, onResult, onCancel }) {
       );
       const deviceId = back?.deviceId ?? devices[devices.length - 1]?.deviceId;
 
-      await reader.decodeFromVideoDevice(deviceId, videoRef.current, async (result, err) => {
+      const controls = await reader.decodeFromVideoDevice(deviceId, videoRef.current, async (result, err) => {
         if (!result || processingRef.current) return;
         if (err) return;
         processingRef.current = true;
@@ -226,6 +244,10 @@ function CameraScreen({ token, onResult, onCancel }) {
           setTimeout(() => { setError(null); processingRef.current = false; }, 2500);
         }
       });
+      controlsRef.current = controls;
+      if (videoRef.current?.srcObject) {
+        streamRef.current = videoRef.current.srcObject;
+      }
     } catch {
       setError('לא ניתן לגשת למצלמה');
     }
@@ -233,14 +255,8 @@ function CameraScreen({ token, onResult, onCancel }) {
 
   useEffect(() => {
     startScanner();
-    return () => {
-      readerRef.current?.reset();
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
-        videoRef.current.srcObject = null;
-      }
-    };
-  }, [startScanner]);
+    return killCamera;
+  }, [startScanner, killCamera]);
 
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: '#000' }}>
@@ -249,7 +265,7 @@ function CameraScreen({ token, onResult, onCancel }) {
 
         {/* Fixed back button — always visible over camera */}
         <button
-          onClick={onCancel}
+          onClick={() => { killCamera(); onCancel(); }}
           className="absolute top-4 right-4 z-20 font-bold px-4 py-2 rounded-xl text-sm"
           style={{ background: 'rgba(0,0,0,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
         >
@@ -276,9 +292,15 @@ function CameraScreen({ token, onResult, onCancel }) {
         )}
       </div>
 
-      <div className="px-6 py-6 text-center" style={{ background: '#060202' }}>
-        <p className="font-semibold mb-4" style={{ color: 'var(--gold)' }}>כוון את המצלמה אל קוד ה-QR של הלקוח</p>
-        <button onClick={onCancel} className="hm-btn-secondary px-8 py-3 font-bold rounded-2xl">ביטול</button>
+      <div className="px-6 py-6 text-center flex flex-col gap-3" style={{ background: '#060202' }}>
+        <p className="font-semibold" style={{ color: 'var(--gold)' }}>כוון את המצלמה אל קוד ה-QR של הלקוח</p>
+        <button
+          onClick={() => { killCamera(); onCancel(); }}
+          className="w-full py-4 font-black rounded-2xl text-lg"
+          style={{ background: '#c0392b', color: '#fff' }}
+        >
+          ⏹ כבה מצלמה וחזור
+        </button>
       </div>
     </div>
   );
