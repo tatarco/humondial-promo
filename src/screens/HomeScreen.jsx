@@ -1760,20 +1760,29 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         onScroll={handleScroll}
       >
         <div style={{ background: 'var(--hm-bg, #100505)' }}>
-          <header className="flex items-center justify-between px-4 pt-4 pb-3">
+          <header
+            className="flex items-center justify-between px-3 pt-2 pb-2"
+            style={{
+              backgroundImage: 'url(/brand/humondial-banner.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
             <button
-              onClick={onPersonalArea}
-              className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+              onClick={onLogout}
+              className="flex-shrink-0"
+              aria-label="יציאה"
             >
-              <span className="text-lg leading-none">👤</span>
+              <img src="/assets/icon-exit.png" alt="יציאה" className="w-11 h-11 object-contain" />
             </button>
             <CampaignHeaderBrand maxLogoHeight={34} titleSizePx={22} />
             <button
-              onClick={onLogout}
-              className="text-xs px-3 py-1.5 rounded-full"
-              style={{ color: 'var(--text-sec)', border: '1px solid rgba(255,255,255,0.15)' }}
-            >יציאה</button>
+              onClick={onPersonalArea}
+              className="flex-shrink-0"
+              aria-label="אזור אישי"
+            >
+              <img src="/assets/icon-personal-area.png" alt="אזור אישי" className="w-11 h-11 object-contain" />
+            </button>
           </header>
 
           <div ref={heroRef}>
