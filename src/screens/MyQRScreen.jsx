@@ -20,7 +20,8 @@ export default function MyQRScreen({ token, campaignId, onBack }) {
       const r = await callFn('generatePlayerQR', { token, campaign_id: campaignId });
       const d = r?.data ?? r;
       if (!d?.payload) throw new Error('no payload');
-      const url = await QRCode.toDataURL(d.payload, {
+      const staffUrl = `https://humondial-promo.pages.dev/staff?qr=${d.payload}`;
+      const url = await QRCode.toDataURL(staffUrl, {
         width: 280,
         margin: 2,
         color: { dark: '#ffffff', light: '#1a1a2e' },

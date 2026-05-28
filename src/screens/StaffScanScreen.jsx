@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { useState, useEffect } from 'react';
 import { callFn } from '../lib/api.js';
 import { PROMO_CAMPAIGN_ID } from '../lib/config.js';
 import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
@@ -101,7 +100,7 @@ function PasswordScreen({ onSuccess }) {
 }
 
 // ─── Sub-screen: Home ─────────────────────────────────────────────────────────
-function HomeStaffScreen({ branchName, token, onScan, onLogout }) {
+function HomeStaffScreen({ branchName, token, onLogout }) {
   const [codes, setCodes] = useState(null);
   const [loadingCodes, setLoadingCodes] = useState(true);
 
@@ -166,141 +165,24 @@ function HomeStaffScreen({ branchName, token, onScan, onLogout }) {
             </p>
           </div>
         </div>
-        {!loadingCodes && !codes?.venue_code && (
-          <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>לחץ רענן לקבלת הקודים</p>
-        )}
       </div>
 
-      {/* Scan button */}
-      <button
-        onClick={onScan}
-        className="hm-btn-primary flex flex-col items-center gap-3 w-full py-8 text-xl font-black rounded-3xl active:scale-95 transition-transform"
+      {/* Scan instruction */}
+      <div
+        className="flex flex-col items-center gap-3 rounded-3xl p-6 text-center"
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}
       >
         <span className="text-4xl">📷</span>
-        <span>סרוק QR של לקוח</span>
-      </button>
-
-      <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>
-        סרוק את הקוד של הלקוח, ברך אותו על השלב שהוא הגיע אליו והזן את מספר הטלפון לטאביט, ההטבה כבר מוזנת כחלק ממועדון הלקוחות
-      </p>
-    </div>
-  );
-}
-
-// ─── Sub-screen: Camera Scanner ───────────────────────────────────────────────
-function CameraScreen({ token, onResult, onCancel }) {
-  const videoRef = useRef(null);
-  const readerRef = useRef(null);
-  const controlsRef = useRef(null);
-  const streamRef = useRef(null);
-  const processingRef = useRef(false);
-  const [error, setError] = useState(null);
-
-  const killCamera = useCallback(() => {
-    try { controlsRef.current?.stop(); } catch {}
-    controlsRef.current = null;
-    try { readerRef.current?.reset(); } catch {}
-    readerRef.current = null;
-    const stream = streamRef.current ?? videoRef.current?.srcObject;
-    if (stream) {
-      stream.getTracks().forEach(t => { try { t.stop(); } catch {} });
-    }
-    streamRef.current = null;
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-      videoRef.current.load();
-    }
-  }, []);
-
-  const startScanner = useCallback(async () => {
-    try {
-      const reader = new BrowserMultiFormatReader();
-      readerRef.current = reader;
-
-      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-      const back = devices.find(d =>
-        /back|rear|environment/i.test(d.label)
-      );
-      const deviceId = back?.deviceId ?? devices[devices.length - 1]?.deviceId;
-
-      const controls = await reader.decodeFromVideoDevice(deviceId, videoRef.current, async (result, err) => {
-        if (!result || processingRef.current) return;
-        if (err) return;
-        processingRef.current = true;
-
-        try {
-          const data = await callFn('verifyPlayerQR', { payload: result.getText(), staff_token: token });
-          if (!data.valid) {
-            const msg = data.error === 'expired'
-              ? 'QR פג — בקש מהלקוח לרענן'
-              : 'QR לא תקין';
-            setError(msg);
-            setTimeout(() => { setError(null); processingRef.current = false; }, 2500);
-            return;
-          }
-          onResult(data);
-        } catch {
-          setError('שגיאת רשת — נסה שנית');
-          setTimeout(() => { setError(null); processingRef.current = false; }, 2500);
-        }
-      });
-      controlsRef.current = controls;
-      if (videoRef.current?.srcObject) {
-        streamRef.current = videoRef.current.srcObject;
-      }
-    } catch {
-      setError('לא ניתן לגשת למצלמה');
-    }
-  }, [token, onResult]);
-
-  useEffect(() => {
-    startScanner();
-    return killCamera;
-  }, [startScanner, killCamera]);
-
-  return (
-    <div className="min-h-dvh flex flex-col" style={{ background: '#000' }}>
-      <div className="relative flex-1" style={{ minHeight: '70dvh' }}>
-        <video ref={videoRef} className="w-full h-full object-cover" style={{ minHeight: '70dvh' }} playsInline />
-
-        {/* Fixed back button — always visible over camera */}
-        <button
-          onClick={() => { killCamera(); onCancel(); }}
-          className="absolute top-4 right-4 z-20 font-bold px-4 py-2 rounded-xl text-sm"
-          style={{ background: 'rgba(0,0,0,0.6)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
-        >
-          ← חזור
-        </button>
-
-        {/* Corner viewfinder */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative w-64 h-64">
-            {['top-0 left-0 border-t-4 border-l-4 rounded-tl-lg',
-              'top-0 right-0 border-t-4 border-r-4 rounded-tr-lg',
-              'bottom-0 left-0 border-b-4 border-l-4 rounded-bl-lg',
-              'bottom-0 right-0 border-b-4 border-r-4 rounded-br-lg',
-            ].map((c, i) => (
-              <div key={i} className={`absolute w-12 h-12 ${c}`} style={{ borderColor: 'var(--gold)' }} />
-            ))}
-          </div>
-        </div>
-
-        {error && (
-          <div className="absolute bottom-6 inset-x-4 text-white text-center rounded-2xl py-4 px-6 font-bold text-lg" style={{ background: 'rgba(214,58,54,0.9)' }}>
-            {error}
-          </div>
-        )}
-      </div>
-
-      <div className="px-6 py-6 text-center flex flex-col gap-3" style={{ background: '#060202' }}>
-        <p className="font-semibold" style={{ color: 'var(--gold)' }}>כוון את המצלמה אל קוד ה-QR של הלקוח</p>
-        <button
-          onClick={() => { killCamera(); onCancel(); }}
-          className="w-full py-4 font-black rounded-2xl text-lg"
-          style={{ background: '#c0392b', color: '#fff' }}
-        >
-          ⏹ כבה מצלמה וחזור
-        </button>
+        <p className="font-bold text-base" style={{ color: 'var(--text)' }}>
+          כיצד לסרוק לקוח
+        </p>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-sec)' }}>
+          בקש מהלקוח לפתוח את ה-QR שלו באפליקציה,
+          <br />
+          ואז פתח את המצלמה הרגילה בטלפון וסרוק אותו.
+          <br />
+          המסך ייפתח אוטומטית עם פרטי הלקוח.
+        </p>
       </div>
     </div>
   );
@@ -420,80 +302,45 @@ export default function StaffScanScreen() {
   const [view, setView] = useState('loading');
   const [session, setSession] = useState(null);
   const [scanResult, setScanResult] = useState(null);
-  const scannerHistoryPushed = useRef(false);
-  const suppressNextPop = useRef(false);
+  const [pendingQr, setPendingQr] = useState(null);
+  const [verifyError, setVerifyError] = useState(null);
 
   useEffect(() => {
+    const qr = new URLSearchParams(window.location.search).get('qr');
     const s = loadStaffSession();
+    if (qr) setPendingQr(qr);
     setSession(s);
-    setView(s ? 'home' : 'password');
+    if (s && qr) {
+      setView('verifying');
+    } else if (s) {
+      setView('home');
+    } else {
+      setView('password');
+    }
   }, []);
 
-  // Single popstate listener for the whole component lifetime
   useEffect(() => {
-    const handlePop = () => {
-      if (suppressNextPop.current) {
-        suppressNextPop.current = false;
-        return;
-      }
-      scannerHistoryPushed.current = false;
-      setView(v => (v === 'scanner' ? 'home' : v));
-    };
-    window.addEventListener('popstate', handlePop);
-    return () => window.removeEventListener('popstate', handlePop);
-  }, []);
-
-  function openScanner() {
-    if (!scannerHistoryPushed.current) {
-      history.pushState({ staff_scanner: true }, '');
-      scannerHistoryPushed.current = true;
-    }
-    setView('scanner');
-  }
-
-  function closeScanner() {
-    setView('home');
-    if (scannerHistoryPushed.current) {
-      scannerHistoryPushed.current = false;
-      suppressNextPop.current = true;
-      history.back();
-    }
-  }
+    if (view !== 'verifying' || !pendingQr || !session) return;
+    callFn('verifyPlayerQR', { payload: pendingQr, staff_token: session.token })
+      .then(data => {
+        if (data.valid) {
+          setScanResult(data);
+          setView('result');
+        } else {
+          const msg = data.error === 'expired' ? 'QR פג — בקש מהלקוח לרענן' : 'QR לא תקין';
+          setVerifyError(msg);
+          setView('qr_error');
+        }
+      })
+      .catch(() => {
+        setVerifyError('שגיאת רשת — נסה שנית');
+        setView('qr_error');
+      });
+  }, [view, pendingQr, session]);
 
   function handleLogin(s) {
     setSession(s);
-    setView('home');
-  }
-
-  function handleResult(r) {
-    setScanResult(r);
-    setView('result');
-  }
-
-  if (view === 'loading') {
-    return (
-      <div className="min-h-dvh flex items-center justify-center" style={{ background: '#060202' }}>
-        <CampaignHeaderBrand maxLogoHeight={36} titleSizePx={24} />
-      </div>
-    );
-  }
-
-  if (view === 'password') {
-    return <PasswordScreen onSuccess={handleLogin} />;
-  }
-
-  if (view === 'scanner') {
-    return (
-      <CameraScreen
-        token={session.token}
-        onResult={handleResult}
-        onCancel={closeScanner}
-      />
-    );
-  }
-
-  if (view === 'result') {
-    return <ResultScreen result={scanResult} onBack={() => setView('home')} />;
+    setView(pendingQr ? 'verifying' : 'home');
   }
 
   function handleLogout() {
@@ -502,11 +349,46 @@ export default function StaffScanScreen() {
     setView('password');
   }
 
+  if (view === 'loading' || view === 'verifying') {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4" style={{ background: '#060202' }}>
+        <CampaignHeaderBrand maxLogoHeight={36} titleSizePx={24} />
+        {view === 'verifying' && (
+          <p className="text-sm font-semibold animate-pulse" style={{ color: 'var(--text-sec)' }}>
+            מאמת...
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (view === 'qr_error') {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-6 px-6" style={{ background: '#060202' }} dir="rtl">
+        <CampaignHeaderBrand maxLogoHeight={36} titleSizePx={24} />
+        <p className="text-xl font-black text-center" style={{ color: '#e74c3c' }}>{verifyError}</p>
+        <button
+          onClick={() => setView('home')}
+          className="hm-btn-secondary px-8 py-3 font-bold rounded-2xl"
+        >
+          חזור
+        </button>
+      </div>
+    );
+  }
+
+  if (view === 'password') {
+    return <PasswordScreen onSuccess={handleLogin} />;
+  }
+
+  if (view === 'result') {
+    return <ResultScreen result={scanResult} onBack={() => setView('home')} />;
+  }
+
   return (
     <HomeStaffScreen
       branchName={session?.branch_name}
       token={session?.token}
-      onScan={openScanner}
       onLogout={handleLogout}
     />
   );
