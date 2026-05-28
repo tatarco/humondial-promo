@@ -101,7 +101,7 @@ function PasswordScreen({ onSuccess }) {
 }
 
 // ─── Sub-screen: Home ─────────────────────────────────────────────────────────
-function HomeStaffScreen({ branchName, token, onScan }) {
+function HomeStaffScreen({ branchName, token, onScan, onLogout }) {
   const [codes, setCodes] = useState(null);
   const [loadingCodes, setLoadingCodes] = useState(true);
 
@@ -128,6 +128,13 @@ function HomeStaffScreen({ branchName, token, onScan }) {
             {branchName}
           </div>
         )}
+        <button
+          onClick={onLogout}
+          className="text-xs px-3 py-1 rounded-full"
+          style={{ color: 'var(--text-sec)', opacity: 0.5 }}
+        >
+          התנתק
+        </button>
       </div>
 
       {/* Daily codes */}
@@ -160,7 +167,7 @@ function HomeStaffScreen({ branchName, token, onScan }) {
           </div>
         </div>
         {!loadingCodes && !codes?.venue_code && (
-          <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>הקודים ייווצרו אוטומטית בחצות</p>
+          <p className="text-xs text-center" style={{ color: 'var(--text-sec)' }}>לחץ רענן לקבלת הקודים</p>
         )}
       </div>
 
@@ -428,11 +435,18 @@ export default function StaffScanScreen() {
     return <ResultScreen result={scanResult} onBack={() => setView('home')} />;
   }
 
+  function handleLogout() {
+    clearStaffSession();
+    setSession(null);
+    setView('password');
+  }
+
   return (
     <HomeStaffScreen
       branchName={session?.branch_name}
       token={session?.token}
       onScan={() => setView('scanner')}
+      onLogout={handleLogout}
     />
   );
 }
