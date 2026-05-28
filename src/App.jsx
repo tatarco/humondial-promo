@@ -20,6 +20,7 @@ import BranchBookingScreen from './screens/BranchBookingScreen.jsx';
 import CampaignHeaderBrand from './components/CampaignHeaderBrand.jsx';
 import ExistingMemberModal from './components/ExistingMemberModal.jsx';
 import StaffScanScreen from './screens/StaffScanScreen.jsx';
+import AchievementsScreen from './screens/AchievementsScreen.jsx';
 
 const SCREEN = {
   SPLASH: 'splash',
@@ -37,6 +38,7 @@ const SCREEN = {
   BRANCH_BOOKING: 'branch_booking',
   LEDGER: 'ledger',
   STAFF: 'staff',
+  ACHIEVEMENTS: 'achievements',
 };
 
 const UUID_CTX =
@@ -75,6 +77,7 @@ export default function App() {
   const [bookingContext, setBookingContext] = useState(null);
   const [venueCodeEntryContext, setVenueCodeEntryContext] = useState('neutral');
   const [memberWelcome, setMemberWelcome] = useState(null);
+  const [achievements, setAchievements] = useState([]);
   const splashBootRef = useRef(null);
 
   useEffect(() => {
@@ -440,6 +443,15 @@ export default function App() {
           onBack={() => setScreen(SCREEN.SHELL)}
           onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
           onLedger={() => setScreen(SCREEN.LEDGER)}
+          onAchievements={(data) => { setAchievements(data || []); setScreen(SCREEN.ACHIEVEMENTS); }}
+        />
+      );
+    }
+    if (screen === SCREEN.ACHIEVEMENTS) {
+      return (
+        <AchievementsScreen
+          achievements={achievements}
+          onBack={() => setScreen(SCREEN.PERSONAL_AREA)}
         />
       );
     }
