@@ -36,9 +36,11 @@ export default function AchievementsScreen({ achievements = [], onBack }) {
                 key={b.id}
                 className="flex items-center gap-4 px-4 py-4 rounded-2xl"
                 style={{
-                  background: done ? 'rgba(244,193,93,0.07)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${done ? 'rgba(244,193,93,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                  opacity: done ? 1 : 0.45,
+                  background: done ? 'rgba(244,193,93,0.18)' : 'rgba(255,255,255,0.13)',
+                  border: `1px solid ${done ? 'rgba(244,193,93,0.35)' : 'rgba(255,255,255,0.18)'}`,
+                  backdropFilter: 'blur(6px)',
+                  WebkitBackdropFilter: 'blur(6px)',
+                  opacity: done ? 1 : 0.75,
                 }}
               >
                 <span className="text-4xl leading-none flex-shrink-0">{b.badge}</span>
