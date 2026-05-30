@@ -70,7 +70,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
 
   if (loading) {
     return (
-      <div className="min-h-dvh stadium-bg flex items-center justify-center">
+      <div className="min-h-dvh leaderboard-bg flex items-center justify-center">
         <div className="text-2xl font-black animate-pulse" style={{ color: 'var(--red)' }}>טוען...</div>
       </div>
     );
@@ -78,7 +78,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
 
   if (error) {
     return (
-      <div className="min-h-dvh stadium-bg flex flex-col items-center justify-center gap-4 p-6">
+      <div className="min-h-dvh leaderboard-bg flex flex-col items-center justify-center gap-4 p-6">
         <div style={{ color: 'var(--text-sec)' }}>{error}</div>
         <button onClick={load} className="hm-btn-primary px-6 py-2 text-sm">נסה שוב</button>
       </div>
@@ -108,7 +108,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   };
 
   return (
-    <div className="min-h-dvh stadium-bg overflow-y-auto pb-20" dir="rtl">
+    <div className="min-h-dvh leaderboard-bg overflow-y-auto pb-20" dir="rtl">
       <header className="flex items-center justify-between px-4 py-3">
         <div className="text-base font-black" style={{ color: 'var(--text)' }}>לוח האלופים</div>
         <button

@@ -10,7 +10,7 @@ export default function AchievementsScreen({ achievements = [], onBack }) {
   const achievementsOrdered = [...unlockedAchievements, ...lockedAchievements];
 
   return (
-    <div className="hm-personal-screen-bg" dir="rtl">
+    <div className="hm-achievements-bg" dir="rtl">
       <div className="h-dvh overflow-y-auto pb-8">
         <header className="flex items-center justify-between px-4 py-3">
           <button
