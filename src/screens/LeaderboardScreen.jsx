@@ -51,6 +51,13 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const [tableCount, setTableCount]   = useState(3);
   const [delivCount, setDelivCount]   = useState(2);
   const [showRankShare, setShowRankShare] = useState(false);
+  const [podiumScale, setPodiumScale] = useState(() => Math.max(window.innerWidth / 390, window.innerHeight / 844));
+
+  useEffect(() => {
+    const update = () => setPodiumScale(Math.max(window.innerWidth / 390, window.innerHeight / 844));
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,13 +106,6 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const delivDelta =
     typeof whatif.delivery_pts === 'number' && Number.isFinite(whatif.delivery_pts) ? whatif.delivery_pts : null;
   const whatIfReady = predDelta != null && tableDelta != null && delivDelta != null;
-
-  const [podiumScale, setPodiumScale] = useState(() => Math.max(window.innerWidth / 390, window.innerHeight / 844));
-  useEffect(() => {
-    const update = () => setPodiumScale(Math.max(window.innerWidth / 390, window.innerHeight / 844));
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
 
   const PODIUM_ORDER = [2, 1, 3];
   const _hdr = 54;
