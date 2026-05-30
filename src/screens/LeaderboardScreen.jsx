@@ -114,8 +114,8 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   };
 
   return (
-    <div className="min-h-dvh leaderboard-bg overflow-y-auto pb-20" dir="rtl">
-      <header className="flex items-center justify-between px-4 py-3">
+    <div className="h-dvh leaderboard-bg flex flex-col overflow-hidden" dir="rtl">
+      <header className="flex-shrink-0 flex items-center justify-between px-4 py-3">
         <div className="text-base font-black" style={{ color: 'var(--text)' }}>לוח האלופים</div>
         <button
           type="button"
@@ -127,7 +127,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </button>
       </header>
 
-      <div className="relative w-full" style={{ height: 290 }}>
+      <div className="flex-shrink-0 relative w-full" style={{ height: 290 }}>
         {PODIUM_ORDER.map((rank, colIdx) => {
           const entry = top3.find(r => r.rank === rank);
           const meta  = PODIUM_META[rank];
@@ -145,7 +145,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
               >
                 {(entry.nickname || '?')[0].toUpperCase()}
               </div>
-              <div className="text-xs font-black text-center max-w-full truncate" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+              <div className="text-xs font-black text-center truncate px-0.5" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.8)', maxWidth: rank === 1 ? 104 : 84 }} title={entry.nickname}>
                 {entry.nickname}
               </div>
               {entryTier && (
@@ -162,7 +162,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         })}
       </div>
 
-      <div className="hm-card p-4 mx-4 mb-3" style={{ borderColor: 'var(--red)', border: '2px solid var(--red)' }}>
+      <div className="flex-shrink-0 hm-card p-3 mx-4 mb-2" style={{ borderColor: 'var(--red)', border: '2px solid var(--red)' }}>
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center font-black text-base flex-shrink-0"
@@ -170,26 +170,32 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
           >
             {(me.nickname || 'א')[0].toUpperCase()}
           </div>
-          <div className="text-3xl font-black" style={{ color: 'var(--red)' }}>#{me.rank ?? '—'}</div>
-          <div className="flex-1">
-            <div className="text-sm font-bold" style={{ color: 'var(--text)' }}>{me.nickname ?? 'אתה'}</div>
+          <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+            <div className="text-[1.68rem] leading-none font-black tabular-nums" style={{ color: 'var(--red)' }}>
+              #{me.rank ?? '—'}
+            </div>
+            <button
+              type="button"
+              className="text-[10px] font-bold whitespace-nowrap"
+              style={{ color: '#f4c15d' }}
+              onClick={() => setShowRankShare(true)}
+            >
+              📤 שתף
+            </button>
+          </div>
+          <div className="flex-1 min-w-0 text-right">
+            <div className="text-[13px] font-extrabold truncate" style={{ color: 'var(--text)' }}>
+              {me.nickname ?? 'אתה'}
+            </div>
             {myTier && (
-              <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${tierChipClassFromCampaignTier(myTier)}`}>
+              <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 ${tierChipClassFromCampaignTier(myTier)}`}>
                 <TierIcon tierLike={myTier} sizePx={20} />
                 {myTier.label_he}
               </span>
             )}
-            <div className="text-xs mt-0.5" style={{ color: 'var(--text-sec)' }}>{myPts} נקודות</div>
+            <div className="text-[11px] mt-0.5 tabular-nums" style={{ color: 'var(--text-sec)' }}>{myPts} נקודות</div>
           </div>
         </div>
-        <button
-          type="button"
-          className="mt-2 text-xs font-bold flex items-center gap-1"
-          style={{ color: '#f4c15d' }}
-          onClick={() => setShowRankShare(true)}
-        >
-          📤 שתף את הדירוג שלי
-        </button>
       </div>
       {showRankShare && (
         <ShareModal
@@ -205,9 +211,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         />
       )}
 
-      <div className="hm-card p-4 mx-4 mb-3">
-        <div className="text-xs font-bold mb-1" style={{ color: 'var(--text-sec)' }}>בקצב הזה אתה בדרך ל...</div>
-        <div className="text-2xl font-black mb-3" style={{ color: 'var(--red)' }}>
+      <div className="flex-shrink-0 hm-card p-3 mx-4 mb-2">
+        <div className="text-[11px] font-extrabold mb-0.5 text-right" style={{ color: 'var(--text-sec)' }}>בקצב הזה אתה בדרך ל...</div>
+        <div className="text-[1.35rem] leading-tight font-black mb-2 text-right" style={{ color: 'var(--red)' }}>
           מסלול לשיפור
         </div>
         <div className="hm-progress-bg h-2 rounded-full overflow-hidden mb-1">
@@ -216,20 +222,21 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
             style={{ width: `${Math.min(100, Math.round((myPts / Math.max(1, trajectory.projected_points ?? myPts)) * 100))}%` }}
           />
         </div>
-        <div className="flex justify-between text-[10px] mb-3" style={{ color: 'var(--text-sec)' }}>
+        <div className="flex justify-between text-[10px] mb-2" style={{ color: 'var(--text-sec)' }} dir="ltr">
+          <span className="tabular-nums">{myPts} / {trajectory.projected_points ?? myPts} נ׳</span>
           <span>{trajectory.days_remaining ?? 0} ימים נותרו</span>
-          <span>{myPts} / {trajectory.projected_points ?? myPts} נ׳</span>
         </div>
         <button
           onClick={() => setShowChallenges(v => !v)}
-          className="hm-btn-primary w-full py-3 text-sm font-bold"
+          className="hm-btn-primary w-full py-2.5 text-sm font-bold"
         >
           {showChallenges ? 'הסתר ←' : 'ראה אתגרים שיקדמו אותי ←'}
         </button>
       </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-20">
       {showChallenges && (
-        <div className="mx-4 mb-3 space-y-2">
+        <div className="mx-4 mb-2 space-y-2">
           {!whatIfReady ? (
             <p className="text-xs text-center py-4" style={{ color: 'var(--text-sec)' }}>
               מה־אם חסרים נתוני קמפיין — טען שוב מהשרת או החזר מסך.
@@ -263,11 +270,11 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </div>
       )}
 
-      <div className="px-4 mb-2">
+      <div className="px-4 mb-2 pt-1">
         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-sec)' }}>שחקנים</div>
       </div>
 
-      <div className="mx-4 hm-card overflow-hidden">
+      <div className="mx-4 hm-card overflow-hidden mb-4">
         {rest.map(entry => {
           const entryTier = getTierForPoints(tiers, entry.total_points);
           const avatarColor = AVATAR_COLORS[entry.rank % 6];
@@ -301,6 +308,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
