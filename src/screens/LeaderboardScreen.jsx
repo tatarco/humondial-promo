@@ -109,17 +109,17 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
 
   const PODIUM_ORDER = [2, 1, 3];
   const _hdr = 54;
-  // Phone screen interior from pixel sampling: side y=121-192 (71px), center y=84-163 (79px)
-  // Center content (38px) within screen area: side top=138, center top=105
+  // Pedestal/stand area below each phone frame — natural label position
+  // Native 390x844: side pedestals y≈255, center pedestal y≈290
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
-    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(105 * podiumScale) - _hdr) },
-    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    0: { left: 'calc(17% - 55px)', top: Math.max(0, Math.round(248 * podiumScale) - _hdr) },
+    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(282 * podiumScale) - _hdr) },
+    2: { left: 'calc(83% - 55px)', top: Math.max(0, Math.round(248 * podiumScale) - _hdr) },
   };
   const PODIUM_META = {
-    1: { textColor: 'var(--gold)', w: 110 },
-    2: { textColor: 'rgba(220,220,255,0.9)', w: 88 },
-    3: { textColor: 'rgba(210,160,80,0.9)', w: 88 },
+    1: { textColor: 'var(--gold)', w: 120 },
+    2: { textColor: 'rgba(220,220,240,1.0)', w: 110 },
+    3: { textColor: 'rgba(220,160,60,1.0)', w: 110 },
   };
 
   return (
@@ -136,7 +136,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </button>
       </header>
 
-      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(220 * podiumScale) }}>
+      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(330 * podiumScale) }}>
         {PODIUM_ORDER.map((rank, colIdx) => {
           const entry = top3.find(r => r.rank === rank);
           const meta  = PODIUM_META[rank];
@@ -145,13 +145,13 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
           return (
             <div
               key={rank}
-              className="absolute flex flex-col items-center gap-0.5 px-1 py-1 rounded-xl"
-              style={{ ...PODIUM_COL[colIdx], width: meta.w, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+              className="absolute flex flex-col items-center gap-1"
+              style={{ ...PODIUM_COL[colIdx], width: meta.w }}
             >
-              <div className="text-[11px] font-black text-center w-full overflow-hidden" dir="ltr" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.9)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }} title={entry.nickname}>
+              <div className="text-xs font-black text-center w-full overflow-hidden" dir="ltr" style={{ color: meta.textColor, textShadow: '0 2px 6px rgba(0,0,0,1)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }} title={entry.nickname}>
                 {entry.nickname}
               </div>
-              <div className="text-sm font-black" style={{ color: 'var(--gold)', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+              <div className="text-base font-black" style={{ color: 'var(--gold)', textShadow: '0 2px 6px rgba(0,0,0,1)' }}>
                 {entry.total_points} נ׳
               </div>
             </div>
