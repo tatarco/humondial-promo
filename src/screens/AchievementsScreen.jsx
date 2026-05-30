@@ -45,11 +45,11 @@ export default function AchievementsScreen({ achievements = [], onBack }) {
               >
                 <span className="text-4xl leading-none flex-shrink-0">{b.badge}</span>
                 <div className="flex-1 min-w-0 text-right">
-                  <div className="text-base font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'var(--text-sec)' }}>
+                  <div className="text-base font-bold leading-tight" style={{ color: done ? 'var(--gold)' : 'rgba(255,255,255,0.92)' }}>
                     {b.label_he}
                   </div>
                   {b.description_he && (
-                    <div className="text-xs mt-1 leading-snug" style={{ color: 'var(--text-sec)' }}>
+                    <div className="text-xs mt-1 leading-snug" style={{ color: done ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.65)' }}>
                       {b.description_he}
                     </div>
                   )}
