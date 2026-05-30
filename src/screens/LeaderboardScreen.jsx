@@ -105,9 +105,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const _bgScale = Math.max(window.innerWidth / 390, window.innerHeight / 844);
   const _hdr = 54;
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(115 * _bgScale) - _hdr + 5) },
-    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(85 * _bgScale) - _hdr + 5) },
-    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(115 * _bgScale) - _hdr + 5) },
+    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(88 * _bgScale) - _hdr + 5) },
+    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(58 * _bgScale) - _hdr + 5) },
+    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(88 * _bgScale) - _hdr + 5) },
   };
   const PODIUM_META = {
     1: { avatarSize: 'w-14 h-14 text-2xl', avatarBg: 'rgba(244,193,93,0.45)', textColor: 'var(--gold)' },
