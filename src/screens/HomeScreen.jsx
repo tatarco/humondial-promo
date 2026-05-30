@@ -570,14 +570,24 @@ function HeroCard({
   );
 }
 
-function QuickActionTile({ icon, label, sub, onClick, href, scrolled }) {
+function QuickActionTile({ icon, iconSrc, label, sub, onClick, href, scrolled }) {
   const inner = (
     <div
       className="hm-card flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 w-full"
       style={{ padding: scrolled ? '8px 4px' : '10px 6px' }}
       onClick={onClick}
     >
-      <div className={`${scrolled ? 'text-xl' : 'text-2xl'} leading-none`}>{icon}</div>
+      {iconSrc ? (
+        <img
+          src={iconSrc}
+          alt=""
+          className="object-contain"
+          style={{ height: scrolled ? 22 : 28, width: 'auto', maxWidth: '100%' }}
+          draggable={false}
+        />
+      ) : (
+        <div className={`${scrolled ? 'text-xl' : 'text-2xl'} leading-none`}>{icon}</div>
+      )}
       {label ? (
         <div
           className={`font-bold text-center leading-tight ${scrolled ? 'text-[9px]' : 'text-[10px]'}`}
@@ -1799,8 +1809,8 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           </div>
           <div className="grid grid-cols-3 gap-2 px-3 mb-1">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
-            <QuickActionTile icon="🛵" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={false} />
-            <QuickActionTile icon="📍" label="הגעתי לסניף" onClick={openVenueAtBranch} scrolled={false} />
+            <QuickActionTile iconSrc="/assets/icon-delivery.jpg" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={false} />
+            <QuickActionTile iconSrc="/assets/icon-branch-visit.jpg" label="הגעתי לסניף" onClick={openVenueAtBranch} scrolled={false} />
           </div>
 
           <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />

@@ -24,10 +24,11 @@ export default function ExistingMemberModal({ bonusPoints, tierName, onClose }) 
     >
       <div
         className="w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-3"
-        style={{ background: '#1e1e35', border: '1px solid rgba(255,255,255,0.12)' }}
+        style={{
+          background: 'linear-gradient(to bottom, rgba(4,2,2,0.42) 0%, rgba(6,3,3,0.65) 55%, rgba(8,4,4,0.88) 100%), url(/assets/existing-member-hero.jpg) top center / cover no-repeat',
+          border: '1px solid rgba(244,193,93,0.35)',
+        }}
       >
-        <div className="text-5xl mt-2">🤝</div>
-
         <div
           className="text-xs font-bold px-3 py-0.5 rounded-full"
           style={{
