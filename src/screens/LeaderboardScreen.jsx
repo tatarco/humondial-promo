@@ -114,9 +114,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   // Phone screen interior (pixel-sampled): side y=121-192, center y=84-163
   // Content centered in each screen: side mid=157→top=138, center mid=124→top=105
   const PODIUM_COL = {
-    0: { left: 'calc(25% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    0: { left: 'calc(23% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
     1: { left: '50%', transform: 'translateX(calc(-50% + 8px))', top: Math.max(0, Math.round(105 * podiumScale) - _hdr) },
-    2: { left: 'calc(75% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    2: { left: 'calc(77% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
   };
   const PODIUM_META = {
     1: { textColor: 'var(--gold)', w: 110 },
@@ -150,7 +150,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
               className="absolute flex flex-col items-center gap-1"
               style={{ ...PODIUM_COL[colIdx], width: meta.w }}
             >
-              <div className="text-xs font-black text-center w-full" style={{ color: meta.textColor, textShadow: '0 2px 6px rgba(0,0,0,1)' }}>
+              <div className="text-xs font-black text-center w-full" dir="auto" style={{ color: meta.textColor, textShadow: '0 2px 6px rgba(0,0,0,1)' }}>
                 {entry.nickname.length > 10 ? entry.nickname.slice(0, 10) + '…' : entry.nickname}
               </div>
               <div className="text-base font-black" style={{ color: 'var(--gold)', textShadow: '0 2px 6px rgba(0,0,0,1)' }}>
