@@ -54,7 +54,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const [podiumScale, setPodiumScale] = useState(() => Math.max(window.innerWidth / 390, window.innerHeight / 844));
 
   useEffect(() => {
+    // Update on mount (catches navigation from another screen) and on resize
     const update = () => setPodiumScale(Math.max(window.innerWidth / 390, window.innerHeight / 844));
+    update(); // always re-compute on mount
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
@@ -109,17 +111,17 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
 
   const PODIUM_ORDER = [2, 1, 3];
   const _hdr = 54;
-  // Pedestal/stand area below each phone frame — natural label position
-  // Native 390x844: side pedestals y≈255, center pedestal y≈290
+  // Phone screen interior (pixel-sampled): side y=121-192, center y=84-163
+  // Content centered in each screen: side mid=157→top=138, center mid=124→top=105
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 55px)', top: Math.max(0, Math.round(248 * podiumScale) - _hdr) },
-    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(282 * podiumScale) - _hdr) },
-    2: { left: 'calc(83% - 55px)', top: Math.max(0, Math.round(248 * podiumScale) - _hdr) },
+    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(105 * podiumScale) - _hdr) },
+    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
   };
   const PODIUM_META = {
-    1: { textColor: 'var(--gold)', w: 120 },
-    2: { textColor: 'rgba(220,220,240,1.0)', w: 110 },
-    3: { textColor: 'rgba(220,160,60,1.0)', w: 110 },
+    1: { textColor: 'var(--gold)', w: 110 },
+    2: { textColor: 'rgba(220,220,255,1.0)', w: 88 },
+    3: { textColor: 'rgba(220,160,60,1.0)', w: 88 },
   };
 
   return (
@@ -136,7 +138,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </button>
       </header>
 
-      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(330 * podiumScale) }}>
+      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(220 * podiumScale) }}>
         {PODIUM_ORDER.map((rank, colIdx) => {
           const entry = top3.find(r => r.rank === rank);
           const meta  = PODIUM_META[rank];
