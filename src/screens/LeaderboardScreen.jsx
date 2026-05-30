@@ -109,11 +109,12 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
 
   const PODIUM_ORDER = [2, 1, 3];
   const _hdr = 54;
-  // Frame interior positions measured from native 390x844 bg image via canvas pixel sampling
+  // Phone screen interior from pixel sampling: side y=121-192 (71px), center y=84-163 (79px)
+  // Center content (38px) within screen area: side top=138, center top=105
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(215 * podiumScale) - _hdr) },
-    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(165 * podiumScale) - _hdr) },
-    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(215 * podiumScale) - _hdr) },
+    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(105 * podiumScale) - _hdr) },
+    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
   };
   const PODIUM_META = {
     1: { textColor: 'var(--gold)', w: 110 },
@@ -135,7 +136,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </button>
       </header>
 
-      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(380 * podiumScale) }}>
+      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(220 * podiumScale) }}>
         {PODIUM_ORDER.map((rank, colIdx) => {
           const entry = top3.find(r => r.rank === rank);
           const meta  = PODIUM_META[rank];
