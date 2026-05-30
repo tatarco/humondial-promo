@@ -494,7 +494,14 @@ function HeroCard({
           );
         })()}
         <div className="flex items-center justify-between mt-1.5">
-          <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>{pct}%</span>
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>{pct}%</span>
+            {!commercialUi && nextT && tp !== null && bandMaxRaw > bandMin && (
+              <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-sec)' }}>
+                {Math.max(0, tp - bandMin)} / {bandMaxRaw - bandMin} נק׳ בשלב
+              </span>
+            )}
+          </div>
           {nextLabel && commercialUi ? (
             <span className="text-xs text-right max-w-[70%]" style={{ color: 'var(--text-sec)' }}>
               מתקדמים ל{nextLabel} לפי הכללים (נקודות + מסעדה / משלוח כשמוגדרים)
