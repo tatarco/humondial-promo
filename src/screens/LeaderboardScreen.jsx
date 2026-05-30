@@ -104,9 +104,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   // Positions aligned to the pre-drawn phone frames in leaderboard-bg.jpg (390x844)
   // Left frame center = 17%, right frame center = 83% — percentages scale with cover bg
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: 72 },
+    0: { left: 'calc(17% - 44px)', top: 35 },
     1: { left: '50%', transform: 'translateX(-50%)', top: 35 },
-    2: { left: 'calc(83% - 44px)', top: 72 },
+    2: { left: 'calc(83% - 44px)', top: 35 },
   };
   const PODIUM_META = {
     1: { avatarSize: 'w-14 h-14 text-2xl', avatarBg: 'rgba(244,193,93,0.45)', textColor: 'var(--gold)' },
