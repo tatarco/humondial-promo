@@ -114,9 +114,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   // Phone screen interior (pixel-sampled): side y=121-192, center y=84-163
   // Content centered in each screen: side mid=157→top=138, center mid=124→top=105
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    0: { left: 'calc(22% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
     1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(105 * podiumScale) - _hdr) },
-    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
+    2: { left: 'calc(78% - 44px)', top: Math.max(0, Math.round(138 * podiumScale) - _hdr) },
   };
   const PODIUM_META = {
     1: { textColor: 'var(--gold)', w: 110 },
