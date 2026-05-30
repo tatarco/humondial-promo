@@ -109,15 +109,16 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
 
   const PODIUM_ORDER = [2, 1, 3];
   const _hdr = 54;
+  // Frame interior positions measured from native 390x844 bg image via canvas pixel sampling
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(88 * podiumScale) - _hdr + 5) },
-    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(58 * podiumScale) - _hdr + 5) },
-    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(88 * podiumScale) - _hdr + 5) },
+    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(215 * podiumScale) - _hdr) },
+    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(165 * podiumScale) - _hdr) },
+    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(215 * podiumScale) - _hdr) },
   };
   const PODIUM_META = {
-    1: { avatarSize: 'w-14 h-14 text-2xl', avatarBg: 'rgba(244,193,93,0.45)', textColor: 'var(--gold)' },
-    2: { avatarSize: 'w-11 h-11 text-lg',  avatarBg: 'rgba(210,210,220,0.35)', textColor: 'var(--text)' },
-    3: { avatarSize: 'w-11 h-11 text-lg',  avatarBg: 'rgba(180,100,40,0.35)',  textColor: 'var(--text)' },
+    1: { textColor: 'var(--gold)', w: 110 },
+    2: { textColor: 'rgba(220,220,255,0.9)', w: 88 },
+    3: { textColor: 'rgba(210,160,80,0.9)', w: 88 },
   };
 
   return (
@@ -134,7 +135,7 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </button>
       </header>
 
-      <div className="flex-shrink-0 relative w-full" style={{ height: 290 }}>
+      <div className="flex-shrink-0 relative w-full" style={{ height: Math.round(380 * podiumScale) }}>
         {PODIUM_ORDER.map((rank, colIdx) => {
           const entry = top3.find(r => r.rank === rank);
           const meta  = PODIUM_META[rank];
@@ -143,25 +144,13 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
           return (
             <div
               key={rank}
-              className="absolute flex flex-col items-center gap-1"
-              style={{ ...PODIUM_COL[colIdx], width: rank === 1 ? 110 : 88 }}
+              className="absolute flex flex-col items-center gap-0.5 px-1 py-1 rounded-xl"
+              style={{ ...PODIUM_COL[colIdx], width: meta.w, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)' }}
             >
-              <div
-                className={`${meta.avatarSize} rounded-full flex items-center justify-center font-black border-2`}
-                style={{ background: meta.avatarBg, color: 'var(--text)', borderColor: meta.textColor, backdropFilter: 'blur(4px)' }}
-              >
-                {(entry.nickname || '?')[0].toUpperCase()}
-              </div>
-              <div className="text-xs font-black text-center truncate px-0.5" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.8)', maxWidth: rank === 1 ? 104 : 84 }} title={entry.nickname}>
+              <div className="text-xs font-black text-center w-full truncate" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }} title={entry.nickname}>
                 {entry.nickname}
               </div>
-              {entryTier && (
-                <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[9px] font-bold px-1 py-0.5 rounded-full ${tierChipClassFromCampaignTier(entryTier)}`}>
-                  <TierIcon tierLike={entryTier} sizePx={14} />
-                  {entryTier.label_he}
-                </span>
-              )}
-              <div className="text-[10px] font-black" style={{ color: 'var(--gold)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+              <div className="text-sm font-black" style={{ color: 'var(--gold)', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
                 {entry.total_points} נ׳
               </div>
             </div>
