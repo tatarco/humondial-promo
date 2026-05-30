@@ -101,10 +101,16 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const whatIfReady = predDelta != null && tableDelta != null && delivDelta != null;
 
   const PODIUM_ORDER = [2, 1, 3];
+  // Absolute positions align content with the pre-drawn frames in leaderboard-bg.jpg
+  const PODIUM_COL = {
+    0: { right: '62%', top: 72 },
+    1: { left: '50%', transform: 'translateX(-50%)', top: 16 },
+    2: { left: '62%', top: 72 },
+  };
   const PODIUM_META = {
-    1: { avatarSize: 'w-12 h-12 text-xl', platformH: 80, avatarBg: 'rgba(244,193,93,0.3)', showCrown: true },
-    2: { avatarSize: 'w-9 h-9 text-base',  platformH: 60, avatarBg: 'rgba(200,200,200,0.2)', showCrown: false },
-    3: { avatarSize: 'w-9 h-9 text-base',  platformH: 50, avatarBg: 'rgba(180,100,40,0.2)', showCrown: false },
+    1: { avatarSize: 'w-14 h-14 text-2xl', avatarBg: 'rgba(244,193,93,0.45)', textColor: 'var(--gold)' },
+    2: { avatarSize: 'w-11 h-11 text-lg',  avatarBg: 'rgba(210,210,220,0.35)', textColor: 'var(--text)' },
+    3: { avatarSize: 'w-11 h-11 text-lg',  avatarBg: 'rgba(180,100,40,0.35)',  textColor: 'var(--text)' },
   };
 
   return (
@@ -121,36 +127,35 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
         </button>
       </header>
 
-      <div className="flex items-end justify-center gap-3 px-4 py-4">
-        {PODIUM_ORDER.map(rank => {
+      <div className="relative w-full" style={{ height: 290 }}>
+        {PODIUM_ORDER.map((rank, colIdx) => {
           const entry = top3.find(r => r.rank === rank);
           const meta  = PODIUM_META[rank];
-          if (!entry) return <div key={rank} className="w-20" />;
+          if (!entry) return null;
           const entryTier = getTierForPoints(tiers, entry.total_points);
           return (
-            <div key={rank} className="flex flex-col items-center gap-1">
-              {meta.showCrown && <div className="text-lg">👑</div>}
+            <div
+              key={rank}
+              className="absolute flex flex-col items-center gap-1"
+              style={{ ...PODIUM_COL[colIdx], width: rank === 1 ? 110 : 88 }}
+            >
               <div
-                className={`${meta.avatarSize} rounded-full flex items-center justify-center font-black`}
-                style={{ background: meta.avatarBg, color: 'var(--text)' }}
+                className={`${meta.avatarSize} rounded-full flex items-center justify-center font-black border-2`}
+                style={{ background: meta.avatarBg, color: 'var(--text)', borderColor: meta.textColor, backdropFilter: 'blur(4px)' }}
               >
                 {(entry.nickname || '?')[0].toUpperCase()}
               </div>
-              <div className="text-xs font-bold text-center max-w-[68px] truncate" style={{ color: 'var(--text)' }}>
+              <div className="text-xs font-black text-center max-w-full truncate" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
                 {entry.nickname}
               </div>
               {entryTier && (
-                <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tierChipClassFromCampaignTier(entryTier)}`}>
-                  <TierIcon tierLike={entryTier} sizePx={18} />
+                <span className={`inline-flex flex-row-reverse items-center gap-0.5 text-[9px] font-bold px-1 py-0.5 rounded-full ${tierChipClassFromCampaignTier(entryTier)}`}>
+                  <TierIcon tierLike={entryTier} sizePx={14} />
                   {entryTier.label_he}
                 </span>
               )}
-              <div className="text-[10px]" style={{ color: 'var(--gold)' }}>{entry.total_points} נ׳</div>
-              <div
-                className="w-16 rounded-t-md flex items-center justify-center text-sm font-black"
-                style={{ height: meta.platformH, background: meta.avatarBg, color: 'rgba(255,255,255,0.4)' }}
-              >
-                {rank}
+              <div className="text-[10px] font-black" style={{ color: 'var(--gold)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+                {entry.total_points} נ׳
               </div>
             </div>
           );
