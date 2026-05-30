@@ -100,14 +100,19 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
     typeof whatif.delivery_pts === 'number' && Number.isFinite(whatif.delivery_pts) ? whatif.delivery_pts : null;
   const whatIfReady = predDelta != null && tableDelta != null && delivDelta != null;
 
+  const [podiumScale, setPodiumScale] = useState(() => Math.max(window.innerWidth / 390, window.innerHeight / 844));
+  useEffect(() => {
+    const update = () => setPodiumScale(Math.max(window.innerWidth / 390, window.innerHeight / 844));
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   const PODIUM_ORDER = [2, 1, 3];
-  // bg is cover on 390x844 — scale with viewport so content always lands inside the frames
-  const _bgScale = Math.max(window.innerWidth / 390, window.innerHeight / 844);
   const _hdr = 54;
   const PODIUM_COL = {
-    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(88 * _bgScale) - _hdr + 5) },
-    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(58 * _bgScale) - _hdr + 5) },
-    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(88 * _bgScale) - _hdr + 5) },
+    0: { left: 'calc(17% - 44px)', top: Math.max(0, Math.round(88 * podiumScale) - _hdr + 5) },
+    1: { left: '50%', transform: 'translateX(-50%)', top: Math.max(0, Math.round(58 * podiumScale) - _hdr + 5) },
+    2: { left: 'calc(83% - 44px)', top: Math.max(0, Math.round(88 * podiumScale) - _hdr + 5) },
   };
   const PODIUM_META = {
     1: { avatarSize: 'w-14 h-14 text-2xl', avatarBg: 'rgba(244,193,93,0.45)', textColor: 'var(--gold)' },
