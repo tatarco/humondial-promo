@@ -101,11 +101,12 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
   const whatIfReady = predDelta != null && tableDelta != null && delivDelta != null;
 
   const PODIUM_ORDER = [2, 1, 3];
-  // Absolute positions align content with the pre-drawn frames in leaderboard-bg.jpg
+  // Positions aligned to the pre-drawn phone frames in leaderboard-bg.jpg (390x844)
+  // Left frame center = 17%, right frame center = 83% — percentages scale with cover bg
   const PODIUM_COL = {
-    0: { right: '62%', top: 72 },
-    1: { left: '50%', transform: 'translateX(-50%)', top: 16 },
-    2: { left: '62%', top: 72 },
+    0: { left: 'calc(17% - 44px)', top: 72 },
+    1: { left: '50%', transform: 'translateX(-50%)', top: 35 },
+    2: { left: 'calc(83% - 44px)', top: 72 },
   };
   const PODIUM_META = {
     1: { avatarSize: 'w-14 h-14 text-2xl', avatarBg: 'rgba(244,193,93,0.45)', textColor: 'var(--gold)' },
