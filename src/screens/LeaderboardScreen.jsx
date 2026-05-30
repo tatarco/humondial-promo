@@ -146,9 +146,9 @@ export default function LeaderboardScreen({ token, campaignId, onNavigateHome, o
             <div
               key={rank}
               className="absolute flex flex-col items-center gap-0.5 px-1 py-1 rounded-xl"
-              style={{ ...PODIUM_COL[colIdx], width: meta.w, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)' }}
+              style={{ ...PODIUM_COL[colIdx], width: meta.w, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
             >
-              <div className="text-xs font-black text-center w-full truncate" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }} title={entry.nickname}>
+              <div className="text-[11px] font-black text-center w-full overflow-hidden" dir="ltr" style={{ color: meta.textColor, textShadow: '0 1px 4px rgba(0,0,0,0.9)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }} title={entry.nickname}>
                 {entry.nickname}
               </div>
               <div className="text-sm font-black" style={{ color: 'var(--gold)', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
