@@ -430,12 +430,7 @@ function HeroCard({
           className="hm-tier-hero-shell--elevated shrink-0"
         />
         <div dir="rtl" className="flex-1 min-w-0 text-right pt-0.5">
-          <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>
-            משחקים את המונדיאל ביומנגס
-          </p>
-          <p className="text-sm font-semibold leading-snug mt-1" style={{ color: 'var(--text-sec)' }}>
-            משחקים, מנצחים ונהנים מהטבות מטורפות
-          </p>
+          <img src="/assets/hero-title.png" alt="משחקים את המונדיאל ביומנגס" className="w-full max-w-[220px] h-auto block mr-auto" draggable={false} />
           <div className="flex items-baseline gap-2 justify-end flex-wrap mt-3">
             <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
               {tp === null ? '…' : tp}
