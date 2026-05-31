@@ -591,8 +591,7 @@ function QuickActionTile({ icon, iconSrc, label, sub, onClick, href, scrolled })
         <img
           src={iconSrc}
           alt={label || ''}
-          className="w-full h-full object-contain"
-          style={{ background: '#120508' }}
+          className="w-full h-full object-cover"
           draggable={false}
         />
       ) : (
