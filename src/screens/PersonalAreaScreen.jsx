@@ -6,12 +6,11 @@ import { tierChipClassFromCampaignTier } from '../lib/tierVisual.js';
 import TierIcon from '../components/TierIcon.jsx';
 import CampaignHeaderBrand from '../components/CampaignHeaderBrand.jsx';
 import TierRequirementBars from '../components/TierRequirementBars.jsx';
-import BenefitsPlaybookPanel from '../components/BenefitsPlaybookPanel.jsx';
 import { useConfig } from '../contexts/ConfigContext.jsx';
 import { overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
 import ShareModal from '../components/ShareModal.jsx';
 
-export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger, onAchievements }) {
+export default function PersonalAreaScreen({ token, campaignId, onBack, onLeaderboard, onLedger, onAchievements, onBenefitsGuide }) {
   const cfg = useConfig();
   const [data, setData]                     = useState(null);
   const [loading, setLoading]               = useState(true);
@@ -267,7 +266,30 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
           </div>
         </div>
 
-        <BenefitsPlaybookPanel copy={benefitsCopyMerged} variant="full" />
+        <button
+          type="button"
+          onClick={onBenefitsGuide}
+          className="mx-3 mb-2 w-[calc(100%-1.5rem)] rounded-xl overflow-hidden flex items-center justify-between cursor-pointer border-0 appearance-none"
+          style={{
+            background: 'linear-gradient(to left, #6b0f1a, #3a0a5e)',
+            minHeight: 56,
+            fontFamily: 'inherit',
+          }}
+          dir="rtl"
+        >
+          <div className="flex items-center gap-3 px-4 flex-1">
+            <span className="text-2xl leading-none" aria-hidden>📖</span>
+            <span className="font-black text-base" style={{ color: '#ff4444', textShadow: '0 0 12px rgba(255,60,60,0.7), 0 0 24px rgba(255,60,60,0.4)' }}>
+              מדריך הטבות
+            </span>
+          </div>
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center ml-3 shrink-0"
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)' }}
+          >
+            <span className="text-white font-black text-base leading-none">›</span>
+          </div>
+        </button>
 
         {/* Block 2 — Trajectory */}
         {trajectory.end_date && (

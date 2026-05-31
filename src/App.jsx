@@ -448,6 +448,7 @@ export default function App() {
           onLeaderboard={() => setScreen(SCREEN.LEADERBOARD)}
           onLedger={() => setScreen(SCREEN.LEDGER)}
           onAchievements={(data) => { setAchievements(data || []); setScreen(SCREEN.ACHIEVEMENTS); }}
+          onBenefitsGuide={() => setScreen(SCREEN.BENEFITS_GUIDE)}
         />
       );
     }
