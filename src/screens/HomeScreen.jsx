@@ -1780,7 +1780,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         className="h-dvh overflow-y-auto pb-[max(12px,env(safe-area-inset-bottom))]"
         onScroll={handleScroll}
       >
-        <div style={{ backgroundImage: 'linear-gradient(rgba(8,2,2,0.78), rgba(8,2,2,0.88)), url(/assets/stadium-hero.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}>
+        <div style={{ backgroundImage: 'linear-gradient(rgba(5,0,0,0.42), rgba(5,0,0,0.65)), url(/assets/stadium-hero.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}>
           <header
             className="flex items-center justify-between px-3 pt-2 pb-2"
             style={{
