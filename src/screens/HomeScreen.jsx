@@ -430,7 +430,7 @@ function HeroCard({
           className="hm-tier-hero-shell--elevated shrink-0"
         />
         <div dir="rtl" className="flex-1 min-w-0 text-right pt-0.5">
-          <img src="/assets/hero-title.png" alt="משחקים את המונדיאל ביומנגס" className="w-full max-w-[220px] h-auto block mr-auto" draggable={false} />
+          <img src="/assets/hero-title.png" alt="משחקים את המונדיאל ביומנגס" className="w-full max-w-[300px] h-auto block mr-auto" draggable={false} />
           <div className="flex items-baseline gap-2 justify-end flex-wrap mt-3">
             <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
               {tp === null ? '…' : tp}
@@ -1780,7 +1780,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         className="h-dvh overflow-y-auto pb-[max(12px,env(safe-area-inset-bottom))]"
         onScroll={handleScroll}
       >
-        <div style={{ backgroundImage: 'linear-gradient(rgba(5,0,0,0.42), rgba(5,0,0,0.65)), url(/assets/stadium-hero.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}>
+        <div style={{ backgroundImage: 'linear-gradient(rgba(5,0,0,0.22), rgba(5,0,0,0.45)), url(/assets/stadium-hero.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}>
           <header
             className="flex items-center justify-between px-3 pt-2 pb-2"
             style={{
@@ -1827,10 +1827,10 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           <div className="px-3 mb-2 space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={openVenueAtBranch} className="hm-card overflow-hidden rounded-xl border-0 appearance-none p-0 cursor-pointer w-full" style={{ fontFamily: 'inherit' }}>
-                <img src="/assets/icon-branch-visit.jpg" alt="הגעתי לסניף" className="w-full h-auto block" draggable={false} style={{ maxHeight: 90, objectFit: 'cover' }} />
+                <img src="/assets/icon-branch-visit.jpg" alt="הגעתי לסניף" className="w-full h-auto block" draggable={false} style={{ maxHeight: 72, objectFit: 'cover' }} />
               </button>
               <button type="button" onClick={openVenueDelivery} className="hm-card overflow-hidden rounded-xl border-0 appearance-none p-0 cursor-pointer w-full" style={{ fontFamily: 'inherit' }}>
-                <img src="/assets/icon-delivery.jpg" alt="קיבלתי משלוח?" className="w-full h-auto block" draggable={false} style={{ maxHeight: 90, objectFit: 'cover' }} />
+                <img src="/assets/icon-delivery.jpg" alt="קיבלתי משלוח?" className="w-full h-auto block" draggable={false} style={{ maxHeight: 72, objectFit: 'cover' }} />
               </button>
             </div>
             <button type="button" onClick={onMyQR} className="hm-card w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-0 appearance-none cursor-pointer" dir="rtl" style={{ fontFamily: 'inherit' }}>
