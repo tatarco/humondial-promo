@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { callFn } from '../lib/api.js';
 import { PROMO_CAMPAIGN_ID } from '../lib/config.js';
 import { getToken } from '../lib/session.js';
-import { normalizeBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
+import { normalizeBenefitsPlayerCopy, overlayBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
+import { useConfig } from '../contexts/ConfigContext.jsx';
 
 const SECTIONS = [
   { key: 'milestones_he', title: 'שלבים ותאריכים' },
@@ -14,7 +15,8 @@ const SECTIONS = [
 ];
 
 export default function BenefitsGuideScreen({ onBack }) {
-  const [copy, setCopy] = useState(null);
+  const cfg = useConfig();
+  const [playerCopy, setPlayerCopy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,9 +25,10 @@ export default function BenefitsGuideScreen({ onBack }) {
     setLoading(true);
     setError(null);
     callFn('getLeaderboard', { token: getToken(), campaign_id: PROMO_CAMPAIGN_ID })
-      .then((d) => {
+      .then((res) => {
         if (cancelled) return;
-        setCopy(d?.benefits_player_copy ?? null);
+        const d = res?.data ?? res;
+        setPlayerCopy(d?.benefits_player_copy ?? null);
         setLoading(false);
       })
       .catch((e) => {
@@ -36,7 +39,8 @@ export default function BenefitsGuideScreen({ onBack }) {
     return () => { cancelled = true; };
   }, []);
 
-  const c = normalizeBenefitsPlayerCopy(copy);
+  const merged = overlayBenefitsPlayerCopy(cfg?.benefits_player_copy, playerCopy);
+  const c = normalizeBenefitsPlayerCopy(merged);
   const items = SECTIONS.filter((s) => typeof c[s.key] === 'string' && c[s.key].trim());
 
   return (
