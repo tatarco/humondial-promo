@@ -420,7 +420,7 @@ function HeroCard({
   return (
     <div
       className="hm-card mb-3 mx-3 overflow-hidden cursor-pointer"
-      style={{ border: '1px solid rgba(244,193,93,0.45)', boxShadow: '0 0 40px rgba(244,193,93,0.14), 0 0 80px rgba(214,58,54,0.18)' }}
+      style={{ background: 'rgba(15,3,3,0.48)', border: '1px solid rgba(244,193,93,0.45)', boxShadow: '0 0 40px rgba(244,193,93,0.14), 0 0 80px rgba(214,58,54,0.18)' }}
       onClick={onPersonalArea}
     >
       <div dir="ltr" className="flex flex-row gap-3 items-start px-5 pt-5 pb-2">
