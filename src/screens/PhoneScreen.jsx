@@ -81,15 +81,6 @@ export default function PhoneScreen({ onSuccess }) {
       }}
     >
       <div className="w-full max-w-sm mx-auto">
-        <div className="bg-hm-card rounded-2xl px-4 py-3 mb-6 text-center border border-hm-dim">
-          <p className="text-hm-white text-sm font-semibold leading-relaxed">
-            🏆 ניחשו, נצחו, אכלו
-          </p>
-          <p className="text-hm-muted text-xs mt-1">
-            פרסים ראשיים: כרטיסים לגמר המונדיאל
-          </p>
-        </div>
-
         <form onSubmit={isPhasePhone ? handleCheck : handleSubmit} className="flex flex-col gap-4">
 
           <div className="flex flex-col gap-1">

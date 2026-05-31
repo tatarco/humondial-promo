@@ -12,9 +12,9 @@ export default function ExistingMemberModal({ bonusPoints, tierName, onClose }) 
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  const title = mc.existing_member_title_he || 'ברוך הבא בחזרה, שמנמן!';
+  const title = mc.existing_member_title_he || 'זיהינו שאתה חבר מועדון השמנמן המתמיד';
   const body = mc.existing_member_body_he
-    || `זיהינו שאתה כבר חבר Chubby's Club — המקום שבו שמנמנים מתפנקים יותר! כאות הוקרה — אתה מתחיל מדרגת ${tierName || 'כסף'} עם בונוס נקודות!`;
+    || `אז שמנמנים מתמידים נהנים יותר, קבל פינוק!\nשודרגתם לשלב "${tierName || 'פותח בהרכב'}" עם ${bonusPoints || 250} נקודות בונוס מאיתנו.\nהתחילו להנות מ-30% הנחה על הראשונות, התוספות והקינוחים.`;
 
   return createPortal(
     <div

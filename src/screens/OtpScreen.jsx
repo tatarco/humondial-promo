@@ -81,22 +81,22 @@ export default function OtpScreen({ phone, isNewUser, onSuccess, onBack }) {
       <div className="w-full max-w-sm mx-auto">
         <button
           onClick={onBack}
-          className="text-hm-muted text-xs mb-8 flex items-center gap-1 opacity-40 hover:opacity-70"
+          className="text-white/60 text-xs mb-8 flex items-center gap-1 opacity-40 hover:opacity-70"
         >
           ← חזרה לשינוי מספר
         </button>
 
         <h2 className="text-2xl font-bold text-hm-white mb-2">הזן קוד אימות</h2>
-        <p className="text-hm-muted text-sm mb-2">
+        <p className="text-white/85 text-sm mb-2">
           שלחנו קוד ב-WhatsApp למספר {displayPhone}
         </p>
 
         {countdown > 0 ? (
-          <p className="text-hm-muted text-xs mb-6">
+          <p className="text-white/85 text-xs mb-6">
             הקוד יכול לקחת עד {countdown} שניות להגיע
           </p>
         ) : (
-          <p className="text-hm-muted text-xs mb-6">לא קיבלת קוד?</p>
+          <p className="text-white/85 text-xs mb-6">לא קיבלת קוד?</p>
         )}
 
         <form onSubmit={handleVerify} className="flex flex-col gap-4">
