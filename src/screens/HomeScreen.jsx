@@ -1818,10 +1818,19 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               />
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 px-3 mb-2">
-            <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
-            <QuickActionTile iconSrc="/assets/icon-delivery.jpg" onClick={openVenueDelivery} scrolled={false} />
-            <QuickActionTile iconSrc="/assets/icon-branch-visit.jpg" onClick={openVenueAtBranch} scrolled={false} />
+          <div className="px-3 mb-2 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={openVenueAtBranch} className="hm-card overflow-hidden rounded-xl border-0 appearance-none p-0 cursor-pointer w-full" style={{ fontFamily: 'inherit' }}>
+                <img src="/assets/icon-branch-visit.jpg" alt="הגעתי לסניף" className="w-full h-auto block" draggable={false} />
+              </button>
+              <button type="button" onClick={openVenueDelivery} className="hm-card overflow-hidden rounded-xl border-0 appearance-none p-0 cursor-pointer w-full" style={{ fontFamily: 'inherit' }}>
+                <img src="/assets/icon-delivery.jpg" alt="קיבלתי משלוח?" className="w-full h-auto block" draggable={false} />
+              </button>
+            </div>
+            <button type="button" onClick={onMyQR} className="hm-card w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-0 appearance-none cursor-pointer" dir="rtl" style={{ fontFamily: 'inherit' }}>
+              <span className="text-2xl leading-none">🎁</span>
+              <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>הטבות שלי</span>
+            </button>
           </div>
           <button
             type="button"
