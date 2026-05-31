@@ -275,16 +275,16 @@ export default function PersonalAreaScreen({ token, campaignId, onBack, onLeader
             minHeight: 56,
             fontFamily: 'inherit',
           }}
-          dir="rtl"
+          dir="ltr"
         >
           <div className="flex items-center gap-3 px-4 flex-1">
             <span className="text-2xl leading-none" aria-hidden>📖</span>
-            <span className="font-black text-base" style={{ color: '#ff4444', textShadow: '0 0 12px rgba(255,60,60,0.7), 0 0 24px rgba(255,60,60,0.4)' }}>
+            <span className="font-black text-base" dir="rtl" style={{ color: '#ff4444', textShadow: '0 0 12px rgba(255,60,60,0.7), 0 0 24px rgba(255,60,60,0.4)' }}>
               מדריך הטבות
             </span>
           </div>
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center ml-3 shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0"
             style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)' }}
           >
             <span className="text-white font-black text-base leading-none">›</span>
