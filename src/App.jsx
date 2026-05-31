@@ -21,6 +21,7 @@ import CampaignHeaderBrand from './components/CampaignHeaderBrand.jsx';
 import ExistingMemberModal from './components/ExistingMemberModal.jsx';
 import StaffScanScreen from './screens/StaffScanScreen.jsx';
 import AchievementsScreen from './screens/AchievementsScreen.jsx';
+import BenefitsGuideScreen from './screens/BenefitsGuideScreen.jsx';
 
 const SCREEN = {
   SPLASH: 'splash',
@@ -39,6 +40,7 @@ const SCREEN = {
   LEDGER: 'ledger',
   STAFF: 'staff',
   ACHIEVEMENTS: 'achievements',
+  BENEFITS_GUIDE: 'benefits_guide',
 };
 
 const UUID_CTX =
@@ -457,6 +459,13 @@ export default function App() {
         />
       );
     }
+    if (screen === SCREEN.BENEFITS_GUIDE) {
+      return (
+        <BenefitsGuideScreen
+          onBack={() => setScreen(SCREEN.SHELL)}
+        />
+      );
+    }
     if (screen === SCREEN.LEDGER) {
       return (
         <LedgerScreen
@@ -529,6 +538,7 @@ export default function App() {
         }}
         onMyQR={() => setScreen(SCREEN.MY_QR)}
         onBranchBooking={openBranchBooking}
+        onBenefitsGuide={() => setScreen(SCREEN.BENEFITS_GUIDE)}
       />
     );
   })();

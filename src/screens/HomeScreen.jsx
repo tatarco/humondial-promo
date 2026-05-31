@@ -419,9 +419,11 @@ function HeroCard({
           className="hm-tier-hero-shell--elevated shrink-0"
         />
         <div dir="rtl" className="flex-1 min-w-0 text-right pt-0.5">
-          <span className="block text-[1.25rem] leading-none mb-1.5 opacity-95" style={{ color: 'var(--red)' }} aria-hidden>❝</span>
-          <p className="text-lg font-black leading-snug" style={{ color: 'var(--text)' }}>
-            פה לא רק רואים מונדיאל — פה משחקים אותו.
+          <p className="text-xl font-black leading-snug" style={{ color: 'var(--text)' }}>
+            משחקים את המונדיאל ביומנגס
+          </p>
+          <p className="text-sm font-semibold leading-snug mt-1" style={{ color: 'var(--text-sec)' }}>
+            משחקים, מנצחים ונהנים מהטבות מטורפות
           </p>
           <div className="flex items-baseline gap-2 justify-end flex-wrap mt-3">
             <span className="text-[42px] font-black tabular-nums leading-none" style={{ color: 'var(--gold)' }}>
@@ -429,12 +431,6 @@ function HeroCard({
             </span>
             <span className="text-2xl font-black" style={{ color: 'var(--gold)' }}>נקודות</span>
           </div>
-          {tp !== null && (
-            <p className="text-[11px] mt-1 leading-relaxed max-w-[20rem] mr-0 ml-auto" style={{ color: 'var(--text-sec)' }}>
-              <span className="font-bold" style={{ color: 'var(--text)' }}>{tp}</span>
-              {' '}נקודות מאושרות — אלה נספרות בדירוג ובדרגה.
-            </p>
-          )}
           {typeof pendingBookingPoints === 'number' && pendingBookingPoints > 0 && (
             <div
               className="mt-2 rounded-xl px-3 py-2.5 text-right space-y-1"
@@ -455,11 +451,8 @@ function HeroCard({
 
       {/* Tier progress */}
       <div className="px-5 pb-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-end mb-2">
           <TierIcon tierLike={tierFromServer} sizePx={26} className="hm-tier-hero-shell--dense" />
-            <button onClick={onPersonalAreaTier} className="text-sm font-bold text-right" style={{ color: 'var(--text)' }}>
-            השלב שלי: {tierDisplayLabel || '—'} ↗
-          </button>
         </div>
         {(() => {
           const p = Math.min(100, Math.max(0, pct));
@@ -507,8 +500,8 @@ function HeroCard({
               מתקדמים ל{nextLabel} לפי הכללים (נקודות + מסעדה / משלוח כשמוגדרים)
             </span>
           ) : nextT && ptsToNextPlain > 0 && tp !== null ? (
-            <span className="text-xs text-right" style={{ color: 'var(--text-sec)' }}>
-              עוד {ptsToNextPlain} נקודות מאושרות ל{nextLabel || nextT.label_he || 'השלב הבא'}
+            <span className="text-sm font-black text-right" style={{ color: 'var(--gold)' }}>
+              עוד {ptsToNextPlain} נקודות לשלב {nextLabel || nextT.label_he || 'הבא'}
             </span>
           ) : null}
         </div>
@@ -542,16 +535,26 @@ function HeroCard({
 
       {/* Today's Snapshot */}
       <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <p className="text-xs font-bold mb-2 text-right" style={{ color: 'var(--gold)' }}>מבט מהיר להיום</p>
-        <div className="space-y-1.5 text-sm text-right" style={{ color: 'var(--text)' }}>
-          {openMatchCount > 0 && <p>⚽ {openMatchCount} משחקים פתוחים לניחוש</p>}
+        <p className="text-base font-black mb-3 text-right" style={{ color: 'var(--gold)' }}>כמה נקודות אני יכול להרוויח היום?</p>
+        <div className="space-y-2 text-sm text-right" style={{ color: 'var(--text)' }}>
+          <div className="flex items-start gap-2 flex-row-reverse">
+            <span className="text-green-400 shrink-0 mt-0.5">✅</span>
+            <p>ניחשת נכון משחק? קיבלת {config.participation_points || 0} נקודות</p>
+          </div>
           {config.table_booking_points > 0 && (
-            <p>🔥 אחרי הזמנת שולחן: +{config.table_booking_points} נק׳ <span className="opacity-90">ממתינות</span> עד קוד ביקור יומי בסניף</p>
+            <div className="flex items-start gap-2 flex-row-reverse">
+              <span className="text-green-400 shrink-0 mt-0.5">✅</span>
+              <p>הזמנת מקום קיבלת {config.table_booking_points} נקודות</p>
+            </div>
           )}
           {typeof delivPts === 'number' && delivPts > 0 ? (
-            <p>🛵 הזמנת משלוח מאושר בקוד: עד +{delivPts} נ׳ למאזן המאושר</p>
+            <div className="flex items-start gap-2 flex-row-reverse">
+              <span className="text-green-400 shrink-0 mt-0.5">✅</span>
+              <p>הגעת למסעדה קיבלת {delivPts} נקודות</p>
+            </div>
           ) : null}
         </div>
+        <p className="text-[10px] mt-2 text-right" style={{ color: 'var(--text-sec)', opacity: 0.6 }}>בכפוף לתקנון</p>
       </div>
 
       {/* CTAs */}
@@ -561,7 +564,7 @@ function HeroCard({
         </button>
         <div className="grid grid-cols-2 gap-2.5">
           <button type="button" onClick={() => onBranchBooking?.()} className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1">
-            📅 שמור לי שולחן
+            ✅ שמור לי שולחן
           </button>
           <a
             href={config.delivery_url}
@@ -569,7 +572,7 @@ function HeroCard({
             rel="noopener noreferrer"
             className="hm-btn-secondary py-3 text-xs font-bold flex items-center justify-center gap-1 text-center"
           >
-            🛵 הזמן משלוח
+            ✅ הזמן משלוח
           </a>
         </div>
       </div>
@@ -580,32 +583,33 @@ function HeroCard({
 function QuickActionTile({ icon, iconSrc, label, sub, onClick, href, scrolled }) {
   const inner = (
     <div
-      className="hm-card flex flex-col items-center gap-0.5 cursor-pointer transition-all duration-200 w-full"
-      style={{ padding: scrolled ? '8px 4px' : '10px 6px' }}
+      className="hm-card overflow-hidden cursor-pointer transition-all duration-200 w-full"
+      style={{ padding: 0, aspectRatio: '1' }}
       onClick={onClick}
     >
       {iconSrc ? (
         <img
           src={iconSrc}
-          alt=""
-          className="object-contain"
-          style={{ height: scrolled ? 22 : 28, width: 'auto', maxWidth: '100%' }}
+          alt={label || ''}
+          className="w-full h-full object-cover"
           draggable={false}
         />
       ) : (
-        <div className={`${scrolled ? 'text-xl' : 'text-2xl'} leading-none`}>{icon}</div>
-      )}
-      {label ? (
-        <div
-          className={`font-bold text-center leading-tight ${scrolled ? 'text-[9px]' : 'text-[10px]'}`}
-          style={{ color: 'var(--text)' }}
-        >
-          {label}
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1" style={{ padding: scrolled ? '8px 4px' : '10px 6px' }}>
+          <div className={`${scrolled ? 'text-xl' : 'text-2xl'} leading-none`}>{icon}</div>
+          {label ? (
+            <div
+              className={`font-bold text-center leading-tight ${scrolled ? 'text-[9px]' : 'text-[10px]'}`}
+              style={{ color: 'var(--text)' }}
+            >
+              {label}
+            </div>
+          ) : null}
+          {!scrolled && sub ? (
+            <div className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--gold)' }}>{sub}</div>
+          ) : null}
         </div>
-      ) : null}
-      {!scrolled && sub ? (
-        <div className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--gold)' }}>{sub}</div>
-      ) : null}
+      )}
     </div>
   );
   return href
@@ -1512,7 +1516,7 @@ function StageFilterTabs({ stages, activeStage, onSelect }) {
   );
 }
 
-export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onBranchBooking }) {
+export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPersonalAreaTier, onVenueCode, onMyQR, onBranchBooking, onBenefitsGuide }) {
   const openVenueDelivery = () => onVenueCode?.('delivery');
   const openVenueAtBranch = () => onVenueCode?.('venue');
   const config = useConfig();
@@ -1780,19 +1784,19 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
             }}
           >
             <button
-              onClick={onLogout}
-              className="flex-shrink-0"
-              aria-label="יציאה"
-            >
-              <img src="/assets/icon-exit.png" alt="יציאה" className="w-11 h-11 object-contain" />
-            </button>
-            <div className="flex-1" />
-            <button
               onClick={onPersonalArea}
               className="flex-shrink-0"
               aria-label="אזור אישי"
             >
               <img src="/assets/icon-personal-area.png" alt="אזור אישי" className="w-11 h-11 object-contain" />
+            </button>
+            <div className="flex-1" />
+            <button
+              onClick={onLogout}
+              className="flex-shrink-0"
+              aria-label="יציאה"
+            >
+              <img src="/assets/icon-exit.png" alt="יציאה" className="w-11 h-11 object-contain" />
             </button>
           </header>
 
@@ -1814,11 +1818,35 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
               />
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 px-3 mb-1">
+          <div className="grid grid-cols-3 gap-2 px-3 mb-2">
             <QuickActionTile icon="🎁" label="הטבות שלי" onClick={onMyQR} scrolled={false} />
-            <QuickActionTile iconSrc="/assets/icon-delivery.jpg" label="קיבלת משלוח?" onClick={openVenueDelivery} scrolled={false} />
-            <QuickActionTile iconSrc="/assets/icon-branch-visit.jpg" label="הגעתי לסניף" onClick={openVenueAtBranch} scrolled={false} />
+            <QuickActionTile iconSrc="/assets/icon-delivery.jpg" onClick={openVenueDelivery} scrolled={false} />
+            <QuickActionTile iconSrc="/assets/icon-branch-visit.jpg" onClick={openVenueAtBranch} scrolled={false} />
           </div>
+          <button
+            type="button"
+            onClick={onBenefitsGuide}
+            className="mx-3 mb-2 w-[calc(100%-1.5rem)] rounded-xl overflow-hidden flex items-center justify-between cursor-pointer border-0 appearance-none"
+            style={{
+              background: 'linear-gradient(to left, #6b0f1a, #3a0a5e)',
+              minHeight: 56,
+              fontFamily: 'inherit',
+            }}
+            dir="rtl"
+          >
+            <div className="flex items-center gap-3 px-4 flex-1">
+              <span className="text-2xl leading-none" aria-hidden>📖</span>
+              <span className="font-black text-base" style={{ color: '#ff4444', textShadow: '0 0 12px rgba(255,60,60,0.7), 0 0 24px rgba(255,60,60,0.4)' }}>
+                מדריך הטבות
+              </span>
+            </div>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center ml-3 shrink-0"
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)' }}
+            >
+              <span className="text-white font-black text-base leading-none">›</span>
+            </div>
+          </button>
 
           <StageFilterTabs stages={stages} activeStage={activeStage} onSelect={setActiveStage} />
         </div>
