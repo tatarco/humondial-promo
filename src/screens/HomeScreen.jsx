@@ -14,6 +14,17 @@ import { normalizeBenefitsPlayerCopy } from '../lib/benefitsPlayerCopy.js';
 import ShareModal from '../components/ShareModal.jsx';
 import AchievementModal from '../components/AchievementModal.jsx';
 
+function GlowCheck({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      style={{ filter: 'drop-shadow(0 0 4px #4ade80) drop-shadow(0 0 8px rgba(74,222,128,0.35))', flexShrink: 0 }}>
+      <polyline points="3,13 9,19 21,5" stroke="#071a07" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="3,13 9,19 21,5" stroke="#15803d" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="3,13 9,19 21,5" stroke="#86efac" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 function leaderboardSnapshotKey(cid) {
   return `hm_leaderboard_snap_v1:${cid}`;
 }
@@ -537,20 +548,20 @@ function HeroCard({
       <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <p className="text-base font-black mb-3 text-right" style={{ color: 'var(--gold)' }}>כמה נקודות אני יכול להרוויח היום?</p>
         <div className="space-y-2 text-sm text-right" style={{ color: 'var(--text)' }}>
-          <div className="flex items-start gap-2 flex-row-reverse">
-            <span className="text-green-400 shrink-0 mt-0.5">✅</span>
-            <p>ניחשת נכון משחק? קיבלת {config.participation_points || 0} נקודות</p>
+          <div className="flex items-start gap-2">
+            <GlowCheck size={20} />
+            <p>ניחשת משחק? קיבלת {config.participation_points || 0} נקודות</p>
           </div>
           {config.table_booking_points > 0 && (
-            <div className="flex items-start gap-2 flex-row-reverse">
-              <span className="text-green-400 shrink-0 mt-0.5">✅</span>
-              <p>הזמנת מקום קיבלת {config.table_booking_points} נקודות</p>
+            <div className="flex items-start gap-2">
+              <GlowCheck size={20} />
+              <p>הזמנת מקום? קיבלת {config.table_booking_points} נקודות</p>
             </div>
           )}
           {typeof delivPts === 'number' && delivPts > 0 ? (
-            <div className="flex items-start gap-2 flex-row-reverse">
-              <span className="text-green-400 shrink-0 mt-0.5">✅</span>
-              <p>הגעת למסעדה קיבלת {delivPts} נקודות</p>
+            <div className="flex items-start gap-2">
+              <GlowCheck size={20} />
+              <p>הגעת למסעדה? קיבלת {delivPts} נקודות</p>
             </div>
           ) : null}
         </div>
