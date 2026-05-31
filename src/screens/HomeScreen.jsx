@@ -545,7 +545,7 @@ function HeroCard({
       </div>
 
       {/* Today's Snapshot */}
-      <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(0,0,0,0.45)', border: '2px solid rgba(220,180,0,0.55)', boxShadow: '0 0 12px rgba(220,180,0,0.2)' }}>
         <p className="text-base font-black mb-3 text-right" style={{ color: 'var(--gold)' }}>כמה נקודות אני יכול להרוויח היום?</p>
         <div className="space-y-2 text-sm text-right" style={{ color: 'var(--text)' }}>
           <div className="flex items-start gap-2">
@@ -1785,7 +1785,7 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
         className="h-dvh overflow-y-auto pb-[max(12px,env(safe-area-inset-bottom))]"
         onScroll={handleScroll}
       >
-        <div style={{ background: 'var(--hm-bg, #100505)' }}>
+        <div style={{ backgroundImage: 'linear-gradient(rgba(8,2,2,0.78), rgba(8,2,2,0.88)), url(/assets/stadium-hero.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }}>
           <header
             className="flex items-center justify-between px-3 pt-2 pb-2"
             style={{
