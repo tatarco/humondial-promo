@@ -1827,10 +1827,10 @@ export default function HomeScreen({ playerId, onLogout, onPersonalArea, onPerso
           <div className="px-3 mb-2 space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={openVenueAtBranch} className="hm-card overflow-hidden rounded-xl border-0 appearance-none p-0 cursor-pointer w-full" style={{ fontFamily: 'inherit' }}>
-                <img src="/assets/icon-branch-visit.jpg" alt="הגעתי לסניף" className="w-full h-auto block" draggable={false} style={{ maxHeight: 72, objectFit: 'cover' }} />
+                <img src="/assets/icon-branch-visit.jpg" alt="הגעתי לסניף" className="w-full h-auto block" draggable={false} style={{ maxHeight: 58, objectFit: 'cover' }} />
               </button>
               <button type="button" onClick={openVenueDelivery} className="hm-card overflow-hidden rounded-xl border-0 appearance-none p-0 cursor-pointer w-full" style={{ fontFamily: 'inherit' }}>
-                <img src="/assets/icon-delivery.jpg" alt="קיבלתי משלוח?" className="w-full h-auto block" draggable={false} style={{ maxHeight: 72, objectFit: 'cover' }} />
+                <img src="/assets/icon-delivery.jpg" alt="קיבלתי משלוח?" className="w-full h-auto block" draggable={false} style={{ maxHeight: 58, objectFit: 'cover' }} />
               </button>
             </div>
             <button type="button" onClick={onMyQR} className="hm-card w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-0 appearance-none cursor-pointer" dir="rtl" style={{ fontFamily: 'inherit' }}>
